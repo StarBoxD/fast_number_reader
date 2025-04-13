@@ -482,39 +482,19 @@
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             
             if(uygunSesler.length > 0) {
-                // Mac için özel ses seçimi
-                if (navigator.platform.includes('Mac')) {
-                    // Almanca için Mac'te ses desteği yok
-                    if (secilenDil === 'de-DE') {
-                        alert('Mac işletim sisteminde Almanca ses desteği bulunmamaktadır. Lütfen başka bir dil seçiniz.');
-                        languageSelect.value = 'tr-TR'; // Varsayılan olarak Türkçe'ye dön
-                        return;
-                    } else {
-                        // Diğer diller için Mac ses seçimi
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    }
-                } else {
-                    // Windows için ses seçimi
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('default')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                               uygunSesler[0];
-                }
+                // Tüm işletim sistemleri için standart ses seçimi
+                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                           uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                           uygunSesler[0];
                 
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
-                // Ses kalitesi ayarları
-                if (secilenDil === 'de-DE') {
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
-                } else {
-                    speech.pitch = 1.1;
-                    speech.rate = parseFloat(speedControl.value);
-                }
+                // Standart ses kalitesi ayarları
+                speech.pitch = 1.1;
+                speech.rate = parseFloat(speedControl.value);
                 
                 console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
             } else {
@@ -594,20 +574,15 @@
             const min = parseInt(document.getElementById('minValue').value);
             const max = parseInt(document.getElementById('maxValue').value);
             const gecikme = parseFloat(document.getElementById('delayControl').value) * 1000;
-            let hiz = parseFloat(document.getElementById('speedControl').value);
+            const hiz = parseFloat(document.getElementById('speedControl').value);
             const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
             const secilenDil = languageSelect.value;
-
-            // Türkçe dışındaki diller için hız sınırlaması
-            if (secilenDil !== 'tr-TR' && hiz > 2.0) {
-                hiz = 2.0;
-            }
 
             // Sayıyı formatla ve göster
             const formattedNumber = formatNumber(sayi, secilenDil);
             document.getElementById('resultDisplay').textContent = formattedNumber;
 
-            // Mac için ses sentezini sıfırla
+            // Ses sentezini sıfırla
             window.speechSynthesis.cancel();
             
             // Yeni bir SpeechSynthesisUtterance oluştur
@@ -615,9 +590,6 @@
             newSpeech.rate = hiz;
             newSpeech.voice = seciliSes;
             newSpeech.lang = secilenDil;
-
-            // Mac için ses kontrolünü başlat
-            startResumeInterval();
 
             // Sayıyı okut
             try {
@@ -633,7 +605,6 @@
                 if(isActive) {
                     if(timeoutID) clearTimeout(timeoutID);
                     timeoutID = setTimeout(() => {
-                        stopResumeInterval();
                         readNumber();
                     }, gecikme);
                 }
@@ -649,7 +620,7 @@
                 return;
             }
             
-            // Mac için ses sistemini sıfırla
+            // Ses sistemini sıfırla
             window.speechSynthesis.cancel();
             
             isActive = true;
@@ -658,9 +629,6 @@
             languageSelect.disabled = true;
             document.getElementById('minValue').disabled = true;
             document.getElementById('maxValue').disabled = true;
-            
-            // Mac için ses kontrolünü başlat
-            startResumeInterval();
             
             // Okumayı başlat
             setTimeout(() => {
@@ -671,7 +639,6 @@
         function stopReading() {
             isActive = false;
             window.speechSynthesis.cancel();
-            stopResumeInterval();
             clearTimeout(timeoutID);
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
