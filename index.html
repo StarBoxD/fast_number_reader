@@ -591,119 +591,242 @@
             color: var(--text-light);
             opacity: 0.7;
         }
+
+        /* İzin İsteme Modalı */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-light);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px var(--shadow-light);
+            text-align: center;
+        }
+
+        body.dark-mode .modal-content {
+            background: var(--card-dark);
+            box-shadow: 0 10px 30px var(--shadow-dark);
+        }
+
+        .modal h2 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .modal p {
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+
+        .modal ul {
+            text-align: left;
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .primary-button {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .secondary-button {
+            background: var(--text-light);
+            color: var(--text-dark);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode .secondary-button {
+            background: var(--border-dark);
+            color: var(--text-light);
+        }
+
+        .primary-button:hover, .secondary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
         </style>
     </head>
     <body>
-    <div class="container">
-        <div class="header">
-            <h1><span style="font-size: 1.2em;">🌐</span> <span class="lang-text" data-key="title">Sayı Okuyucu</span></h1>
-            <button class="theme-toggle" id="themeToggle">
-                <span id="themeIcon">🌙</span> <span class="lang-text" data-key="theme">Koyu Mod</span>
-            </button>
+        <!-- İzin İsteme Modalı -->
+        <div id="permissionModal" class="modal">
+            <div class="modal-content">
+                <h2>İzinler Gerekli</h2>
+                <p>Sayı Okuyucu uygulamasının düzgün çalışması için aşağıdaki izinlere ihtiyacı vardır:</p>
+                <ul>
+                    <li>Ses sentezi (text-to-speech) - Sayıları sesli okumak için</li>
+                    <li>Panoya kopyalama - Sayıları kopyalamak için</li>
+                </ul>
+                <p>Bu izinleri vermek ister misiniz?</p>
+                <div class="modal-buttons">
+                    <button id="grantPermissions" class="primary-button">İzinleri Ver</button>
+                    <button id="denyPermissions" class="secondary-button">Daha Sonra</button>
+                </div>
+            </div>
         </div>
-        
-        <div class="control-card">
-            <div class="control-row">
-                <span class="control-label lang-text" data-key="language">Dil Seçimi:</span>
-                <div class="language-container">
-                    <select id="languageSelect">
-                <option value="tr-TR">Turkish</option>
-                        <option value="en-US">English (US)</option>
-                        <option value="en-GB">English (UK)</option>
-                        <option value="de-DE">German</option>
-                        <option value="fr-FR">French</option>
-                        <option value="es-ES">Spanish</option>
-                        <option value="ja-JP">Japanese</option>
-                        <option value="ru-RU">Russian</option>
-                        <option value="zh-CN">Chinese</option>
-                        <option value="it-IT">Italian</option>
-            </select>
+
+        <div class="container">
+            <div class="header">
+                <h1><span style="font-size: 1.2em;">🌐</span> <span class="lang-text" data-key="title">Sayı Okuyucu</span></h1>
+                <button class="theme-toggle" id="themeToggle">
+                    <span id="themeIcon">🌙</span> <span class="lang-text" data-key="theme">Koyu Mod</span>
+                </button>
+            </div>
+            
+            <div class="control-card">
+                <div class="control-row">
+                    <span class="control-label lang-text" data-key="language">Dil Seçimi:</span>
+                    <div class="language-container">
+                        <select id="languageSelect">
+                    <option value="tr-TR">Turkish</option>
+                            <option value="en-US">English (US)</option>
+                            <option value="en-GB">English (UK)</option>
+                            <option value="de-DE">German</option>
+                            <option value="fr-FR">French</option>
+                            <option value="es-ES">Spanish</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="ru-RU">Russian</option>
+                            <option value="zh-CN">Chinese</option>
+                            <option value="it-IT">Italian</option>
+                </select>
+                    </div>
+                </div>
+                
+                <div class="control-row">
+                    <span class="control-label lang-text" data-key="range">Sayı Aralığı:</span>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" id="minValue" value="1" min="0" placeholder="Min">
+                        <span style="align-self:center;">-</span>
+                        <input type="number" id="maxValue" value="100" min="1" placeholder="Max">
+                    </div>
+                </div>
+                
+                <div class="control-row">
+                    <span class="control-label lang-text" data-key="speed">Okuma Hızı:</span>
+                    <div class="speed-control">
+                        <input type="range" id="speedControl" min="0.5" max="5.0" step="0.1" value="1.0">
+                        <span id="speedDisplay" class="value-display">1.0x</span>
+                    </div>
+                </div>
+                
+                <div class="control-row">
+                    <span class="control-label lang-text" data-key="delay">Geçiş Süresi:</span>
+                    <div class="speed-control">
+                        <input type="range" id="delayControl" min="0" max="5" step="0.5" value="0">
+                        <span id="delayDisplay" class="value-display">0s</span>
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-top:25px;">
+                    <button id="startBtn" class="lang-text" data-key="start">BAŞLAT</button>
+                    <button id="stopBtn" disabled class="lang-text" data-key="stop">DURDUR</button>
                 </div>
             </div>
             
-            <div class="control-row">
-                <span class="control-label lang-text" data-key="range">Sayı Aralığı:</span>
-                <div style="display:flex; gap:10px;">
-                    <input type="number" id="minValue" value="1" min="0" placeholder="Min">
-                    <span style="align-self:center;">-</span>
-                    <input type="number" id="maxValue" value="100" min="1" placeholder="Max">
-                </div>
-            </div>
-            
-            <div class="control-row">
-                <span class="control-label lang-text" data-key="speed">Okuma Hızı:</span>
-                <div class="speed-control">
-                    <input type="range" id="speedControl" min="0.5" max="5.0" step="0.1" value="1.0">
-                    <span id="speedDisplay" class="value-display">1.0x</span>
-                </div>
-            </div>
-            
-            <div class="control-row">
-                <span class="control-label lang-text" data-key="delay">Geçiş Süresi:</span>
-                <div class="speed-control">
-                    <input type="range" id="delayControl" min="0" max="5" step="0.5" value="0">
-                    <span id="delayDisplay" class="value-display">0s</span>
-                </div>
+            <div id="resultDisplay">---</div>
+
+            <div class="history-section">
+                <div class="history-title lang-text" data-key="history">Okunan Sayılar</div>
+                <div class="history-list" id="historyList"></div>
             </div>
 
-            <div style="text-align:center; margin-top:25px;">
-                <button id="startBtn" class="lang-text" data-key="start">BAŞLAT</button>
-                <button id="stopBtn" disabled class="lang-text" data-key="stop">DURDUR</button>
+            <!-- İstatistikler -->
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalNumbers">0</div>
+                    <div class="stat-label">Toplam Sayı</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalTime">0</div>
+                    <div class="stat-label">Toplam Süre (dk)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="favoriteLanguage">-</div>
+                    <div class="stat-label">En Çok Kullanılan Dil</div>
+                </div>
             </div>
-        </div>
-        
-        <div id="resultDisplay">---</div>
-
-        <div class="history-section">
-            <div class="history-title lang-text" data-key="history">Okunan Sayılar</div>
-            <div class="history-list" id="historyList"></div>
-        </div>
-
-        <!-- İstatistikler -->
-        <div class="stats-container">
-            <div class="stat-item">
-                <div class="stat-value" id="totalNumbers">0</div>
-                <div class="stat-label">Toplam Sayı</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="totalTime">0</div>
-                <div class="stat-label">Toplam Süre (dk)</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="favoriteLanguage">-</div>
-                <div class="stat-label">En Çok Kullanılan Dil</div>
-            </div>
-        </div>
         </div>
 
         <script>
         // İzin isteme fonksiyonu
         async function requestPermissions() {
-            try {
-                // Ses sentezi için izin kontrolü
-                if (!window.speechSynthesis) {
-                    alert('Tarayıcınız ses sentezi özelliğini desteklemiyor. Lütfen güncel bir tarayıcı kullanın.');
-                    return false;
-                }
+            const modal = document.getElementById('permissionModal');
+            const grantButton = document.getElementById('grantPermissions');
+            const denyButton = document.getElementById('denyPermissions');
 
-                // Panoya kopyalama için izin kontrolü
-                try {
-                    await navigator.permissions.query({ name: 'clipboard-write' });
-                } catch (e) {
-                    console.log('Panoya kopyalama izni kontrolü desteklenmiyor');
-                }
+            return new Promise((resolve) => {
+                // Modalı göster
+                modal.style.display = 'flex';
 
-                // Ses sentezi için test konuşması
-                const testSpeech = new SpeechSynthesisUtterance(' ');
-                testSpeech.volume = 0;
-                window.speechSynthesis.speak(testSpeech);
+                // İzin ver butonuna tıklama
+                grantButton.onclick = async () => {
+                    try {
+                        // Ses sentezi için izin kontrolü
+                        if (!window.speechSynthesis) {
+                            alert('Tarayıcınız ses sentezi özelliğini desteklemiyor. Lütfen güncel bir tarayıcı kullanın.');
+                            modal.style.display = 'none';
+                            resolve(false);
+                            return;
+                        }
 
-                return true;
-            } catch (error) {
-                console.error('İzin hatası:', error);
-                alert('Sistem izinleri alınamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.');
-                return false;
-            }
+                        // Panoya kopyalama için izin kontrolü
+                        try {
+                            await navigator.permissions.query({ name: 'clipboard-write' });
+                        } catch (e) {
+                            console.log('Panoya kopyalama izni kontrolü desteklenmiyor');
+                        }
+
+                        // Ses sentezi için test konuşması
+                        const testSpeech = new SpeechSynthesisUtterance(' ');
+                        testSpeech.volume = 0;
+                        window.speechSynthesis.speak(testSpeech);
+
+                        modal.style.display = 'none';
+                        resolve(true);
+                    } catch (error) {
+                        console.error('İzin hatası:', error);
+                        alert('Sistem izinleri alınamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.');
+                        modal.style.display = 'none';
+                        resolve(false);
+                    }
+                };
+
+                // İzin verme butonuna tıklama
+                denyButton.onclick = () => {
+                    modal.style.display = 'none';
+                    resolve(false);
+                };
+            });
         }
 
         // Sayfa yüklendiğinde izinleri iste
@@ -712,6 +835,7 @@
             if (!permissionsGranted) {
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('languageSelect').disabled = true;
+                alert('Uygulama bazı özellikleri kullanmak için izinlere ihtiyaç duyuyor. İzinleri vermek için sayfayı yenileyin.');
             }
         });
 
