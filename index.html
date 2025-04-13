@@ -454,7 +454,7 @@
         // Ses Yönetimi
         let sesler = [];
         let seciliSes = null;
-        let timeoutID = null;
+            let timeoutID = null;
         let isActive = false;
         let resumeTimeout = null;
 
@@ -492,17 +492,9 @@
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
-                // Mobil cihaz kontrolü
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                
-                // Ses kalitesi ayarları
-                if (isMobile) {
-                    speech.pitch = 1.0;  // Mobilde daha net ses
-                    speech.rate = 1.0;   // Mobilde standart hız
-                } else {
-                    speech.pitch = 1.1;
-                    speech.rate = parseFloat(speedControl.value);
-                }
+                // Standart ses kalitesi ayarları
+                speech.pitch = 1.1;
+                speech.rate = parseFloat(speedControl.value);
                 
                 console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
             } else {
@@ -511,8 +503,8 @@
             }
         }
 
-        function sesleriYukle() {
-            return new Promise(resolve => {
+            function sesleriYukle() {
+                return new Promise(resolve => {
                 const checkVoices = () => {
                     const availableVoices = window.speechSynthesis.getVoices();
                     if (availableVoices.length > 0) {
@@ -524,11 +516,8 @@
                             const bIsDefault = b.voiceURI.includes('default') ? 1 : 0;
                             const aIsMicrosoft = a.voiceURI.includes('Microsoft') ? 1 : 0;
                             const bIsMicrosoft = b.voiceURI.includes('Microsoft') ? 1 : 0;
-                            const aIsGoogle = a.voiceURI.includes('Google') ? 1 : 0;
-                            const bIsGoogle = b.voiceURI.includes('Google') ? 1 : 0;
                             
-                            return (bIsNative + bIsDefault + bIsMicrosoft + bIsGoogle) - 
-                                   (aIsNative + aIsDefault + aIsMicrosoft + aIsGoogle);
+                            return (bIsNative + bIsDefault + bIsMicrosoft) - (aIsNative + aIsDefault + aIsMicrosoft);
                         });
                         resolve(sesler);
                     } else {
@@ -536,7 +525,7 @@
                     }
                 };
 
-                // Ses yükleme gecikmesi
+                // Mac için ses yükleme gecikmesi
                 setTimeout(() => {
                     checkVoices();
                     window.speechSynthesis.onvoiceschanged = checkVoices;
@@ -586,9 +575,8 @@
             const max = parseInt(document.getElementById('maxValue').value);
             const gecikme = parseFloat(document.getElementById('delayControl').value) * 1000;
             const hiz = parseFloat(document.getElementById('speedControl').value);
-            const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+                const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
             const secilenDil = languageSelect.value;
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
             // Sayıyı formatla ve göster
             const formattedNumber = formatNumber(sayi, secilenDil);
@@ -599,16 +587,7 @@
             
             // Yeni bir SpeechSynthesisUtterance oluştur
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
-            
-            // Mobil cihazlarda özel ayarlar
-            if (isMobile) {
-                newSpeech.rate = 1.0;    // Mobilde standart hız
-                newSpeech.pitch = 1.0;   // Mobilde daha net ses
-            } else {
-                newSpeech.rate = hiz;
-                newSpeech.pitch = 1.1;
-            }
-            
+            newSpeech.rate = hiz;
             newSpeech.voice = seciliSes;
             newSpeech.lang = secilenDil;
 
@@ -638,10 +617,10 @@
             
             if (min >= max) {
                 alert("Maksimum değer minimumdan büyük olmalı!");
-                return;
-            }
+                        return;
+                    }
             
-            // Mac için ses sistemini sıfırla
+            // Ses sistemini sıfırla
             window.speechSynthesis.cancel();
             
             isActive = true;
@@ -650,9 +629,6 @@
             languageSelect.disabled = true;
             document.getElementById('minValue').disabled = true;
             document.getElementById('maxValue').disabled = true;
-            
-            // Mac için ses kontrolünü başlat
-            startResumeInterval();
             
             // Okumayı başlat
             setTimeout(() => {
@@ -663,7 +639,6 @@
         function stopReading() {
             isActive = false;
             window.speechSynthesis.cancel();
-            stopResumeInterval();
             clearTimeout(timeoutID);
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
