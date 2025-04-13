@@ -889,6 +889,11 @@
 
         // Dil değişikliğinde ses kontrolü
         languageSelect.addEventListener('change', () => {
+            // Ses hızını 1x'e sıfırla
+            speedControl.value = 1.0;
+            speedDisplay.textContent = '1.0x';
+            speech.rate = 1.0;
+            
             sesiGuncelle();
             if(isActive) {
                 window.speechSynthesis.cancel();
