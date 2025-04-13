@@ -484,20 +484,19 @@
             
             if(uygunSesler.length > 0) {
                 // Mac için özel ses seçimi
-                if (isMac) {
-                    // Mac için öncelikli ses seçimi
+                if (isMac && secilenDil === 'de-DE') {
+                    // Mac için Almanca özel ses seçimi
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                } else if (isMac) {
+                    // Mac için diğer diller
                     seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
                                uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Samantha')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Alex')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Daniel')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Karen')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Tessa')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Fred')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Victoria')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Zira')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('David')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Mark')) ||
                                uygunSesler[0];
                 } else {
                     // Windows için ses seçimi
@@ -512,9 +511,12 @@
                 speech.lang = secilenDil;
                 
                 // Mac için özel ses kalitesi ayarları
-                if (isMac) {
-                    speech.pitch = 1.0;  // Mac'te daha net ses
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5); // Mac'te hız sınırlaması
+                if (isMac && secilenDil === 'de-DE') {
+                    speech.pitch = 0.9;  // Almanca için daha düşük perde
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2); // Almanca için daha yavaş
+                } else if (isMac) {
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
                 } else {
                     speech.pitch = 1.1;
                     speech.rate = parseFloat(speedControl.value);
@@ -614,7 +616,10 @@
         const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
         
         // Mac için özel ayarlar
-        if (isMac) {
+        if (isMac && secilenDil === 'de-DE') {
+            newSpeech.rate = Math.min(hiz, 1.2);
+            newSpeech.pitch = 0.9;
+        } else if (isMac) {
             newSpeech.rate = Math.min(hiz, 1.5);
             newSpeech.pitch = 1.0;
         } else {
