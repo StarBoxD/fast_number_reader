@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sayı Okuyucu</title>
+    <title>Sayı Okuyucu - Çoklu Dil Desteği ile Sayıları Sesli Okuyun</title>
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="Sayı Okuyucu ile farklı dillerde sayıları sesli olarak dinleyin. Türkçe, İngilizce, Almanca, Fransızca ve daha birçok dil desteği ile sayıları kolayca öğrenin.">
@@ -333,32 +333,32 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><span style="font-size: 1.2em;">🌐</span> Sayı Okuyucu</h1>
+            <h1><span style="font-size: 1.2em;">🌐</span> <span class="lang-text" data-key="title">Sayı Okuyucu</span></h1>
             <button class="theme-toggle" id="themeToggle">
-                <span id="themeIcon">🌙</span> Koyu Mod
+                <span id="themeIcon">🌙</span> <span class="lang-text" data-key="theme">Koyu Mod</span>
             </button>
         </div>
         
         <div class="control-card">
             <div class="control-row">
-                <span class="control-label">Dil Seçimi:</span>
+                <span class="control-label lang-text" data-key="language">Dil Seçimi:</span>
                 <div class="language-container">
                     <select id="languageSelect">
                         <option value="tr-TR">Türkçe</option>
-                        <option value="en-US">İngilizce</option>
-                        <option value="de-DE">Almanca</option>
-                        <option value="fr-FR">Fransızca</option>
-                        <option value="es-ES">İspanyolca</option>
-                        <option value="ja-JP">Japonca</option>
-                        <option value="ru-RU">Rusça</option>
-                        <option value="zh-CN">Çince</option>
-                        <option value="it-IT">İtalyanca</option>
+                        <option value="en-US">English</option>
+                        <option value="de-DE">Deutsch</option>
+                        <option value="fr-FR">Français</option>
+                        <option value="es-ES">Español</option>
+                        <option value="ja-JP">日本語</option>
+                        <option value="ru-RU">Русский</option>
+                        <option value="zh-CN">中文</option>
+                        <option value="it-IT">Italiano</option>
                     </select>
                 </div>
             </div>
             
             <div class="control-row">
-                <span class="control-label">Sayı Aralığı:</span>
+                <span class="control-label lang-text" data-key="range">Sayı Aralığı:</span>
                 <div style="display:flex; gap:10px;">
                     <input type="number" id="minValue" value="1" min="0" placeholder="Min">
                     <span style="align-self:center;">-</span>
@@ -367,7 +367,7 @@
             </div>
             
             <div class="control-row">
-                <span class="control-label">Okuma Hızı:</span>
+                <span class="control-label lang-text" data-key="speed">Okuma Hızı:</span>
                 <div class="speed-control">
                     <input type="range" id="speedControl" min="0.5" max="5.0" step="0.1" value="1.0">
                     <span id="speedDisplay" class="value-display">1.0x</span>
@@ -375,7 +375,7 @@
             </div>
             
             <div class="control-row">
-                <span class="control-label">Geçiş Süresi:</span>
+                <span class="control-label lang-text" data-key="delay">Geçiş Süresi:</span>
                 <div class="speed-control">
                     <input type="range" id="delayControl" min="0" max="2000" step="100" value="0">
                     <span id="delayDisplay" class="value-display">0ms</span>
@@ -383,8 +383,8 @@
             </div>
             
             <div style="text-align:center; margin-top:25px;">
-                <button id="startBtn">BAŞLAT</button>
-                <button id="stopBtn" disabled>DURDUR</button>
+                <button id="startBtn" class="lang-text" data-key="start">BAŞLAT</button>
+                <button id="stopBtn" disabled class="lang-text" data-key="stop">DURDUR</button>
             </div>
         </div>
         
@@ -455,28 +455,34 @@
         let sesler = [];
         let seciliSes = null;
         let timeoutID = null;
+        let isActive = false;
 
         function sesleriYukle() {
             return new Promise(resolve => {
-                if(window.speechSynthesis.getVoices().length > 0) {
-                    sesler = window.speechSynthesis.getVoices();
-                    resolve(sesler);
-                } else {
-                    window.speechSynthesis.onvoiceschanged = () => {
+                // Mac Safari için ses yükleme gecikmesi eklendi
+                setTimeout(() => {
+                    if(window.speechSynthesis.getVoices().length > 0) {
                         sesler = window.speechSynthesis.getVoices();
                         resolve(sesler);
-                    };
-                }
+                    } else {
+                        window.speechSynthesis.onvoiceschanged = () => {
+                            sesler = window.speechSynthesis.getVoices();
+                            resolve(sesler);
+                        };
+                    }
+                }, 100);
             });
         }
 
         function sesiGuncelle() {
             const secilenDil = languageSelect.value;
-            const uygunSesler = sesler.filter(s => s.lang === secilenDil);
+            const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             
             if(uygunSesler.length > 0) {
-                // En uygun sesi seç
-                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                // Mac için optimize edilmiş ses seçimi
+                seciliSes = uygunSesler.find(s => s.voiceURI.includes('natural')) || 
+                           uygunSesler.find(s => s.voiceURI.includes('premium')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('native')) || 
                            uygunSesler.find(s => s.voiceURI.includes('default')) || 
                            uygunSesler[0];
                 
@@ -489,6 +495,41 @@
             }
         }
 
+        // Sayı formatlama fonksiyonları
+        const numberFormatters = {
+            'tr-TR': (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            },
+            'en-US': (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            },
+            'de-DE': (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            },
+            'fr-FR': (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            },
+            'es-ES': (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            },
+            'ja-JP': (num) => {
+                return num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ",");
+            },
+            'ru-RU': (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            },
+            'zh-CN': (num) => {
+                return num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ",");
+            },
+            'it-IT': (num) => {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+        };
+
+        function formatNumber(num, lang) {
+            return numberFormatters[lang] ? numberFormatters[lang](num) : num.toString();
+        }
+
         function readNumber() {
             if(!isActive) return;
             
@@ -497,23 +538,43 @@
             const gecikme = parseInt(document.getElementById('delayControl').value);
             let hiz = parseFloat(document.getElementById('speedControl').value);
             const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+            const secilenDil = languageSelect.value;
 
             // Türkçe dışındaki diller için hız sınırlaması
-            if (languageSelect.value !== 'tr-TR' && hiz > 2.0) {
+            if (secilenDil !== 'tr-TR' && hiz > 2.0) {
                 hiz = 2.0;
             }
 
-            document.getElementById('resultDisplay').textContent = sayi;
+            // Sayıyı formatla ve göster
+            const formattedNumber = formatNumber(sayi, secilenDil);
+            document.getElementById('resultDisplay').textContent = formattedNumber;
+
+            // Mac Safari için ses sentezi düzeltmesi
+            window.speechSynthesis.cancel();
+            
+            // Sayıyı okut
             speech.text = sayi.toString();
             speech.rate = hiz;
             speech.voice = seciliSes;
-            speech.lang = languageSelect.value;
-
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(speech);
+            speech.lang = secilenDil;
+            
+            // Mac'te ses kesintisini önlemek için
+            try {
+                window.speechSynthesis.speak(speech);
+            } catch (e) {
+                console.error('Ses sentezi hatası:', e);
+                // Hata durumunda tekrar dene
+                setTimeout(() => {
+                    window.speechSynthesis.speak(speech);
+                }, 50);
+            }
 
             speech.onend = () => {
-                if(isActive) timeoutID = setTimeout(readNumber, gecikme);
+                if(isActive) {
+                    // Mac'te ses kesintisini önlemek için timeout'u temizle
+                    if(timeoutID) clearTimeout(timeoutID);
+                    timeoutID = setTimeout(readNumber, gecikme);
+                }
             };
         }
 
@@ -564,6 +625,158 @@
         sesleriYukle().then(() => {
             sesiGuncelle();
             console.log('Mevcut sesler:', sesler.map(s => `${s.name} (${s.lang})`));
+        });
+
+        // Safari için ses sentezi düzeltmesi
+        window.addEventListener('beforeunload', () => {
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+        });
+
+        // Dil çevirileri
+        const translations = {
+            'tr-TR': {
+                title: 'Sayı Okuyucu',
+                theme: 'Koyu Mod',
+                language: 'Dil Seçimi:',
+                range: 'Sayı Aralığı:',
+                speed: 'Okuma Hızı:',
+                delay: 'Geçiş Süresi:',
+                start: 'BAŞLAT',
+                stop: 'DURDUR',
+                min: 'Min',
+                max: 'Max'
+            },
+            'en-US': {
+                title: 'Number Reader',
+                theme: 'Dark Mode',
+                language: 'Language:',
+                range: 'Number Range:',
+                speed: 'Reading Speed:',
+                delay: 'Transition Time:',
+                start: 'START',
+                stop: 'STOP',
+                min: 'Min',
+                max: 'Max'
+            },
+            'de-DE': {
+                title: 'Zahlenleser',
+                theme: 'Dunkelmodus',
+                language: 'Sprache:',
+                range: 'Zahlenbereich:',
+                speed: 'Lesegeschwindigkeit:',
+                delay: 'Übergangszeit:',
+                start: 'STARTEN',
+                stop: 'STOPPEN',
+                min: 'Min',
+                max: 'Max'
+            },
+            'fr-FR': {
+                title: 'Lecteur de Nombres',
+                theme: 'Mode Sombre',
+                language: 'Langue:',
+                range: 'Plage de Nombres:',
+                speed: 'Vitesse de Lecture:',
+                delay: 'Temps de Transition:',
+                start: 'DÉMARRER',
+                stop: 'ARRÊTER',
+                min: 'Min',
+                max: 'Max'
+            },
+            'es-ES': {
+                title: 'Lector de Números',
+                theme: 'Modo Oscuro',
+                language: 'Idioma:',
+                range: 'Rango de Números:',
+                speed: 'Velocidad de Lectura:',
+                delay: 'Tiempo de Transición:',
+                start: 'INICIAR',
+                stop: 'DETENER',
+                min: 'Min',
+                max: 'Max'
+            },
+            'ja-JP': {
+                title: '数字リーダー',
+                theme: 'ダークモード',
+                language: '言語:',
+                range: '数値範囲:',
+                speed: '読み上げ速度:',
+                delay: '遷移時間:',
+                start: '開始',
+                stop: '停止',
+                min: '最小',
+                max: '最大'
+            },
+            'ru-RU': {
+                title: 'Читатель Чисел',
+                theme: 'Тёмный Режим',
+                language: 'Язык:',
+                range: 'Диапазон Чисел:',
+                speed: 'Скорость Чтения:',
+                delay: 'Время Перехода:',
+                start: 'СТАРТ',
+                stop: 'СТОП',
+                min: 'Мин',
+                max: 'Макс'
+            },
+            'zh-CN': {
+                title: '数字阅读器',
+                theme: '深色模式',
+                language: '语言:',
+                range: '数字范围:',
+                speed: '阅读速度:',
+                delay: '过渡时间:',
+                start: '开始',
+                stop: '停止',
+                min: '最小',
+                max: '最大'
+            },
+            'it-IT': {
+                title: 'Lettore di Numeri',
+                theme: 'Modalità Scura',
+                language: 'Lingua:',
+                range: 'Intervallo Numeri:',
+                speed: 'Velocità Lettura:',
+                delay: 'Tempo Transizione:',
+                start: 'AVVIA',
+                stop: 'FERMA',
+                min: 'Min',
+                max: 'Max'
+            }
+        };
+
+        // Dil değiştirme fonksiyonu
+        function updateLanguage(lang) {
+            const elements = document.querySelectorAll('.lang-text');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-key');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+
+            // Placeholder'ları güncelle
+            document.getElementById('minValue').placeholder = translations[lang].min;
+            document.getElementById('maxValue').placeholder = translations[lang].max;
+        }
+
+        // Dil seçimi değiştiğinde
+        languageSelect.addEventListener('change', () => {
+            const selectedLang = languageSelect.value;
+            updateLanguage(selectedLang);
+            sesiGuncelle();
+            if(isActive) {
+                window.speechSynthesis.cancel();
+                clearTimeout(timeoutID);
+                readNumber();
+            }
+        });
+
+        // Sayfa yüklendiğinde varsayılan dili ayarla
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultLang = languageSelect.value;
+            updateLanguage(defaultLang);
         });
     </script>
 </body>
