@@ -487,7 +487,8 @@
                 <div class="language-container">
                     <select id="languageSelect">
                 <option value="tr-TR">Türkçe</option>
-                        <option value="en-US">English</option>
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
                         <option value="de-DE">Deutsch</option>
                         <option value="fr-FR">Français</option>
                         <option value="es-ES">Español</option>
@@ -641,6 +642,15 @@
                                uygunSesler.find(s => s.voiceURI.includes('native')) ||
                                uygunSesler.find(s => s.voiceURI.includes('default')) ||
                                uygunSesler[0];
+                } else if (isMac && secilenDil === 'en-GB') {
+                    // Mac için İngiliz (UK) ses seçimi
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Daniel')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Kate')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Oliver')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Serena')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
                 } else if (isMac) {
                     // Mac için diğer diller
                     seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
@@ -648,11 +658,21 @@
                                uygunSesler[0];
                 } else {
                     // Windows için ses seçimi
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('default')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                               uygunSesler[0];
+                    if (secilenDil === 'en-GB') {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Hazel')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('George')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Susan')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('UK')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    } else {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                                   uygunSesler[0];
+                    }
                 }
                 
                 speech.voice = seciliSes;
@@ -662,6 +682,9 @@
                 if (isMac && secilenDil === 'de-DE') {
                     speech.pitch = 0.9;  // Almanca için daha düşük perde
                     speech.rate = Math.min(parseFloat(speedControl.value), 1.2); // Almanca için daha yavaş
+                } else if (isMac && secilenDil === 'en-GB') {
+                    speech.pitch = 1.0;  // İngiliz aksanı için standart perde
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.3); // İngiliz aksanı için orta hız
                 } else if (isMac) {
                     speech.pitch = 1.0;
                     speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
@@ -713,6 +736,9 @@
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         },
         'en-US': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        },
+        'en-GB': (num) => {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         },
         'de-DE': (num) => {
@@ -805,6 +831,9 @@
         if (isMac && secilenDil === 'de-DE') {
             newSpeech.rate = Math.min(hiz, 1.2);
             newSpeech.pitch = 0.9;
+        } else if (isMac && secilenDil === 'en-GB') {
+            newSpeech.rate = Math.min(hiz, 1.3);
+            newSpeech.pitch = 1.0;
         } else if (isMac) {
             newSpeech.rate = Math.min(hiz, 1.5);
             newSpeech.pitch = 1.0;
@@ -950,7 +979,21 @@
             start: 'START',
             stop: 'STOP',
             min: 'Min',
-            max: 'Max'
+            max: 'Max',
+            history: 'Read Numbers'
+        },
+        'en-GB': {
+            title: 'Number Reader',
+            theme: 'Dark Mode',
+            language: 'Language:',
+            range: 'Number Range:',
+            speed: 'Reading Speed:',
+            delay: 'Transition Time:',
+            start: 'START',
+            stop: 'STOP',
+            min: 'Min',
+            max: 'Max',
+            history: 'Read Numbers'
         },
         'de-DE': {
             title: 'Zahlenleser',
