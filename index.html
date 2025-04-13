@@ -456,21 +456,41 @@
         let seciliSes = null;
         let timeoutID = null;
         let isActive = false;
+        let resumeTimeout = null;
+
+        // Mac için ses sentezi düzeltmesi
+        function resumeSpeechIfNeeded() {
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+        }
+
+        // Mac için periyodik kontrol
+        function startResumeInterval() {
+            resumeTimeout = setInterval(resumeSpeechIfNeeded, 250);
+        }
+
+        function stopResumeInterval() {
+            if (resumeTimeout) {
+                clearInterval(resumeTimeout);
+                resumeTimeout = null;
+            }
+        }
 
         function sesleriYukle() {
             return new Promise(resolve => {
-                // Mac Safari için ses yükleme gecikmesi eklendi
-                setTimeout(() => {
-                    if(window.speechSynthesis.getVoices().length > 0) {
-                        sesler = window.speechSynthesis.getVoices();
+                const checkVoices = () => {
+                    const availableVoices = window.speechSynthesis.getVoices();
+                    if (availableVoices.length > 0) {
+                        sesler = availableVoices;
                         resolve(sesler);
                     } else {
-                        window.speechSynthesis.onvoiceschanged = () => {
-                            sesler = window.speechSynthesis.getVoices();
-                            resolve(sesler);
-                        };
+                        setTimeout(checkVoices, 100);
                     }
-                }, 100);
+                };
+
+                checkVoices();
+                window.speechSynthesis.onvoiceschanged = checkVoices;
             });
         }
 
@@ -479,7 +499,6 @@
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             
             if(uygunSesler.length > 0) {
-                // Mac için optimize edilmiş ses seçimi
                 seciliSes = uygunSesler.find(s => s.voiceURI.includes('natural')) || 
                            uygunSesler.find(s => s.voiceURI.includes('premium')) ||
                            uygunSesler.find(s => s.voiceURI.includes('native')) || 
@@ -549,7 +568,7 @@
             const formattedNumber = formatNumber(sayi, secilenDil);
             document.getElementById('resultDisplay').textContent = formattedNumber;
 
-            // Mac Safari için ses sentezi düzeltmesi
+            // Önceki sesi temizle
             window.speechSynthesis.cancel();
             
             // Sayıyı okut
@@ -558,22 +577,24 @@
             speech.voice = seciliSes;
             speech.lang = secilenDil;
             
-            // Mac'te ses kesintisini önlemek için
             try {
                 window.speechSynthesis.speak(speech);
+                startResumeInterval(); // Mac için periyodik kontrol başlat
             } catch (e) {
                 console.error('Ses sentezi hatası:', e);
-                // Hata durumunda tekrar dene
                 setTimeout(() => {
                     window.speechSynthesis.speak(speech);
+                    startResumeInterval();
                 }, 50);
             }
 
             speech.onend = () => {
                 if(isActive) {
-                    // Mac'te ses kesintisini önlemek için timeout'u temizle
                     if(timeoutID) clearTimeout(timeoutID);
-                    timeoutID = setTimeout(readNumber, gecikme);
+                    timeoutID = setTimeout(() => {
+                        stopResumeInterval(); // Bir sonraki okuma öncesi interval'i durdur
+                        readNumber();
+                    }, gecikme);
                 }
             };
         }
@@ -593,12 +614,18 @@
             languageSelect.disabled = true;
             document.getElementById('minValue').disabled = true;
             document.getElementById('maxValue').disabled = true;
-            readNumber();
+            
+            // Mac için ses sentezini sıfırla
+            window.speechSynthesis.cancel();
+            setTimeout(() => {
+                readNumber();
+            }, 100);
         }
 
         function stopReading() {
             isActive = false;
             window.speechSynthesis.cancel();
+            stopResumeInterval();
             clearTimeout(timeoutID);
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
