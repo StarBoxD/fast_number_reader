@@ -32,26 +32,35 @@
     <link rel="canonical" href="https://fast-number-reader.vercel.app/">
         <style>
             :root {
-                --primary: #6e48aa;
-                --secondary: #9d50bb;
-            --text-light: #f5f5f5;
-            --text-dark: #333;
-                --bg-light: #f8f9fa;
-                --bg-dark: #1a1a2e;
-            --card-light: #ffffff;
-            --card-dark: #16213e;
+                /* Açık mod renkleri */
+                --primary: #4f46e5;
+                --secondary: #6366f1;
+                --text-light: #e2e8f0;
+                --text-dark: #2d3748;
+                --bg-light: #f5f7fa;
+                --bg-dark: #1a1b26;
+                --card-light: #ffffff;
+                --card-dark: #24283b;
+                --border-light: #e2e8f0;
+                --border-dark: #2d3a4a;
+                --input-bg-light: #ffffff;
+                --input-bg-dark: #1e1e2e;
+                --shadow-light: rgba(0,0,0,0.03);
+                --shadow-dark: rgba(0,0,0,0.3);
+                --hover-light: rgba(79,70,229,0.05);
+                --hover-dark: rgba(122,162,247,0.1);
             }
 
             body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            margin: 0;
-            padding: 20px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                margin: 0;
+                padding: 20px;
                 background: var(--bg-light);
                 color: var(--text-dark);
-            transition: all 0.3s;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
+                transition: all 0.3s;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                text-rendering: optimizeLegibility;
             }
 
             body.dark-mode {
@@ -86,16 +95,18 @@
 
         .control-card {
             background: var(--card-light);
-                padding: 25px;
+            padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 30px var(--shadow-light);
             margin-bottom: 25px;
             transition: all 0.3s;
+            border: 1px solid var(--border-light);
         }
 
         body.dark-mode .control-card {
             background: var(--card-dark);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px var(--shadow-dark);
+            border: 1px solid var(--border-dark);
         }
 
         .control-row {
@@ -110,7 +121,7 @@
             flex: 1;
             min-width: 150px;
             font-weight: 600;
-            color: var(--text-dark);
+            color: #4a5568;
             font-size: 1.1rem;
             letter-spacing: -0.2px;
         }
@@ -121,19 +132,20 @@
 
         input[type="number"] {
             padding: 10px;
-            border: 2px solid #e0e0e0;
+            border: 1px solid var(--border-light);
             border-radius: 8px;
             width: 100px;
             font-size: 1rem;
             transition: all 0.3s;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
             letter-spacing: -0.1px;
+            background: var(--input-bg-light);
         }
 
         body.dark-mode input[type="number"] {
-            background: #0f3460;
-            border-color: #1a1a2e;
-            color: white;
+            background: var(--input-bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-light);
         }
 
         /* Sayı oklarını kaldırma */
@@ -148,10 +160,10 @@
 
         select {
             padding: 10px;
-            border: 2px solid #e0e0e0;
-                border-radius: 8px;
-                font-size: 1rem;
-            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--input-bg-light);
             cursor: pointer;
             transition: all 0.3s;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -159,10 +171,10 @@
         }
 
         body.dark-mode select {
-            background: #0f3460;
-            border-color: #1a1a2e;
-            color: white;
-            }
+            background: var(--input-bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-light);
+        }
 
             button {
             padding: 12px 25px;
@@ -180,13 +192,13 @@
         #startBtn {
                 background: linear-gradient(45deg, var(--primary), var(--secondary));
                 color: white;
-            box-shadow: 0 5px 15px rgba(110, 72, 170, 0.4);
+            box-shadow: 0 5px 15px rgba(79,70,229,0.2);
         }
 
         #stopBtn {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            background: linear-gradient(45deg, #ef4444, #f87171);
             color: white;
-            box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
+            box-shadow: 0 5px 15px rgba(239,68,68,0.2);
             }
 
             button:hover {
@@ -203,13 +215,14 @@
             font-weight: 800;
             margin: 25px 0;
             padding: 25px;
-            background: linear-gradient(135deg, rgba(110,72,170,0.1), rgba(157,80,187,0.1));
+            background: linear-gradient(135deg, rgba(79,70,229,0.03), rgba(99,102,241,0.03));
             border-radius: 12px;
             text-align: center;
             transition: all 0.3s;
             letter-spacing: -1px;
             line-height: 1.2;
             position: relative;
+            border: 1px solid var(--border-light);
         }
 
         #resultDisplay.highlight {
@@ -218,12 +231,13 @@
 
         @keyframes highlight {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); background: linear-gradient(135deg, rgba(110,72,170,0.2), rgba(157,80,187,0.2)); }
+            50% { transform: scale(1.05); background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(99,102,241,0.2)); }
             100% { transform: scale(1); }
         }
 
         body.dark-mode #resultDisplay {
-            background: linear-gradient(135deg, rgba(110,72,170,0.2), rgba(157,80,187,0.2));
+            background: linear-gradient(135deg, rgba(122,162,247,0.1), rgba(187,154,247,0.1));
+            border: 1px solid var(--border-dark);
         }
 
         .theme-toggle {
@@ -260,6 +274,12 @@
             background: linear-gradient(90deg, var(--primary), var(--secondary));
             border-radius: 10px;
             outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        input[type="range"]:hover {
+            opacity: 1;
         }
 
         input[type="range"]::-webkit-slider-thumb {
@@ -269,7 +289,7 @@
             background: white;
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         body:not(.dark-mode) input[type="range"] {
@@ -277,7 +297,7 @@
             width: 100%;
             height: 8px;
             border-radius: 4px;
-            background: #6e48aa;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             outline: none;
         }
         
@@ -287,16 +307,32 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #9d50bb;
+            background: white;
             cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         body:not(.dark-mode) input[type="range"]::-moz-range-thumb {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #9d50bb;
+            background: white;
             cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode input[type="range"] {
+            background: linear-gradient(90deg, #7aa2f7, #bb9af7);
+        }
+
+        body.dark-mode input[type="range"]::-webkit-slider-thumb {
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        body.dark-mode input[type="range"]::-moz-range-thumb {
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         .value-display {
@@ -373,13 +409,15 @@
             padding: 20px;
             background: var(--card-light);
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 30px var(--shadow-light);
             transition: all 0.3s;
+            border: 1px solid var(--border-light);
         }
 
         body.dark-mode .history-section {
             background: var(--card-dark);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px var(--shadow-dark);
+            border: 1px solid var(--border-dark);
         }
 
         .history-title {
@@ -397,18 +435,18 @@
             max-height: 100px;
             overflow-y: auto;
             padding: 10px;
-            background: rgba(110,72,170,0.05);
+            background: rgba(79,70,229,0.02);
             border-radius: 10px;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             scrollbar-width: thin;
-            scrollbar-color: var(--primary) rgba(110,72,170,0.1);
+            scrollbar-color: var(--primary) rgba(79,70,229,0.05);
         }
 
         body.dark-mode .history-list {
-            background: rgba(110,72,170,0.1);
-            scrollbar-color: var(--secondary) rgba(110,72,170,0.2);
+            background: rgba(122,162,247,0.1);
+            scrollbar-color: var(--secondary) rgba(122,162,247,0.2);
         }
 
         /* Webkit (Chrome, Safari) için scrollbar stilleri */
@@ -418,23 +456,23 @@
         }
 
         .history-list::-webkit-scrollbar-track {
-            background: rgba(110,72,170,0.1);
+            background: rgba(79,70,229,0.1);
             border-radius: 4px;
         }
 
         body.dark-mode .history-list::-webkit-scrollbar-track {
-            background: rgba(110,72,170,0.2);
+            background: rgba(122,162,247,0.2);
         }
 
         .history-list::-webkit-scrollbar-thumb {
             background: var(--primary);
             border-radius: 4px;
-            border: 2px solid rgba(110,72,170,0.1);
+            border: 2px solid rgba(79,70,229,0.1);
         }
 
         body.dark-mode .history-list::-webkit-scrollbar-thumb {
             background: var(--secondary);
-            border: 2px solid rgba(110,72,170,0.2);
+            border: 2px solid rgba(122,162,247,0.2);
         }
 
         .history-list::-webkit-scrollbar-thumb:hover {
@@ -448,22 +486,24 @@
         .history-item {
             padding: 6px 12px;
             border-radius: 5px;
-            background: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.9);
             transition: all 0.3s;
             display: inline-block;
+            border: 1px solid var(--border-light);
         }
 
         body.dark-mode .history-item {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-dark);
         }
 
         .history-item:hover {
-            background: rgba(110,72,170,0.1);
+            background: var(--hover-light);
             transform: translateY(-2px);
         }
 
         body.dark-mode .history-item:hover {
-            background: rgba(110,72,170,0.2);
+            background: var(--hover-dark);
         }
 
         .history-item .number {
