@@ -942,37 +942,26 @@
                     // Ses sistemini tekrar sıfırla
                     window.speechSynthesis.cancel();
                     
-                    // İlk sayıyı hemen göster ve oku
-                    const firstNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-                    const formattedNumber = formatNumber(firstNumber, languageSelect.value);
-                    document.getElementById('resultDisplay').textContent = formattedNumber;
-                    addToHistory(firstNumber, languageSelect.value);
-                    
                     // Kısa bir bekleme süresi ekle
                     setTimeout(() => {
+                        // İlk sayıyı oku
                         readNumber();
-                    }, 100);
+                    }, 300);
                 };
                 
                 // Hata durumunda yedek plan
                 testSpeech.onerror = () => {
                     console.log('Ses sistemi hatası, alternatif başlatma deneniyor...');
-                    // İlk sayıyı göster
-                    const firstNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-                    const formattedNumber = formatNumber(firstNumber, languageSelect.value);
-                    document.getElementById('resultDisplay').textContent = formattedNumber;
-                    addToHistory(firstNumber, languageSelect.value);
-                    
                     setTimeout(() => {
                         window.speechSynthesis.cancel();
                         readNumber();
-                    }, 500);
+                    }, 1000);
                 };
             } else {
                 // Diğer işletim sistemleri için normal başlangıç
                 setTimeout(() => {
                     readNumber();
-                }, 100);
+                }, 300);
             }
         }
 
@@ -1032,8 +1021,8 @@
                             if (window.speechSynthesis.paused) {
                                 window.speechSynthesis.resume();
                             }
-                        }, 100);
-                    }, 100);
+                        }, 300);
+                    }, 300);
                 } else {
                     window.speechSynthesis.speak(newSpeech);
                 }
@@ -1041,7 +1030,7 @@
                 console.error('Ses sentezi hatası:', e);
                 setTimeout(() => {
                     window.speechSynthesis.speak(newSpeech);
-                }, 100);
+                }, 300);
             }
 
             newSpeech.onend = () => {
