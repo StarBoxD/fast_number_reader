@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çoklu Dil Destekli Sayı Okuyucu Pro</title>
+    <title>🌐 Sayı Okuyucu</title>
     <style>
         :root {
             --primary: #6e48aa;
@@ -285,7 +285,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌍 Çoklu Dil Sayı Okuyucu</h1>
+            <h1><span style="font-size: 1.2em;">🌐</span> Sayı Okuyucu</h1>
             <button class="theme-toggle" id="themeToggle">
                 <span id="themeIcon">🌙</span> Koyu Mod
             </button>
@@ -482,6 +482,8 @@
             document.getElementById('startBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
             languageSelect.disabled = true;
+            document.getElementById('minValue').disabled = true;
+            document.getElementById('maxValue').disabled = true;
             readNumber();
         }
 
@@ -492,6 +494,8 @@
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             languageSelect.disabled = false;
+            document.getElementById('minValue').disabled = false;
+            document.getElementById('maxValue').disabled = false;
         }
 
         // Event Listeners
