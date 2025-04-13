@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra Sayı Okuyucu Pro</title>
+    <style>
+        :root {
+            --primary: #6e48aa;
+            --secondary: #9d50bb;
+            --bg-light: #f8f9fa;
+            --bg-dark: #1a1a2e;
+            --text-light: #ffffff;
+            --text-dark: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            transition: all 0.4s;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        body.dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-light);
+        }
+
+        .control-panel {
+            background: linear-gradient(145deg, rgba(110,72,170,0.1), rgba(157,80,187,0.1));
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        input, select, button {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        #sonuc {
+            font-size: 3em;
+            font-weight: 800;
+            text-align: center;
+            margin: 30px 0;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+        }
+
+        select:disabled {
+            background: #f0f0f0;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        body.dark-mode select:disabled {
+            background: #2c2c54;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <h1>⚡ Ultra Sayı Okuyucu Pro</h1>
+        
+        <!-- Dil Seçimi -->
+        <select id="dilSecimi">
+            <option value="tr-TR">Türkçe</option>
+            <option value="en-US">İngilizce</option>
+            <option value="es-ES">İspanyolca</option>
+            <option value="fr-FR">Fransızca</option>
+            <option value="de-DE">Almanca</option>
+        </select>
+
+        <!-- Sayı Aralığı -->
+        <input type="number" id="min" value="1" placeholder="Min Sayı">
+        <input type="number" id="max" value="100" placeholder="Max Sayı">
+
+        <!-- Kontroller -->
+        <input type="range" id="hiz" min="0.5" max="5.0" step="0.1" value="1.0">
+        <input type="number" id="gecikme" value="0" placeholder="Geçiş Süresi (ms)">
+        
+        <div style="display: flex; gap: 10px;">
+            <button id="baslat">BAŞLAT</button>
+            <button id="durdur" disabled>DURDUR</button>
+        </div>
+
+        <!-- Sonuç -->
+        <div id="sonuc">---</div>
+    </div>
+
+    <script>
+        let calisiyor = false;
+        let timeoutID = null;
+        const ses = new SpeechSynthesisUtterance();
+        const sesSentezi = window.speechSynthesis;
+        const dilSecimi = document.getElementById('dilSecimi');
+
+        // Ses Yönetimi
+        function sesleriYukle() {
+            return new Promise(resolve => {
+                if(sesSentezi.getVoices().length > 0) {
+                    sesler = sesSentezi.getVoices();
+                    resolve(sesler);
+                } else {
+                    sesSentezi.onvoiceschanged = () => {
+                        sesler = sesSentezi.getVoices();
+                        resolve(sesler);
+                    };
+                }
+            });
+        }
+            // 2. DİL DEĞİŞİMİNDE SESİ GÜNCELLE
+            function sesiGuncelle() {
+                        const secilenDil = dilSecimi.value;
+                        const uygunSes = sesler.find(s => s.lang === secilenDil);
+                        
+                        if(uygunSes) {
+                            ses.voice = uygunSes;
+                            ses.lang = secilenDil;
+                        } else {
+                            alert('Bu dil desteklenmiyor!');
+                            dilSecimi.value = ses.lang; // Eski değere dön
+                        }
+        }
+         // 3. OKUMA FONKSİYONUNU GÜNCELLE
+         function sayiOku() {
+            if(!calisiyor) return;
+            
+            sesiGuncelle(); // Her okumada sesi kontrol et
+            
+            const min = parseInt(document.getElementById('min').value);
+            const max = parseInt(document.getElementById('max').value);
+            const gecikme = parseInt(document.getElementById('gecikme').value);
+            const hiz = parseFloat(document.getElementById('hiz').value);
+            const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+
+            document.getElementById('sonuc').textContent = sayi;
+            ses.text = sayi.toString();
+            ses.rate = hiz;
+
+            sesSentezi.cancel();
+            sesSentezi.speak(ses);
+
+            ses.onend = () => {
+                if(calisiyor) timeoutID = setTimeout(sayiOku, gecikme);
+            };
+        }
+        // 4. DİL DEĞİŞİM OLAYINI GÜNCELLE
+        dilSecimi.addEventListener('change', () => {
+            if(calisiyor) {
+                sesSentezi.cancel(); // Mevcut okumayı durdur
+                clearTimeout(timeoutID);
+                sayiOku(); // Yeni dille yeniden başlat
+            }
+        });
+        // 5. UYGULAMAYI BAŞLAT
+        sesleriYukle().then(() => {
+            sesiGuncelle(); // İlk sesi ayarla
+            
+            document.getElementById('baslat').addEventListener('click', () => {
+                if(document.getElementById('min').value >= document.getElementById('max').value) {
+                    alert("Max değer min'den büyük olmalı!");
+                    return;
+                }
+                dilSecimi.disabled = true;
+                calisiyor = true;
+                document.getElementById('baslat').disabled = true;
+                document.getElementById('durdur').disabled = false;
+                sayiOku();
+            });
+        
+
+        // Olay Yöneticileri
+        sesleriYukle().then(() => {
+            document.getElementById('baslat').addEventListener('click', () => {
+                if(document.getElementById('min').value >= document.getElementById('max').value) {
+                    alert("Max değer min'den büyük olmalı!");
+                    return;
+                }
+                
+                dilSecimi.disabled = true;
+                calisiyor = true;
+                document.getElementById('baslat').disabled = true;
+                document.getElementById('durdur').disabled = false;
+                sayiOku();
+            });
+
+            document.getElementById('durdur').addEventListener('click', () => {
+                calisiyor = false;
+                dilSecimi.disabled = false;
+                sesSentezi.cancel();
+                clearTimeout(timeoutID);
+                document.getElementById('baslat').disabled = false;
+                document.getElementById('durdur').disabled = true;
+            });
+
+            dilSecimi.addEventListener('change', () => {
+                if(calisiyor) {
+                    alert("Lütfen önce DURDUR butonuna basın!");
+                    dilSecimi.value = ses.lang;
+                }
+            });
+
+            document.getElementById('hiz').addEventListener('input', () => {
+                if(calisiyor) {
+                    sesSentezi.cancel();
+                    clearTimeout(timeoutID);
+                    sayiOku();
+                }
+            });
+        });
+
+        // Tema Değiştirme
+        document.body.innerHTML += `
+            <button onclick="document.body.classList.toggle('dark-mode')" 
+                    style="position:fixed; bottom:20px; right:20px; padding:10px 20px; border-radius:20px;">
+                🌓 Tema Değiştir
+            </button>
+        `;
+    </script>
+</body>
+</html>
