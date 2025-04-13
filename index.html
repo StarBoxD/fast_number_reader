@@ -457,17 +457,40 @@
         let timeoutID = null;
         let isActive = false;
         let resumeTimeout = null;
+        let speechQueue = [];
+        let isSpeaking = false;
+
+        // Mac için ses kuyruğu yönetimi
+        function processSpeechQueue() {
+            if (speechQueue.length > 0 && !isSpeaking) {
+                isSpeaking = true;
+                const nextSpeech = speechQueue.shift();
+                window.speechSynthesis.speak(nextSpeech);
+                
+                nextSpeech.onend = () => {
+                    isSpeaking = false;
+                    if (isActive) {
+                        processSpeechQueue();
+                    }
+                };
+            }
+        }
 
         // Mac için ses sentezi düzeltmesi
         function resumeSpeechIfNeeded() {
             if (window.speechSynthesis.paused) {
                 window.speechSynthesis.resume();
             }
+            if (!window.speechSynthesis.speaking && speechQueue.length > 0) {
+                processSpeechQueue();
+            }
         }
 
         // Mac için periyodik kontrol
         function startResumeInterval() {
-            resumeTimeout = setInterval(resumeSpeechIfNeeded, 250);
+            if (!resumeTimeout) {
+                resumeTimeout = setInterval(resumeSpeechIfNeeded, 250);
+            }
         }
 
         function stopResumeInterval() {
@@ -489,8 +512,11 @@
                     }
                 };
 
-                checkVoices();
-                window.speechSynthesis.onvoiceschanged = checkVoices;
+                // Mac için ses yükleme gecikmesi
+                setTimeout(() => {
+                    checkVoices();
+                    window.speechSynthesis.onvoiceschanged = checkVoices;
+                }, 500);
             });
         }
 
@@ -568,35 +594,23 @@
             const formattedNumber = formatNumber(sayi, secilenDil);
             document.getElementById('resultDisplay').textContent = formattedNumber;
 
-            // Önceki sesi temizle
-            window.speechSynthesis.cancel();
-            
-            // Sayıyı okut
-            speech.text = sayi.toString();
-            speech.rate = hiz;
-            speech.voice = seciliSes;
-            speech.lang = secilenDil;
-            
-            try {
-                window.speechSynthesis.speak(speech);
-                startResumeInterval(); // Mac için periyodik kontrol başlat
-            } catch (e) {
-                console.error('Ses sentezi hatası:', e);
-                setTimeout(() => {
-                    window.speechSynthesis.speak(speech);
-                    startResumeInterval();
-                }, 50);
-            }
+            // Yeni bir SpeechSynthesisUtterance oluştur
+            const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
+            newSpeech.rate = hiz;
+            newSpeech.voice = seciliSes;
+            newSpeech.lang = secilenDil;
 
-            speech.onend = () => {
-                if(isActive) {
-                    if(timeoutID) clearTimeout(timeoutID);
-                    timeoutID = setTimeout(() => {
-                        stopResumeInterval(); // Bir sonraki okuma öncesi interval'i durdur
-                        readNumber();
-                    }, gecikme);
-                }
-            };
+            // Mac için ses kuyruğuna ekle
+            speechQueue.push(newSpeech);
+            processSpeechQueue();
+
+            // Bir sonraki okuma için zamanlayıcı
+            if(isActive) {
+                if(timeoutID) clearTimeout(timeoutID);
+                timeoutID = setTimeout(() => {
+                    readNumber();
+                }, gecikme);
+            }
         }
 
         function startReading() {
@@ -608,6 +622,11 @@
                 return;
             }
             
+            // Mac için ses sistemini sıfırla
+            window.speechSynthesis.cancel();
+            speechQueue = [];
+            isSpeaking = false;
+            
             isActive = true;
             document.getElementById('startBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
@@ -615,11 +634,13 @@
             document.getElementById('minValue').disabled = true;
             document.getElementById('maxValue').disabled = true;
             
-            // Mac için ses sentezini sıfırla
-            window.speechSynthesis.cancel();
+            // Mac için ses kontrolünü başlat
+            startResumeInterval();
+            
+            // Okumayı başlat
             setTimeout(() => {
                 readNumber();
-            }, 100);
+            }, 500);
         }
 
         function stopReading() {
@@ -627,6 +648,9 @@
             window.speechSynthesis.cancel();
             stopResumeInterval();
             clearTimeout(timeoutID);
+            speechQueue = [];
+            isSpeaking = false;
+            
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             languageSelect.disabled = false;
