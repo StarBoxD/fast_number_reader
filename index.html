@@ -454,7 +454,7 @@
         // Ses Yönetimi
         let sesler = [];
         let seciliSes = null;
-            let timeoutID = null;
+        let timeoutID = null;
         let isActive = false;
         let resumeTimeout = null;
 
@@ -482,19 +482,43 @@
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             
             if(uygunSesler.length > 0) {
-                // Tüm işletim sistemleri için standart ses seçimi
-                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                           uygunSesler.find(s => s.voiceURI.includes('default')) || 
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                           uygunSesler[0];
+                // Mac için özel ses seçimi
+                if (navigator.platform.includes('Mac')) {
+                    // Almanca için özel Mac ses seçimi
+                    if (secilenDil === 'de-DE') {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    } else {
+                        // Diğer diller için Mac ses seçimi
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    }
+                } else {
+                    // Windows için ses seçimi
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                               uygunSesler[0];
+                }
                 
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
-                // Standart ses kalitesi ayarları
-                speech.pitch = 1.1;
-                speech.rate = parseFloat(speedControl.value);
+                // Ses kalitesi ayarları
+                if (secilenDil === 'de-DE') {
+                    speech.pitch = 1.0;  // Almanca için daha doğal ses
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5); // Almanca için hız sınırlaması
+                } else {
+                    speech.pitch = 1.1;
+                    speech.rate = parseFloat(speedControl.value);
+                }
                 
                 console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
             } else {
@@ -503,8 +527,8 @@
             }
         }
 
-            function sesleriYukle() {
-                return new Promise(resolve => {
+        function sesleriYukle() {
+            return new Promise(resolve => {
                 const checkVoices = () => {
                     const availableVoices = window.speechSynthesis.getVoices();
                     if (availableVoices.length > 0) {
@@ -575,7 +599,7 @@
             const max = parseInt(document.getElementById('maxValue').value);
             const gecikme = parseFloat(document.getElementById('delayControl').value) * 1000;
             const hiz = parseFloat(document.getElementById('speedControl').value);
-                const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+            const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
             const secilenDil = languageSelect.value;
 
             // Sayıyı formatla ve göster
@@ -587,9 +611,21 @@
             
             // Yeni bir SpeechSynthesisUtterance oluştur
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
-            newSpeech.rate = hiz;
+            
+            // Almanca için özel ayarlar
+            if (secilenDil === 'de-DE') {
+                newSpeech.rate = Math.min(hiz, 1.5);
+                newSpeech.pitch = 1.0;
+            } else {
+                newSpeech.rate = hiz;
+                newSpeech.pitch = 1.1;
+            }
+            
             newSpeech.voice = seciliSes;
             newSpeech.lang = secilenDil;
+
+            // Mac için ses kontrolünü başlat
+            startResumeInterval();
 
             // Sayıyı okut
             try {
@@ -605,6 +641,7 @@
                 if(isActive) {
                     if(timeoutID) clearTimeout(timeoutID);
                     timeoutID = setTimeout(() => {
+                        stopResumeInterval();
                         readNumber();
                     }, gecikme);
                 }
@@ -617,10 +654,10 @@
             
             if (min >= max) {
                 alert("Maksimum değer minimumdan büyük olmalı!");
-                        return;
-                    }
+                return;
+            }
             
-            // Ses sistemini sıfırla
+            // Mac için ses sistemini sıfırla
             window.speechSynthesis.cancel();
             
             isActive = true;
@@ -629,6 +666,9 @@
             languageSelect.disabled = true;
             document.getElementById('minValue').disabled = true;
             document.getElementById('maxValue').disabled = true;
+            
+            // Mac için ses kontrolünü başlat
+            startResumeInterval();
             
             // Okumayı başlat
             setTimeout(() => {
@@ -639,6 +679,7 @@
         function stopReading() {
             isActive = false;
             window.speechSynthesis.cancel();
+            stopResumeInterval();
             clearTimeout(timeoutID);
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
