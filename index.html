@@ -852,7 +852,14 @@
 
         // Sayıyı okut
         try {
-            window.speechSynthesis.speak(newSpeech);
+            // Mac için ekstra gecikme
+            if (isMac) {
+                setTimeout(() => {
+                    window.speechSynthesis.speak(newSpeech);
+                }, 500);
+            } else {
+                window.speechSynthesis.speak(newSpeech);
+            }
         } catch (e) {
             console.error('Ses sentezi hatası:', e);
             setTimeout(() => {
@@ -905,7 +912,7 @@
         // Okumayı başlat
         setTimeout(() => {
             readNumber();
-        }, 500);
+        }, 1000); // Mac için başlangıç gecikmesini artır
     }
 
     function stopReading() {
