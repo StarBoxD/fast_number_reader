@@ -482,34 +482,44 @@
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             
             if(uygunSesler.length > 0) {
-                // Mac ve Windows için ortak ses seçimi
-                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                           uygunSesler.find(s => s.voiceURI.includes('default')) || 
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Samantha')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Alex')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Daniel')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Karen')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Tessa')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Fred')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Victoria')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Zira')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('David')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Mark')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft David')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Zira')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Mark')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Hazel')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft George')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Susan')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Hazel')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft George')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Susan')) ||
-                           uygunSesler[0];
+                // Mac için özel ses seçimi
+                if (navigator.platform.includes('Mac')) {
+                    // Almanca için özel Mac ses seçimi
+                    if (secilenDil === 'de-DE') {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    } else {
+                        // Diğer diller için Mac ses seçimi
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    }
+                } else {
+                    // Windows için ses seçimi
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                               uygunSesler[0];
+                }
                 
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
+                
+                // Ses kalitesi ayarları
+                if (secilenDil === 'de-DE') {
+                    speech.pitch = 1.0;  // Almanca için daha doğal ses
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5); // Almanca için hız sınırlaması
+                } else {
+                    speech.pitch = 1.1;
+                    speech.rate = parseFloat(speedControl.value);
+                }
+                
                 console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
             } else {
                 console.error('Ses bulunamadı:', secilenDil);
