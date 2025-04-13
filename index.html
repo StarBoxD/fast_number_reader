@@ -892,10 +892,15 @@
             updateHistoryDisplay();
         }
 
+        function isChromeOnMac() {
+            return navigator.platform.includes('Mac') && /Chrome/.test(navigator.userAgent);
+        }
+
         function startReading() {
             const min = parseInt(document.getElementById('minValue').value) || 0;
             const max = parseInt(document.getElementById('maxValue').value) || 100;
             const isMac = navigator.platform.includes('Mac');
+            const isChromeMac = isChromeOnMac();
             
             if (min >= max) {
                 alert("Maksimum değer minimumdan büyük olmalı!");
@@ -928,8 +933,30 @@
             totalNumbers = 0;
             updateStats();
             
-            // Mac için özel başlangıç işlemi
-            if (isMac) {
+            // Chrome on Mac için özel başlangıç işlemi
+            if (isChromeMac) {
+                // Chrome için daha uzun bir bekleme süresi
+                setTimeout(() => {
+                    // Önce bir test konuşması yap
+                    const testSpeech = new SpeechSynthesisUtterance(" ");
+                    testSpeech.voice = seciliSes;
+                    testSpeech.lang = languageSelect.value;
+                    testSpeech.rate = 1.0;
+                    testSpeech.pitch = 1.0;
+                    testSpeech.volume = 1.0;
+                    
+                    window.speechSynthesis.speak(testSpeech);
+                    
+                    testSpeech.onend = () => {
+                        window.speechSynthesis.cancel();
+                        setTimeout(() => {
+                            readNumber();
+                        }, 800);
+                    };
+                }, 1000);
+            } 
+            // Normal Mac için başlangıç işlemi
+            else if (isMac) {
                 // Önce ses sistemini hazırla
                 const testSpeech = new SpeechSynthesisUtterance(" ");
                 testSpeech.voice = seciliSes;
@@ -979,6 +1006,7 @@
             const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
             const secilenDil = languageSelect.value;
             const isMac = navigator.platform.includes('Mac');
+            const isChromeMac = isChromeOnMac();
 
             // Sayıyı formatla ve göster
             const formattedNumber = formatNumber(sayi, secilenDil);
@@ -1000,8 +1028,14 @@
             // Yeni bir SpeechSynthesisUtterance oluştur
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
             
-            // Mac için özel ayarlar
-            if (isMac) {
+            // Chrome on Mac için özel ayarlar
+            if (isChromeMac) {
+                newSpeech.rate = Math.min(hiz, 1.2);
+                newSpeech.pitch = 0.9;
+                newSpeech.volume = 1.0;
+            } 
+            // Normal Mac için ayarlar
+            else if (isMac) {
                 newSpeech.rate = Math.min(hiz, 1.5);
                 newSpeech.pitch = 1.0;
                 newSpeech.volume = 1.0;
@@ -1015,12 +1049,23 @@
 
             // Sayıyı okut
             try {
-                if (isMac) {
-                    // Mac için iki aşamalı ses gönderimi
+                if (isChromeMac) {
+                    // Chrome on Mac için özel ses gönderimi
                     setTimeout(() => {
                         window.speechSynthesis.speak(newSpeech);
                         
                         // Ses gönderildikten sonra kontrol
+                        setTimeout(() => {
+                            if (window.speechSynthesis.paused) {
+                                window.speechSynthesis.resume();
+                            }
+                        }, 500);
+                    }, 500);
+                } else if (isMac) {
+                    // Normal Mac için ses gönderimi
+                    setTimeout(() => {
+                        window.speechSynthesis.speak(newSpeech);
+                        
                         setTimeout(() => {
                             if (window.speechSynthesis.paused) {
                                 window.speechSynthesis.resume();
