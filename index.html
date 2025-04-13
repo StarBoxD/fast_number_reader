@@ -454,7 +454,7 @@
         // Ses Yönetimi
         let sesler = [];
         let seciliSes = null;
-            let timeoutID = null;
+        let timeoutID = null;
         let isActive = false;
         let resumeTimeout = null;
 
@@ -480,21 +480,45 @@
         function sesiGuncelle() {
             const secilenDil = languageSelect.value;
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
+            const isMac = navigator.platform.includes('Mac');
             
             if(uygunSesler.length > 0) {
-                // Tüm işletim sistemleri için standart ses seçimi
-                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                           uygunSesler.find(s => s.voiceURI.includes('default')) || 
-                           uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                           uygunSesler[0];
+                // Mac için özel ses seçimi
+                if (isMac) {
+                    // Mac için öncelikli ses seçimi
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Samantha')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Alex')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Daniel')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Karen')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Tessa')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Fred')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Victoria')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Zira')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('David')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Mark')) ||
+                               uygunSesler[0];
+                } else {
+                    // Windows için ses seçimi
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                               uygunSesler[0];
+                }
                 
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
-                // Standart ses kalitesi ayarları
-                speech.pitch = 1.1;
-                speech.rate = parseFloat(speedControl.value);
+                // Mac için özel ses kalitesi ayarları
+                if (isMac) {
+                    speech.pitch = 1.0;  // Mac'te daha net ses
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5); // Mac'te hız sınırlaması
+                } else {
+                    speech.pitch = 1.1;
+                    speech.rate = parseFloat(speedControl.value);
+                }
                 
                 console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
             } else {
@@ -503,321 +527,350 @@
             }
         }
 
-            function sesleriYukle() {
-                return new Promise(resolve => {
-                const checkVoices = () => {
-                    const availableVoices = window.speechSynthesis.getVoices();
-                    if (availableVoices.length > 0) {
-                        // Sesleri öncelik sırasına göre sırala
-                        sesler = availableVoices.sort((a, b) => {
-                            const aIsNative = a.voiceURI.includes('native') ? 1 : 0;
-                            const bIsNative = b.voiceURI.includes('native') ? 1 : 0;
-                            const aIsDefault = a.voiceURI.includes('default') ? 1 : 0;
-                            const bIsDefault = b.voiceURI.includes('default') ? 1 : 0;
-                            const aIsMicrosoft = a.voiceURI.includes('Microsoft') ? 1 : 0;
-                            const bIsMicrosoft = b.voiceURI.includes('Microsoft') ? 1 : 0;
-                            
-                            return (bIsNative + bIsDefault + bIsMicrosoft) - (aIsNative + aIsDefault + aIsMicrosoft);
-                        });
-                        resolve(sesler);
-                    } else {
-                        setTimeout(checkVoices, 100);
-                    }
-                };
-
-                // Mac için ses yükleme gecikmesi
-                setTimeout(() => {
-                    checkVoices();
-                    window.speechSynthesis.onvoiceschanged = checkVoices;
-                }, 500);
-            });
-        }
-
-        // Sayı formatlama fonksiyonları
-        const numberFormatters = {
-            'tr-TR': (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            },
-            'en-US': (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            },
-            'de-DE': (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            },
-            'fr-FR': (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-            },
-            'es-ES': (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            },
-            'ja-JP': (num) => {
-                return num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ",");
-            },
-            'ru-RU': (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-            },
-            'zh-CN': (num) => {
-                return num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ",");
-            },
-            'it-IT': (num) => {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            }
-        };
-
-        function formatNumber(num, lang) {
-            return numberFormatters[lang] ? numberFormatters[lang](num) : num.toString();
-        }
-
-        function readNumber() {
-            if(!isActive) return;
-            
-            const min = parseInt(document.getElementById('minValue').value);
-            const max = parseInt(document.getElementById('maxValue').value);
-            const gecikme = parseFloat(document.getElementById('delayControl').value) * 1000;
-            const hiz = parseFloat(document.getElementById('speedControl').value);
-                const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
-            const secilenDil = languageSelect.value;
-
-            // Sayıyı formatla ve göster
-            const formattedNumber = formatNumber(sayi, secilenDil);
-            document.getElementById('resultDisplay').textContent = formattedNumber;
-
-            // Ses sentezini sıfırla
-            window.speechSynthesis.cancel();
-            
-            // Yeni bir SpeechSynthesisUtterance oluştur
-            const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
-            newSpeech.rate = hiz;
-            newSpeech.voice = seciliSes;
-            newSpeech.lang = secilenDil;
-
-            // Sayıyı okut
-            try {
-                window.speechSynthesis.speak(newSpeech);
-            } catch (e) {
-                console.error('Ses sentezi hatası:', e);
-                setTimeout(() => {
-                    window.speechSynthesis.speak(newSpeech);
-                }, 100);
-            }
-
-            newSpeech.onend = () => {
-                if(isActive) {
-                    if(timeoutID) clearTimeout(timeoutID);
-                    timeoutID = setTimeout(() => {
-                        readNumber();
-                    }, gecikme);
+        function sesleriYukle() {
+            return new Promise(resolve => {
+            const checkVoices = () => {
+                const availableVoices = window.speechSynthesis.getVoices();
+                if (availableVoices.length > 0) {
+                    // Sesleri öncelik sırasına göre sırala
+                    sesler = availableVoices.sort((a, b) => {
+                        const aIsNative = a.voiceURI.includes('native') ? 1 : 0;
+                        const bIsNative = b.voiceURI.includes('native') ? 1 : 0;
+                        const aIsDefault = a.voiceURI.includes('default') ? 1 : 0;
+                        const bIsDefault = b.voiceURI.includes('default') ? 1 : 0;
+                        const aIsMicrosoft = a.voiceURI.includes('Microsoft') ? 1 : 0;
+                        const bIsMicrosoft = b.voiceURI.includes('Microsoft') ? 1 : 0;
+                        
+                        return (bIsNative + bIsDefault + bIsMicrosoft) - (aIsNative + aIsDefault + aIsMicrosoft);
+                    });
+                    resolve(sesler);
+                } else {
+                    setTimeout(checkVoices, 100);
                 }
             };
-        }
 
-        function startReading() {
-            const min = parseInt(document.getElementById('minValue').value) || 0;
-            const max = parseInt(document.getElementById('maxValue').value) || 100;
-            
-            if (min >= max) {
-                alert("Maksimum değer minimumdan büyük olmalı!");
-                        return;
-                    }
-            
-            // Ses sistemini sıfırla
-            window.speechSynthesis.cancel();
-            
-            isActive = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            languageSelect.disabled = true;
-            document.getElementById('minValue').disabled = true;
-            document.getElementById('maxValue').disabled = true;
-            
-            // Okumayı başlat
+            // Mac için ses yükleme gecikmesi
             setTimeout(() => {
-                readNumber();
+                checkVoices();
+                window.speechSynthesis.onvoiceschanged = checkVoices;
             }, 500);
+        });
+    }
+
+    // Sayı formatlama fonksiyonları
+    const numberFormatters = {
+        'tr-TR': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+        'en-US': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        },
+        'de-DE': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+        'fr-FR': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        },
+        'es-ES': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        },
+        'ja-JP': (num) => {
+            return num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ",");
+        },
+        'ru-RU': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        },
+        'zh-CN': (num) => {
+            return num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ",");
+        },
+        'it-IT': (num) => {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+    };
+
+    function formatNumber(num, lang) {
+        return numberFormatters[lang] ? numberFormatters[lang](num) : num.toString();
+    }
+
+    function readNumber() {
+        if(!isActive) return;
+        
+        const min = parseInt(document.getElementById('minValue').value);
+        const max = parseInt(document.getElementById('maxValue').value);
+        const gecikme = parseFloat(document.getElementById('delayControl').value) * 1000;
+        const hiz = parseFloat(document.getElementById('speedControl').value);
+        const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+        const secilenDil = languageSelect.value;
+        const isMac = navigator.platform.includes('Mac');
+
+        // Sayıyı formatla ve göster
+        const formattedNumber = formatNumber(sayi, secilenDil);
+        document.getElementById('resultDisplay').textContent = formattedNumber;
+
+        // Ses sentezini sıfırla
+        window.speechSynthesis.cancel();
+        
+        // Yeni bir SpeechSynthesisUtterance oluştur
+        const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
+        
+        // Mac için özel ayarlar
+        if (isMac) {
+            newSpeech.rate = Math.min(hiz, 1.5);
+            newSpeech.pitch = 1.0;
+        } else {
+            newSpeech.rate = hiz;
+            newSpeech.pitch = 1.1;
+        }
+        
+        newSpeech.voice = seciliSes;
+        newSpeech.lang = secilenDil;
+
+        // Mac için ses kontrolünü başlat
+        if (isMac) {
+            startResumeInterval();
         }
 
-        function stopReading() {
-            isActive = false;
-            window.speechSynthesis.cancel();
-            clearTimeout(timeoutID);
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            languageSelect.disabled = false;
-            document.getElementById('minValue').disabled = false;
-            document.getElementById('maxValue').disabled = false;
+        // Sayıyı okut
+        try {
+            window.speechSynthesis.speak(newSpeech);
+        } catch (e) {
+            console.error('Ses sentezi hatası:', e);
+            setTimeout(() => {
+                window.speechSynthesis.speak(newSpeech);
+            }, 100);
         }
 
-        // Event Listeners
-        document.getElementById('startBtn').addEventListener('click', startReading);
-        document.getElementById('stopBtn').addEventListener('click', stopReading);
-
-        // Dil değişikliğinde ses kontrolü
-        languageSelect.addEventListener('change', () => {
-            sesiGuncelle();
+        newSpeech.onend = () => {
             if(isActive) {
-                window.speechSynthesis.cancel();
-                clearTimeout(timeoutID);
-                readNumber();
-            }
-        });
-
-        // Uygulama başlangıcında sesleri yükle
-        sesleriYukle().then(() => {
-            sesiGuncelle();
-            console.log('Mevcut sesler:', sesler.map(s => `${s.name} (${s.lang})`));
-        });
-
-        // Safari için ses sentezi düzeltmesi
-        window.addEventListener('beforeunload', () => {
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-            }
-        });
-
-        // Dil çevirileri
-        const translations = {
-            'tr-TR': {
-                title: 'Sayı Okuyucu',
-                theme: 'Koyu Mod',
-                language: 'Dil Seçimi:',
-                range: 'Sayı Aralığı:',
-                speed: 'Okuma Hızı:',
-                delay: 'Geçiş Süresi:',
-                start: 'BAŞLAT',
-                stop: 'DURDUR',
-                min: 'Min',
-                max: 'Max'
-            },
-            'en-US': {
-                title: 'Number Reader',
-                theme: 'Dark Mode',
-                language: 'Language:',
-                range: 'Number Range:',
-                speed: 'Reading Speed:',
-                delay: 'Transition Time:',
-                start: 'START',
-                stop: 'STOP',
-                min: 'Min',
-                max: 'Max'
-            },
-            'de-DE': {
-                title: 'Zahlenleser',
-                theme: 'Dunkelmodus',
-                language: 'Sprache:',
-                range: 'Zahlenbereich:',
-                speed: 'Lesegeschwindigkeit:',
-                delay: 'Übergangszeit:',
-                start: 'STARTEN',
-                stop: 'STOPPEN',
-                min: 'Min',
-                max: 'Max'
-            },
-            'fr-FR': {
-                title: 'Lecteur de Nombres',
-                theme: 'Mode Sombre',
-                language: 'Langue:',
-                range: 'Plage de Nombres:',
-                speed: 'Vitesse de Lecture:',
-                delay: 'Temps de Transition:',
-                start: 'DÉMARRER',
-                stop: 'ARRÊTER',
-                min: 'Min',
-                max: 'Max'
-            },
-            'es-ES': {
-                title: 'Lector de Números',
-                theme: 'Modo Oscuro',
-                language: 'Idioma:',
-                range: 'Rango de Números:',
-                speed: 'Velocidad de Lectura:',
-                delay: 'Tiempo de Transición:',
-                start: 'INICIAR',
-                stop: 'DETENER',
-                min: 'Min',
-                max: 'Max'
-            },
-            'ja-JP': {
-                title: '数字リーダー',
-                theme: 'ダークモード',
-                language: '言語:',
-                range: '数値範囲:',
-                speed: '読み上げ速度:',
-                delay: '遷移時間:',
-                start: '開始',
-                stop: '停止',
-                min: '最小',
-                max: '最大'
-            },
-            'ru-RU': {
-                title: 'Читатель Чисел',
-                theme: 'Тёмный Режим',
-                language: 'Язык:',
-                range: 'Диапазон Чисел:',
-                speed: 'Скорость Чтения:',
-                delay: 'Время Перехода:',
-                start: 'СТАРТ',
-                stop: 'СТОП',
-                min: 'Мин',
-                max: 'Макс'
-            },
-            'zh-CN': {
-                title: '数字阅读器',
-                theme: '深色模式',
-                language: '语言:',
-                range: '数字范围:',
-                speed: '阅读速度:',
-                delay: '过渡时间:',
-                start: '开始',
-                stop: '停止',
-                min: '最小',
-                max: '最大'
-            },
-            'it-IT': {
-                title: 'Lettore di Numeri',
-                theme: 'Modalità Scura',
-                language: 'Lingua:',
-                range: 'Intervallo Numeri:',
-                speed: 'Velocità Lettura:',
-                delay: 'Tempo Transizione:',
-                start: 'AVVIA',
-                stop: 'FERMA',
-                min: 'Min',
-                max: 'Max'
+                if(timeoutID) clearTimeout(timeoutID);
+                timeoutID = setTimeout(() => {
+                    if (isMac) {
+                        stopResumeInterval();
+                    }
+                    readNumber();
+                }, gecikme);
             }
         };
+    }
 
-        // Dil değiştirme fonksiyonu
-        function updateLanguage(lang) {
-            const elements = document.querySelectorAll('.lang-text');
-            elements.forEach(element => {
-                const key = element.getAttribute('data-key');
-                if (translations[lang] && translations[lang][key]) {
-                    element.textContent = translations[lang][key];
-                }
-            });
-
-            // Placeholder'ları güncelle
-            document.getElementById('minValue').placeholder = translations[lang].min;
-            document.getElementById('maxValue').placeholder = translations[lang].max;
+    function startReading() {
+        const min = parseInt(document.getElementById('minValue').value) || 0;
+        const max = parseInt(document.getElementById('maxValue').value) || 100;
+        const isMac = navigator.platform.includes('Mac');
+        
+        if (min >= max) {
+            alert("Maksimum değer minimumdan büyük olmalı!");
+            return;
         }
+        
+        // Mac için ses sistemini sıfırla
+        window.speechSynthesis.cancel();
+        
+        isActive = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        languageSelect.disabled = true;
+        document.getElementById('minValue').disabled = true;
+        document.getElementById('maxValue').disabled = true;
+        
+        // Mac için ses kontrolünü başlat
+        if (isMac) {
+            startResumeInterval();
+        }
+        
+        // Okumayı başlat
+        setTimeout(() => {
+            readNumber();
+        }, 500);
+    }
 
-        // Dil seçimi değiştiğinde
-        languageSelect.addEventListener('change', () => {
-            const selectedLang = languageSelect.value;
-            updateLanguage(selectedLang);
-            sesiGuncelle();
-            if(isActive) {
-                window.speechSynthesis.cancel();
-                clearTimeout(timeoutID);
-                readNumber();
+    function stopReading() {
+        const isMac = navigator.platform.includes('Mac');
+        
+        isActive = false;
+        window.speechSynthesis.cancel();
+        if (isMac) {
+            stopResumeInterval();
+        }
+        clearTimeout(timeoutID);
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        languageSelect.disabled = false;
+        document.getElementById('minValue').disabled = false;
+        document.getElementById('maxValue').disabled = false;
+    }
+
+    // Event Listeners
+    document.getElementById('startBtn').addEventListener('click', startReading);
+    document.getElementById('stopBtn').addEventListener('click', stopReading);
+
+    // Dil değişikliğinde ses kontrolü
+    languageSelect.addEventListener('change', () => {
+        sesiGuncelle();
+        if(isActive) {
+            window.speechSynthesis.cancel();
+            clearTimeout(timeoutID);
+            readNumber();
+        }
+    });
+
+    // Uygulama başlangıcında sesleri yükle
+    sesleriYukle().then(() => {
+        sesiGuncelle();
+        console.log('Mevcut sesler:', sesler.map(s => `${s.name} (${s.lang})`));
+    });
+
+    // Safari için ses sentezi düzeltmesi
+    window.addEventListener('beforeunload', () => {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+    });
+
+    // Dil çevirileri
+    const translations = {
+        'tr-TR': {
+            title: 'Sayı Okuyucu',
+            theme: 'Koyu Mod',
+            language: 'Dil Seçimi:',
+            range: 'Sayı Aralığı:',
+            speed: 'Okuma Hızı:',
+            delay: 'Geçiş Süresi:',
+            start: 'BAŞLAT',
+            stop: 'DURDUR',
+            min: 'Min',
+            max: 'Max'
+        },
+        'en-US': {
+            title: 'Number Reader',
+            theme: 'Dark Mode',
+            language: 'Language:',
+            range: 'Number Range:',
+            speed: 'Reading Speed:',
+            delay: 'Transition Time:',
+            start: 'START',
+            stop: 'STOP',
+            min: 'Min',
+            max: 'Max'
+        },
+        'de-DE': {
+            title: 'Zahlenleser',
+            theme: 'Dunkelmodus',
+            language: 'Sprache:',
+            range: 'Zahlenbereich:',
+            speed: 'Lesegeschwindigkeit:',
+            delay: 'Übergangszeit:',
+            start: 'STARTEN',
+            stop: 'STOPPEN',
+            min: 'Min',
+            max: 'Max'
+        },
+        'fr-FR': {
+            title: 'Lecteur de Nombres',
+            theme: 'Mode Sombre',
+            language: 'Langue:',
+            range: 'Plage de Nombres:',
+            speed: 'Vitesse de Lecture:',
+            delay: 'Temps de Transition:',
+            start: 'DÉMARRER',
+            stop: 'ARRÊTER',
+            min: 'Min',
+            max: 'Max'
+        },
+        'es-ES': {
+            title: 'Lector de Números',
+            theme: 'Modo Oscuro',
+            language: 'Idioma:',
+            range: 'Rango de Números:',
+            speed: 'Velocidad de Lectura:',
+            delay: 'Tiempo de Transición:',
+            start: 'INICIAR',
+            stop: 'DETENER',
+            min: 'Min',
+            max: 'Max'
+        },
+        'ja-JP': {
+            title: '数字リーダー',
+            theme: 'ダークモード',
+            language: '言語:',
+            range: '数値範囲:',
+            speed: '読み上げ速度:',
+            delay: '遷移時間:',
+            start: '開始',
+            stop: '停止',
+            min: '最小',
+            max: '最大'
+        },
+        'ru-RU': {
+            title: 'Читатель Чисел',
+            theme: 'Тёмный Режим',
+            language: 'Язык:',
+            range: 'Диапазон Чисел:',
+            speed: 'Скорость Чтения:',
+            delay: 'Время Перехода:',
+            start: 'СТАРТ',
+            stop: 'СТОП',
+            min: 'Мин',
+            max: 'Макс'
+        },
+        'zh-CN': {
+            title: '数字阅读器',
+            theme: '深色模式',
+            language: '语言:',
+            range: '数字范围:',
+            speed: '阅读速度:',
+            delay: '过渡时间:',
+            start: '开始',
+            stop: '停止',
+            min: '最小',
+            max: '最大'
+        },
+        'it-IT': {
+            title: 'Lettore di Numeri',
+            theme: 'Modalità Scura',
+            language: 'Lingua:',
+            range: 'Intervallo Numeri:',
+            speed: 'Velocità Lettura:',
+            delay: 'Tempo Transizione:',
+            start: 'AVVIA',
+            stop: 'FERMA',
+            min: 'Min',
+            max: 'Max'
+        }
+    };
+
+    // Dil değiştirme fonksiyonu
+    function updateLanguage(lang) {
+        const elements = document.querySelectorAll('.lang-text');
+        elements.forEach(element => {
+            const key = element.getAttribute('data-key');
+            if (translations[lang] && translations[lang][key]) {
+                element.textContent = translations[lang][key];
             }
         });
 
-        // Sayfa yüklendiğinde varsayılan dili ayarla
-        document.addEventListener('DOMContentLoaded', () => {
-            const defaultLang = languageSelect.value;
-            updateLanguage(defaultLang);
-        });
-        </script>
+        // Placeholder'ları güncelle
+        document.getElementById('minValue').placeholder = translations[lang].min;
+        document.getElementById('maxValue').placeholder = translations[lang].max;
+    }
+
+    // Dil seçimi değiştiğinde
+    languageSelect.addEventListener('change', () => {
+        const selectedLang = languageSelect.value;
+        updateLanguage(selectedLang);
+        sesiGuncelle();
+        if(isActive) {
+            window.speechSynthesis.cancel();
+            clearTimeout(timeoutID);
+            readNumber();
+        }
+    });
+
+    // Sayfa yüklendiğinde varsayılan dili ayarla
+    document.addEventListener('DOMContentLoaded', () => {
+        const defaultLang = languageSelect.value;
+        updateLanguage(defaultLang);
+    });
+    </script>
     </body>
     </html>
