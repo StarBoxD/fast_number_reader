@@ -861,29 +861,21 @@
 
                         // Panoya kopyalama için izin kontrolü
                         try {
-                            if (navigator.permissions && navigator.permissions.query) {
-                                await navigator.permissions.query({ name: 'clipboard-write' });
-                            }
+                            await navigator.permissions.query({ name: 'clipboard-write' });
                         } catch (e) {
-                            console.log('Panoya kopyalama izni kontrolü desteklenmiyor, devam ediliyor...');
+                            console.log('Panoya kopyalama izni kontrolü desteklenmiyor');
                         }
 
                         // Ses sentezi için test konuşması
-                        try {
-                            const testSpeech = new SpeechSynthesisUtterance(' ');
-                            testSpeech.volume = 0;
-                            window.speechSynthesis.speak(testSpeech);
-                            
-                            // Test konuşması başarılı olduysa özellikleri aktifleştir
-                            activateFeatures();
-                            modal.style.display = 'none';
-                            resolve(true);
-                        } catch (speechError) {
-                            console.error('Ses sentezi hatası:', speechError);
-                            alert('Ses sentezi başlatılamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.');
-                            modal.style.display = 'none';
-                            resolve(false);
-                        }
+                        const testSpeech = new SpeechSynthesisUtterance(' ');
+                        testSpeech.volume = 0;
+                        window.speechSynthesis.speak(testSpeech);
+
+                        // İzinler verildi, özellikleri aktifleştir
+                        activateFeatures();
+
+                        modal.style.display = 'none';
+                        resolve(true);
                     } catch (error) {
                         console.error('İzin hatası:', error);
                         alert('Sistem izinleri alınamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.');
@@ -902,87 +894,44 @@
 
         // Özellikleri aktifleştirme fonksiyonu
         function activateFeatures() {
-            try {
-                // Başlat butonunu aktifleştir
-                document.getElementById('startBtn').disabled = false;
-                
-                // Dil seçimini aktifleştir
-                document.getElementById('languageSelect').disabled = false;
-                
-                // Ses sistemini başlat
-                sesleriYukle().then(() => {
-                    sesiGuncelle();
-                    console.log('Ses sistemi başlatıldı');
-                }).catch(error => {
-                    console.error('Ses sistemi başlatılamadı:', error);
+            // Başlat butonunu aktifleştir
+            document.getElementById('startBtn').disabled = false;
+            
+            // Dil seçimini aktifleştir
+            document.getElementById('languageSelect').disabled = false;
+            
+            // Ses sistemini başlat
+            sesleriYukle().then(() => {
+                sesiGuncelle();
+                console.log('Ses sistemi başlatıldı');
+            });
+
+            // Kopyalama özelliğini aktifleştir
+            document.getElementById('resultDisplay').addEventListener('click', function() {
+                const text = this.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    this.classList.add('copied');
+                    setTimeout(() => this.classList.remove('copied'), 500);
                 });
+            });
 
-                // Kopyalama özelliğini aktifleştir
-                const resultDisplay = document.getElementById('resultDisplay');
-                if (resultDisplay) {
-                    resultDisplay.addEventListener('click', async function() {
-                        try {
-                            const text = this.textContent;
-                            await navigator.clipboard.writeText(text);
-                            this.classList.add('copied');
-                            setTimeout(() => this.classList.remove('copied'), 500);
-                        } catch (error) {
-                            console.error('Kopyalama hatası:', error);
-                            // Kopyalama başarısız olursa kullanıcıya bilgi ver
-                            const notification = createNotification('Kopyalama başarısız oldu. Lütfen manuel olarak kopyalayın.', '❌');
-                            showNotification(notification);
-                        }
-                    });
-                }
-
-                // Kullanıcıya bilgi ver
-                const notification = createNotification('Tüm özellikler aktifleştirildi!', '✅');
-                showNotification(notification);
-            } catch (error) {
-                console.error('Özellikler aktifleştirilirken hata oluştu:', error);
-                const notification = createNotification('Bazı özellikler aktifleştirilemedi. Lütfen sayfayı yenileyin.', '⚠️');
-                showNotification(notification);
-            }
-        }
-
-        // Bildirim oluşturma yardımcı fonksiyonu
-        function createNotification(text, icon) {
+            // Kullanıcıya bilgi ver
             const notification = document.createElement('div');
             notification.className = 'notification';
             notification.innerHTML = `
                 <div class="notification-content">
-                    <span class="notification-icon">${icon}</span>
-                    <span class="notification-text">${text}</span>
+                    <span class="notification-icon">✅</span>
+                    <span class="notification-text">Tüm özellikler aktifleştirildi!</span>
                 </div>
             `;
-            return notification;
-        }
-
-        // Bildirim gösterme yardımcı fonksiyonu
-        function showNotification(notification) {
             document.body.appendChild(notification);
+
+            // 3 saniye sonra bildirimi kaldır
             setTimeout(() => {
                 notification.classList.add('fade-out');
                 setTimeout(() => notification.remove(), 500);
             }, 3000);
         }
-
-        // Sayfa yüklendiğinde izinleri iste
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const permissionsGranted = await requestPermissions();
-                if (!permissionsGranted) {
-                    document.getElementById('startBtn').disabled = true;
-                    document.getElementById('languageSelect').disabled = true;
-                    const notification = createNotification('Uygulama bazı özellikleri kullanmak için izinlere ihtiyaç duyuyor. İzinleri vermek için sayfayı yenileyin.', '⚠️');
-                    showNotification(notification);
-                }
-            } catch (error) {
-                console.error('İzin isteme sırasında hata oluştu:', error);
-                const notification = createNotification('Bir hata oluştu. Lütfen sayfayı yenileyin.', '⚠️');
-                showNotification(notification);
-            }
-        });
 
         // Tema Değiştirme
         const themeToggle = document.getElementById('themeToggle');
@@ -1206,8 +1155,9 @@
         function startReading() {
             const min = parseInt(document.getElementById('minValue').value) || 0;
             const max = parseInt(document.getElementById('maxValue').value) || 100;
-            const isMac = navigator.platform.includes('Mac');
-            const isChromeMac = isChromeOnMac();
+            const isChrome = /Chrome/.test(navigator.userAgent);
+            const isSafari = /Safari/.test(navigator.userAgent) && !isChrome;
+            const isFirefox = /Firefox/.test(navigator.userAgent);
             
             if (min >= max) {
                 alert("Maksimum değer minimumdan büyük olmalı!");
@@ -1239,17 +1189,14 @@
             startTime = Date.now();
             totalNumbers = 0;
             updateStats();
-            
-            // Chrome on Mac için özel başlangıç işlemi
-            if (isChromeMac) {
-                // Chrome için daha agresif bir başlangıç
+
+            // Tarayıcıya özel başlangıç işlemi
+            if (isChrome) {
+                // Chrome için özel başlangıç
                 const initSpeech = () => {
-                    // Önce ses sistemini tamamen sıfırla
                     window.speechSynthesis.cancel();
                     
-                    // Kısa bir bekleme
                     setTimeout(() => {
-                        // Test konuşması
                         const testSpeech = new SpeechSynthesisUtterance(" ");
                         testSpeech.voice = seciliSes;
                         testSpeech.lang = languageSelect.value;
@@ -1260,67 +1207,96 @@
                         window.speechSynthesis.speak(testSpeech);
                         
                         testSpeech.onend = () => {
-                            // Ses sistemini tekrar sıfırla
                             window.speechSynthesis.cancel();
-                            
-                            // Daha uzun bir bekleme
                             setTimeout(() => {
-                                // İlk sayıyı oku
                                 readNumber();
-                            }, 1500);
+                            }, 300);
                         };
-                    }, 500);
+                    }, 300);
                 };
                 
-                // İlk başlatma
                 initSpeech();
                 
-                // 3 saniye sonra tekrar dene
+                // 2 saniye sonra tekrar dene
                 setTimeout(() => {
                     if (isActive && !window.speechSynthesis.speaking) {
                         initSpeech();
                     }
-                }, 3000);
+                }, 2000);
             } 
-            // Normal Mac için başlangıç işlemi
-            else if (isMac) {
-                // Önce ses sistemini hazırla
-                const testSpeech = new SpeechSynthesisUtterance(" ");
-                testSpeech.voice = seciliSes;
-                testSpeech.lang = languageSelect.value;
-                testSpeech.rate = 1.0;
-                testSpeech.pitch = 1.0;
-                testSpeech.volume = 1.0;
-                
-                // Ses sistemini başlat
-                window.speechSynthesis.speak(testSpeech);
-                
-                // Test konuşması bittikten sonra asıl okumaya başla
-                testSpeech.onend = () => {
-                    // Ses sistemini tekrar sıfırla
+            else if (isSafari) {
+                // Safari için özel başlangıç
+                const initSpeech = () => {
                     window.speechSynthesis.cancel();
                     
-                    // Kısa bir bekleme süresi ekle
                     setTimeout(() => {
-                        // İlk sayıyı oku
-                        readNumber();
-                    }, 500);
+                        const testSpeech = new SpeechSynthesisUtterance(" ");
+                        testSpeech.voice = seciliSes;
+                        testSpeech.lang = languageSelect.value;
+                        testSpeech.rate = 1.0;
+                        testSpeech.pitch = 1.0;
+                        testSpeech.volume = 1.0;
+                        
+                        window.speechSynthesis.speak(testSpeech);
+                        
+                        testSpeech.onend = () => {
+                            window.speechSynthesis.cancel();
+                            setTimeout(() => {
+                                readNumber();
+                            }, 200);
+                        };
+                    }, 200);
                 };
                 
-                // Hata durumunda yedek plan
-                testSpeech.onerror = () => {
-                    console.log('Ses sistemi hatası, alternatif başlatma deneniyor...');
+                initSpeech();
+            }
+            else if (isFirefox) {
+                // Firefox için özel başlangıç
+                const initSpeech = () => {
+                    window.speechSynthesis.cancel();
+                    
                     setTimeout(() => {
-                        window.speechSynthesis.cancel();
-                        readNumber();
-                    }, 1000);
+                        const testSpeech = new SpeechSynthesisUtterance(" ");
+                        testSpeech.voice = seciliSes;
+                        testSpeech.lang = languageSelect.value;
+                        testSpeech.rate = 1.0;
+                        testSpeech.pitch = 1.0;
+                        testSpeech.volume = 1.0;
+                        
+                        window.speechSynthesis.speak(testSpeech);
+                        
+                        testSpeech.onend = () => {
+                            window.speechSynthesis.cancel();
+                            setTimeout(() => {
+                                readNumber();
+                            }, 100);
+                        };
+                    }, 100);
                 };
-            } else {
-                // Diğer işletim sistemleri için normal başlangıç
+                
+                initSpeech();
+            }
+            else {
+                // Diğer tarayıcılar için normal başlangıç
                 setTimeout(() => {
                     readNumber();
                 }, 300);
             }
+
+            // Başlatma başarısız olursa kontrol
+            setTimeout(() => {
+                if (isActive && !window.speechSynthesis.speaking) {
+                    console.log('Başlatma başarısız, tekrar deneniyor...');
+                    const notification = createNotification('Ses sistemi başlatılamadı. Tekrar deneniyor...', '⚠️');
+                    showNotification(notification);
+                    
+                    // Tekrar dene
+                    window.speechSynthesis.cancel();
+                    setTimeout(() => {
+                        readNumber();
+                    }, 500);
+                }
+            }, 3000);
         }
 
         function readNumber() {
@@ -1477,8 +1453,36 @@
         }
 
         // Event Listeners
-        document.getElementById('startBtn').addEventListener('click', startReading);
+        document.getElementById('startBtn').addEventListener('click', () => {
+            // Önce ses sistemini kontrol et
+            if (!window.speechSynthesis) {
+                alert('Tarayıcınız ses sentezi özelliğini desteklemiyor. Lütfen güncel bir tarayıcı kullanın.');
+                return;
+            }
+
+            // Ses sistemini başlat
+            try {
+                startReading();
+            } catch (error) {
+                console.error('Başlatma hatası:', error);
+                const notification = createNotification('Başlatma başarısız oldu. Lütfen sayfayı yenileyin.', '⚠️');
+                showNotification(notification);
+            }
+        });
+
         document.getElementById('stopBtn').addEventListener('click', stopReading);
+
+        // Klavye kısayolları
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isActive) {
+                    stopReading();
+                } else {
+                    startReading();
+                }
+            }
+        });
 
         // Dil değişikliğinde ses kontrolü
         languageSelect.addEventListener('change', () => {
@@ -1690,34 +1694,6 @@
             }
             document.getElementById('favoriteLanguage').textContent = maxLang;
         }
-
-        // Klavye kısayolları
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                if (isActive) {
-                    stopReading();
-                } else {
-                    readNumber();
-                }
-            } else if (e.code === 'Equal' || e.code === 'Minus') {
-                e.preventDefault();
-                const currentSpeed = parseFloat(speedControl.value);
-                const newSpeed = e.code === 'Equal' ? 
-                    Math.min(currentSpeed + 0.1, 2) : 
-                    Math.max(currentSpeed - 0.1, 0.5);
-                speedControl.value = newSpeed;
-                speedDisplay.textContent = newSpeed.toFixed(1) + 'x';
-                speech.rate = newSpeed;
-            }
-        });
-
-        // Dil değişikliğinde istatistikleri güncelle
-        languageSelect.addEventListener('change', () => {
-            const lang = languageSelect.value;
-            languageUsage[lang] = (languageUsage[lang] || 0) + 1;
-            updateStats();
-        });
         </script>
     </body>
     </html>
