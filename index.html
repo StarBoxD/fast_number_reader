@@ -677,6 +677,44 @@
         </div>
 
         <script>
+        // İzin isteme fonksiyonu
+        async function requestPermissions() {
+            try {
+                // Ses sentezi için izin kontrolü
+                if (!window.speechSynthesis) {
+                    alert('Tarayıcınız ses sentezi özelliğini desteklemiyor. Lütfen güncel bir tarayıcı kullanın.');
+                    return false;
+                }
+
+                // Panoya kopyalama için izin kontrolü
+                try {
+                    await navigator.permissions.query({ name: 'clipboard-write' });
+                } catch (e) {
+                    console.log('Panoya kopyalama izni kontrolü desteklenmiyor');
+                }
+
+                // Ses sentezi için test konuşması
+                const testSpeech = new SpeechSynthesisUtterance(' ');
+                testSpeech.volume = 0;
+                window.speechSynthesis.speak(testSpeech);
+
+                return true;
+            } catch (error) {
+                console.error('İzin hatası:', error);
+                alert('Sistem izinleri alınamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.');
+                return false;
+            }
+        }
+
+        // Sayfa yüklendiğinde izinleri iste
+        document.addEventListener('DOMContentLoaded', async () => {
+            const permissionsGranted = await requestPermissions();
+            if (!permissionsGranted) {
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('languageSelect').disabled = true;
+            }
+        });
+
         // Tema Değiştirme
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
