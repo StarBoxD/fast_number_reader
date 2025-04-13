@@ -33,24 +33,24 @@
         <style>
             :root {
                 /* Renkler */
-                --primary: #4f46e5;
-                --secondary: #6366f1;
+                --primary: #2563eb;
+                --secondary: #3b82f6;
                 --text-light: #e2e8f0;
-                --text-dark: #2d3748;
-                --bg-light: #f5f7fa;
-                --bg-dark: #1a1b26;
+                --text-dark: #1e293b;
+                --bg-light: #f8fafc;
+                --bg-dark: #0f172a;
                 --card-light: #ffffff;
-                --card-dark: #24283b;
+                --card-dark: #1e293b;
                 --border-light: #e2e8f0;
-                --border-dark: #2d3a4a;
+                --border-dark: #334155;
                 --input-bg-light: #ffffff;
-                --input-bg-dark: #1e1e2e;
+                --input-bg-dark: #1e293b;
                 --shadow-light: rgba(0,0,0,0.03);
                 --shadow-dark: rgba(0,0,0,0.3);
-                --hover-light: rgba(79,70,229,0.05);
-                --hover-dark: rgba(122,162,247,0.1);
-                --glow-light: 0 0 20px rgba(79,70,229,0.1);
-                --glow-dark: 0 0 20px rgba(122,162,247,0.2);
+                --hover-light: rgba(37,99,235,0.05);
+                --hover-dark: rgba(59,130,246,0.1);
+                --glow-light: 0 0 20px rgba(37,99,235,0.1);
+                --glow-dark: 0 0 20px rgba(59,130,246,0.2);
             }
 
             body {
@@ -930,21 +930,38 @@
                 const testSpeech = new SpeechSynthesisUtterance(" ");
                 testSpeech.voice = seciliSes;
                 testSpeech.lang = languageSelect.value;
+                testSpeech.rate = 1.0;
+                testSpeech.pitch = 1.0;
+                testSpeech.volume = 1.0;
                 
+                // Ses sistemini başlat
                 window.speechSynthesis.speak(testSpeech);
                 
                 // Test konuşması bittikten sonra asıl okumaya başla
                 testSpeech.onend = () => {
+                    // Ses sistemini tekrar sıfırla
+                    window.speechSynthesis.cancel();
+                    
+                    // Kısa bir bekleme süresi ekle
+                    setTimeout(() => {
+                        // İlk sayıyı oku
+                        readNumber();
+                    }, 300);
+                };
+                
+                // Hata durumunda yedek plan
+                testSpeech.onerror = () => {
+                    console.log('Ses sistemi hatası, alternatif başlatma deneniyor...');
                     setTimeout(() => {
                         window.speechSynthesis.cancel();
                         readNumber();
-                    }, 500);
+                    }, 1000);
                 };
             } else {
                 // Diğer işletim sistemleri için normal başlangıç
                 setTimeout(() => {
                     readNumber();
-                }, 500);
+                }, 300);
             }
         }
 
@@ -998,13 +1015,14 @@
                     // Mac için iki aşamalı ses gönderimi
                     setTimeout(() => {
                         window.speechSynthesis.speak(newSpeech);
+                        
                         // Ses gönderildikten sonra kontrol
                         setTimeout(() => {
                             if (window.speechSynthesis.paused) {
                                 window.speechSynthesis.resume();
                             }
-                        }, 500);
-                    }, 1000);
+                        }, 300);
+                    }, 300);
                 } else {
                     window.speechSynthesis.speak(newSpeech);
                 }
@@ -1012,7 +1030,7 @@
                 console.error('Ses sentezi hatası:', e);
                 setTimeout(() => {
                     window.speechSynthesis.speak(newSpeech);
-                }, 100);
+                }, 300);
             }
 
             newSpeech.onend = () => {
