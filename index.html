@@ -484,15 +484,11 @@
             if(uygunSesler.length > 0) {
                 // Mac için özel ses seçimi
                 if (navigator.platform.includes('Mac')) {
-                    // Almanca için özel Mac ses seçimi
+                    // Almanca için Mac'te ses desteği yok
                     if (secilenDil === 'de-DE') {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Markus')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('male')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('man')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
+                        alert('Mac işletim sisteminde Almanca ses desteği bulunmamaktadır. Lütfen başka bir dil seçiniz.');
+                        languageSelect.value = 'tr-TR'; // Varsayılan olarak Türkçe'ye dön
+                        return;
                     } else {
                         // Diğer diller için Mac ses seçimi
                         seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
@@ -513,8 +509,8 @@
                 
                 // Ses kalitesi ayarları
                 if (secilenDil === 'de-DE') {
-                    speech.pitch = 0.9;  // Erkek sesi için daha düşük perde
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5); // Almanca için hız sınırlaması
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
                 } else {
                     speech.pitch = 1.1;
                     speech.rate = parseFloat(speedControl.value);
