@@ -902,15 +902,19 @@
                 return;
             }
             
+            // Önce tüm sesleri ve timeout'ları temizle
+            window.speechSynthesis.cancel();
+            if(timeoutID) {
+                clearTimeout(timeoutID);
+                timeoutID = null;
+            }
+            
             // Geçmişi temizle
             numberHistory = [];
             updateHistoryDisplay();
             
             // Geçmiş başlığını gizle
             document.querySelector('.history-title').style.opacity = '0';
-            
-            // Ses sistemini sıfırla
-            window.speechSynthesis.cancel();
             
             isActive = true;
             document.getElementById('startBtn').disabled = true;
@@ -946,7 +950,7 @@
                     setTimeout(() => {
                         // İlk sayıyı oku
                         readNumber();
-                    }, 300);
+                    }, 500);
                 };
                 
                 // Hata durumunda yedek plan
@@ -1047,23 +1051,57 @@
             const isMac = navigator.platform.includes('Mac');
             
             isActive = false;
-            window.speechSynthesis.cancel();
-            clearTimeout(timeoutID);
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            languageSelect.disabled = false;
-            document.getElementById('minValue').disabled = false;
-            document.getElementById('maxValue').disabled = false;
             
-            // İstatistikleri güncelle
-            if (startTime) {
-                totalTime += (Date.now() - startTime) / 1000;
-                startTime = null;
+            // Mac için özel durdurma işlemi
+            if (isMac) {
+                // Önce tüm sesleri durdur
+                window.speechSynthesis.cancel();
+                
+                // Kısa bir bekleme ekle
+                setTimeout(() => {
+                    // Tüm timeout'ları temizle
+                    if(timeoutID) {
+                        clearTimeout(timeoutID);
+                        timeoutID = null;
+                    }
+                    
+                    // Ses sistemini tamamen sıfırla
+                    window.speechSynthesis.cancel();
+                    
+                    // UI'ı güncelle
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    languageSelect.disabled = false;
+                    document.getElementById('minValue').disabled = false;
+                    document.getElementById('maxValue').disabled = false;
+                    
+                    // İstatistikleri güncelle
+                    if (startTime) {
+                        totalTime += (Date.now() - startTime) / 1000;
+                        startTime = null;
+                    }
+                    updateStats();
+                }, 100);
+            } else {
+                // Diğer işletim sistemleri için normal durdurma
+                window.speechSynthesis.cancel();
+                if(timeoutID) {
+                    clearTimeout(timeoutID);
+                    timeoutID = null;
+                }
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                languageSelect.disabled = false;
+                document.getElementById('minValue').disabled = false;
+                document.getElementById('maxValue').disabled = false;
+                
+                if (startTime) {
+                    totalTime += (Date.now() - startTime) / 1000;
+                    startTime = null;
+                }
+                updateStats();
             }
-            updateStats();
-            
-            // Geçmişi göster
-            document.querySelector('.history-section').style.display = 'block';
         }
 
         // Event Listeners
