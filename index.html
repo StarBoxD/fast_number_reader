@@ -5,6 +5,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sayı Okuyucu - Çoklu Dil Desteği ile Sayıları Sesli Okuyun</title>
     
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366"
+        crossorigin="anonymous"></script>
+    
     <!-- SEO Meta Tags -->
     <meta name="description" content="Sayı Okuyucu ile farklı dillerde sayıları sesli olarak dinleyin. Türkçe, İngilizce, Almanca, Fransızca ve daha birçok dil desteği ile sayıları kolayca öğrenin.">
     <meta name="keywords" content="sayı okuyucu, sesli sayı okuma, dil öğrenme, sayı öğrenme, çoklu dil desteği, Türkçe sayılar, İngilizce sayılar">
@@ -103,6 +107,22 @@
             font-size: 2.2rem;
             font-weight: 800;
             letter-spacing: -0.5px;
+        }
+
+        h1 span:first-child {
+            opacity: 0.7;
+            filter: brightness(0.8);
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode h1 span:first-child {
+            opacity: 0.9;
+            filter: brightness(1.2);
+        }
+
+        h1:hover span:first-child {
+            opacity: 0.9;
+            filter: brightness(1.1);
         }
 
         .control-card {
