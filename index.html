@@ -427,12 +427,11 @@
         // Hız Ayarları
         speedControl.addEventListener('input', () => {
             let speed = parseFloat(speedControl.value);
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            // Mobil cihazlarda ve Almanca için hız sınırlaması
-            if ((isMobile && languageSelect.value === 'de-DE') || languageSelect.value === 'de-DE') {
-                speed = Math.min(speed, 1.2);
-                speedControl.value = speed;
+            // Türkçe dışındaki diller için hız sınırlaması
+            if (languageSelect.value !== 'tr-TR' && speed > 2.0) {
+                speed = 2.0;
+                speedControl.value = 2.0;
             }
             
             speedDisplay.textContent = speed.toFixed(1) + 'x';
@@ -440,7 +439,7 @@
             // Turbo mod renk efekti
             if (speed >= 3.0) {
                 speedDisplay.style.color = '#ff8a00';
-                speech.pitch = 1.4;
+                speech.pitch = 1.4; // Yüksek hızda netlik
             } else {
                 speedDisplay.style.color = '#2ecc71';
                 speech.pitch = 1.1;
@@ -493,17 +492,9 @@
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
-                // Mobil cihaz kontrolü
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                
-                // Ses kalitesi ayarları
-                if (isMobile) {
-                    speech.pitch = 1.0;  // Mobilde daha net ses
-                    speech.rate = 1.0;   // Mobilde standart hız
-                } else {
-                    speech.pitch = 1.1;
-                    speech.rate = parseFloat(speedControl.value);
-                }
+                // Standart ses kalitesi ayarları
+                speech.pitch = 1.1;
+                speech.rate = parseFloat(speedControl.value);
                 
                 console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
             } else {
@@ -584,9 +575,8 @@
             const max = parseInt(document.getElementById('maxValue').value);
             const gecikme = parseFloat(document.getElementById('delayControl').value) * 1000;
             const hiz = parseFloat(document.getElementById('speedControl').value);
-            const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+                const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
             const secilenDil = languageSelect.value;
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
             // Sayıyı formatla ve göster
             const formattedNumber = formatNumber(sayi, secilenDil);
@@ -597,16 +587,7 @@
             
             // Yeni bir SpeechSynthesisUtterance oluştur
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
-            
-            // Mobil cihazlarda özel ayarlar
-            if (isMobile) {
-                newSpeech.rate = 1.0;    // Mobilde standart hız
-                newSpeech.pitch = 1.0;   // Mobilde daha net ses
-            } else {
-                newSpeech.rate = hiz;
-                newSpeech.pitch = 1.1;
-            }
-            
+            newSpeech.rate = hiz;
             newSpeech.voice = seciliSes;
             newSpeech.lang = secilenDil;
 
