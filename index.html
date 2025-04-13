@@ -935,25 +935,45 @@
             
             // Chrome on Mac için özel başlangıç işlemi
             if (isChromeMac) {
-                // Chrome için daha uzun bir bekleme süresi
+                // Chrome için daha agresif bir başlangıç
+                const initSpeech = () => {
+                    // Önce ses sistemini tamamen sıfırla
+                    window.speechSynthesis.cancel();
+                    
+                    // Kısa bir bekleme
+                    setTimeout(() => {
+                        // Test konuşması
+                        const testSpeech = new SpeechSynthesisUtterance(" ");
+                        testSpeech.voice = seciliSes;
+                        testSpeech.lang = languageSelect.value;
+                        testSpeech.rate = 0.8;
+                        testSpeech.pitch = 0.9;
+                        testSpeech.volume = 1.0;
+                        
+                        window.speechSynthesis.speak(testSpeech);
+                        
+                        testSpeech.onend = () => {
+                            // Ses sistemini tekrar sıfırla
+                            window.speechSynthesis.cancel();
+                            
+                            // Daha uzun bir bekleme
+                            setTimeout(() => {
+                                // İlk sayıyı oku
+                                readNumber();
+                            }, 1500);
+                        };
+                    }, 500);
+                };
+                
+                // İlk başlatma
+                initSpeech();
+                
+                // 3 saniye sonra tekrar dene
                 setTimeout(() => {
-                    // Önce bir test konuşması yap
-                    const testSpeech = new SpeechSynthesisUtterance(" ");
-                    testSpeech.voice = seciliSes;
-                    testSpeech.lang = languageSelect.value;
-                    testSpeech.rate = 1.0;
-                    testSpeech.pitch = 1.0;
-                    testSpeech.volume = 1.0;
-                    
-                    window.speechSynthesis.speak(testSpeech);
-                    
-                    testSpeech.onend = () => {
-                        window.speechSynthesis.cancel();
-                        setTimeout(() => {
-                            readNumber();
-                        }, 800);
-                    };
-                }, 1000);
+                    if (isActive && !window.speechSynthesis.speaking) {
+                        initSpeech();
+                    }
+                }, 3000);
             } 
             // Normal Mac için başlangıç işlemi
             else if (isMac) {
@@ -1030,7 +1050,7 @@
             
             // Chrome on Mac için özel ayarlar
             if (isChromeMac) {
-                newSpeech.rate = Math.min(hiz, 1.2);
+                newSpeech.rate = Math.min(hiz, 1.0);
                 newSpeech.pitch = 0.9;
                 newSpeech.volume = 1.0;
             } 
@@ -1059,8 +1079,8 @@
                             if (window.speechSynthesis.paused) {
                                 window.speechSynthesis.resume();
                             }
-                        }, 500);
-                    }, 500);
+                        }, 800);
+                    }, 800);
                 } else if (isMac) {
                     // Normal Mac için ses gönderimi
                     setTimeout(() => {
