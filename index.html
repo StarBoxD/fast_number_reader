@@ -675,6 +675,66 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
+
+        /* Bildirim stili */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-light);
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px var(--shadow-light);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            animation: slideIn 0.5s forwards;
+        }
+
+        body.dark-mode .notification {
+            background: var(--card-dark);
+            box-shadow: 0 5px 15px var(--shadow-dark);
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-icon {
+            font-size: 1.2em;
+        }
+
+        .notification-text {
+            font-weight: 600;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+        }
         </style>
     </head>
     <body>
@@ -811,6 +871,9 @@
                         testSpeech.volume = 0;
                         window.speechSynthesis.speak(testSpeech);
 
+                        // İzinler verildi, özellikleri aktifleştir
+                        activateFeatures();
+
                         modal.style.display = 'none';
                         resolve(true);
                     } catch (error) {
@@ -829,15 +892,46 @@
             });
         }
 
-        // Sayfa yüklendiğinde izinleri iste
-        document.addEventListener('DOMContentLoaded', async () => {
-            const permissionsGranted = await requestPermissions();
-            if (!permissionsGranted) {
-                document.getElementById('startBtn').disabled = true;
-                document.getElementById('languageSelect').disabled = true;
-                alert('Uygulama bazı özellikleri kullanmak için izinlere ihtiyaç duyuyor. İzinleri vermek için sayfayı yenileyin.');
-            }
-        });
+        // Özellikleri aktifleştirme fonksiyonu
+        function activateFeatures() {
+            // Başlat butonunu aktifleştir
+            document.getElementById('startBtn').disabled = false;
+            
+            // Dil seçimini aktifleştir
+            document.getElementById('languageSelect').disabled = false;
+            
+            // Ses sistemini başlat
+            sesleriYukle().then(() => {
+                sesiGuncelle();
+                console.log('Ses sistemi başlatıldı');
+            });
+
+            // Kopyalama özelliğini aktifleştir
+            document.getElementById('resultDisplay').addEventListener('click', function() {
+                const text = this.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    this.classList.add('copied');
+                    setTimeout(() => this.classList.remove('copied'), 500);
+                });
+            });
+
+            // Kullanıcıya bilgi ver
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">✅</span>
+                    <span class="notification-text">Tüm özellikler aktifleştirildi!</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            // 3 saniye sonra bildirimi kaldır
+            setTimeout(() => {
+                notification.classList.add('fade-out');
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
 
         // Tema Değiştirme
         const themeToggle = document.getElementById('themeToggle');
@@ -1528,15 +1622,6 @@
         let totalTime = 0;
         let languageUsage = {};
         let startTime;
-
-        // Sayıyı kopyalama fonksiyonu
-        document.getElementById('resultDisplay').addEventListener('click', function() {
-            const text = this.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                this.classList.add('copied');
-                setTimeout(() => this.classList.remove('copied'), 500);
-            });
-        });
 
         // İstatistikleri güncelle
         function updateStats() {
