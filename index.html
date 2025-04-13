@@ -909,7 +909,7 @@
             // Geçmiş başlığını gizle
             document.querySelector('.history-title').style.opacity = '0';
             
-            // Mac için ses sistemini sıfırla
+            // Ses sistemini sıfırla
             window.speechSynthesis.cancel();
             
             isActive = true;
@@ -924,15 +924,24 @@
             totalNumbers = 0;
             updateStats();
             
-            // Mac için uzun başlangıç gecikmesi
+            // Mac için özel başlangıç işlemi
             if (isMac) {
-                setTimeout(() => {
-                    window.speechSynthesis.cancel();
+                // Önce ses sistemini hazırla
+                const testSpeech = new SpeechSynthesisUtterance(" ");
+                testSpeech.voice = seciliSes;
+                testSpeech.lang = languageSelect.value;
+                
+                window.speechSynthesis.speak(testSpeech);
+                
+                // Test konuşması bittikten sonra asıl okumaya başla
+                testSpeech.onend = () => {
                     setTimeout(() => {
+                        window.speechSynthesis.cancel();
                         readNumber();
-                    }, 2000);
-                }, 1000);
+                    }, 500);
+                };
             } else {
+                // Diğer işletim sistemleri için normal başlangıç
                 setTimeout(() => {
                     readNumber();
                 }, 500);
@@ -971,15 +980,10 @@
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
             
             // Mac için özel ayarlar
-            if (isMac && secilenDil === 'de-DE') {
-                newSpeech.rate = Math.min(hiz, 1.2);
-                newSpeech.pitch = 0.9;
-            } else if (isMac && secilenDil === 'en-GB') {
-                newSpeech.rate = Math.min(hiz, 1.3);
-                newSpeech.pitch = 1.0;
-            } else if (isMac) {
+            if (isMac) {
                 newSpeech.rate = Math.min(hiz, 1.5);
                 newSpeech.pitch = 1.0;
+                newSpeech.volume = 1.0;
             } else {
                 newSpeech.rate = hiz;
                 newSpeech.pitch = 1.1;
