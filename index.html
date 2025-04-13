@@ -477,32 +477,35 @@
             }
         }
 
-        function sesleriYukle() {
-            return new Promise(resolve => {
-                const checkVoices = () => {
-                    const availableVoices = window.speechSynthesis.getVoices();
-                    if (availableVoices.length > 0) {
-                        sesler = availableVoices;
-                        resolve(sesler);
-                    } else {
-                        setTimeout(checkVoices, 100);
-                    }
-                };
-
-                checkVoices();
-                window.speechSynthesis.onvoiceschanged = checkVoices;
-            });
-        }
-
         function sesiGuncelle() {
             const secilenDil = languageSelect.value;
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             
             if(uygunSesler.length > 0) {
-                seciliSes = uygunSesler.find(s => s.voiceURI.includes('natural')) || 
-                           uygunSesler.find(s => s.voiceURI.includes('premium')) ||
-                           uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                // Mac ve Windows için ortak ses seçimi
+                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
                            uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Samantha')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Alex')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Daniel')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Karen')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Tessa')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Fred')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Victoria')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Zira')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('David')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Mark')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft David')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Zira')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Mark')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Hazel')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft George')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Susan')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Hazel')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft George')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft Susan')) ||
                            uygunSesler[0];
                 
                 speech.voice = seciliSes;
@@ -512,6 +515,36 @@
                 console.error('Ses bulunamadı:', secilenDil);
                 alert(`${languageSelect.options[languageSelect.selectedIndex].text} için ses paketi bulunamadı!`);
             }
+        }
+
+        function sesleriYukle() {
+            return new Promise(resolve => {
+                const checkVoices = () => {
+                    const availableVoices = window.speechSynthesis.getVoices();
+                    if (availableVoices.length > 0) {
+                        // Sesleri öncelik sırasına göre sırala
+                        sesler = availableVoices.sort((a, b) => {
+                            const aIsNative = a.voiceURI.includes('native') ? 1 : 0;
+                            const bIsNative = b.voiceURI.includes('native') ? 1 : 0;
+                            const aIsDefault = a.voiceURI.includes('default') ? 1 : 0;
+                            const bIsDefault = b.voiceURI.includes('default') ? 1 : 0;
+                            const aIsMicrosoft = a.voiceURI.includes('Microsoft') ? 1 : 0;
+                            const bIsMicrosoft = b.voiceURI.includes('Microsoft') ? 1 : 0;
+                            
+                            return (bIsNative + bIsDefault + bIsMicrosoft) - (aIsNative + aIsDefault + aIsMicrosoft);
+                        });
+                        resolve(sesler);
+                    } else {
+                        setTimeout(checkVoices, 100);
+                    }
+                };
+
+                // Mac için ses yükleme gecikmesi
+                setTimeout(() => {
+                    checkVoices();
+                    window.speechSynthesis.onvoiceschanged = checkVoices;
+                }, 500);
+            });
         }
 
         // Sayı formatlama fonksiyonları
