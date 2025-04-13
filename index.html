@@ -3,25 +3,26 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Ultra Sayı Okuyucu Pro</title>
+    <title>Çoklu Dil Destekli Sayı Okuyucu Pro</title>
         <style>
             :root {
                 --primary: #6e48aa;
                 --secondary: #9d50bb;
+            --text-light: #f5f5f5;
+            --text-dark: #333;
                 --bg-light: #f8f9fa;
                 --bg-dark: #1a1a2e;
-                --text-light: #ffffff;
-                --text-dark: #2c3e50;
+            --card-light: #ffffff;
+            --card-dark: #16213e;
             }
 
             body {
-                font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
                 background: var(--bg-light);
                 color: var(--text-dark);
-                transition: all 0.4s;
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 20px;
+            transition: all 0.3s;
             }
 
             body.dark-mode {
@@ -29,214 +30,490 @@
                 color: var(--text-light);
             }
 
-            .control-panel {
-                background: linear-gradient(145deg, rgba(110,72,170,0.1), rgba(157,80,187,0.1));
-                padding: 25px;
-                border-radius: 20px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
 
-            input, select, button {
-                margin: 10px 0;
-                padding: 12px;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            margin: 0;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2.2rem;
+        }
+
+        .control-card {
+            background: var(--card-light);
+                padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode .control-card {
+            background: var(--card-dark);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin: 18px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .control-label {
+            flex: 1;
+            min-width: 150px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        body.dark-mode .control-label {
+            color: var(--text-light);
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            width: 100px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode input[type="number"] {
+            background: #0f3460;
+            border-color: #1a1a2e;
+            color: white;
+        }
+
+        /* Sayı oklarını kaldırma */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
                 border-radius: 8px;
-                border: 2px solid #ddd;
-                width: 100%;
                 font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode select {
+            background: #0f3460;
+            border-color: #1a1a2e;
+            color: white;
             }
 
             button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 8px;
+        }
+
+        #startBtn {
                 background: linear-gradient(45deg, var(--primary), var(--secondary));
                 color: white;
-                border: none;
-                cursor: pointer;
-                transition: transform 0.3s;
+            box-shadow: 0 5px 15px rgba(110, 72, 170, 0.4);
+        }
+
+        #stopBtn {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
             }
 
             button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #resultDisplay {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 25px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(110,72,170,0.1), rgba(157,80,187,0.1));
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode #resultDisplay {
+            background: linear-gradient(135deg, rgba(110,72,170,0.2), rgba(157,80,187,0.2));
+        }
+
+        .theme-toggle {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .theme-toggle:hover {
                 transform: translateY(-2px);
-            }
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
 
-            #sonuc {
-                font-size: 3em;
-                font-weight: 800;
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 2;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        body:not(.dark-mode) input[type="range"]::-webkit-slider-thumb {
+            background: #333;
+            border: 2px solid white;
+        }
+
+        .value-display {
+            font-weight: 700;
+            min-width: 50px;
+            display: inline-block;
                 text-align: center;
-                margin: 30px 0;
-                padding: 30px;
-                background: rgba(255,255,255,0.1);
-                border-radius: 15px;
-            }
+        }
 
-            select:disabled {
-                background: #f0f0f0;
-                cursor: not-allowed;
-                opacity: 0.7;
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
             }
-
-            body.dark-mode select:disabled {
-                background: #2c2c54;
+            
+            #resultDisplay {
+                font-size: 2.2rem;
+                padding: 20px;
+            }
             }
         </style>
     </head>
     <body>
-        <div class="control-panel">
-            <h1>⚡ Ultra Sayı Okuyucu Pro</h1>
-            
-            <!-- Dil Seçimi -->
-            <select id="dilSecimi">
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Çoklu Dil Sayı Okuyucu</h1>
+            <button class="theme-toggle" id="themeToggle">
+                <span id="themeIcon">🌙</span> Koyu Mod
+            </button>
+        </div>
+        
+        <div class="control-card">
+            <div class="control-row">
+                <span class="control-label">Dil Seçimi:</span>
+                <select id="languageSelect">
                 <option value="tr-TR">Türkçe</option>
                 <option value="en-US">İngilizce</option>
+                    <option value="de-DE">Almanca</option>
+                    <option value="fr-FR">Fransızca</option>
                 <option value="es-ES">İspanyolca</option>
-                <option value="fr-FR">Fransızca</option>
-                <option value="de-DE">Almanca</option>
+                    <option value="ja-JP">Japonca</option>
+                    <option value="ru-RU">Rusça</option>
+                    <option value="zh-CN">Çince</option>
+                    <option value="it-IT">İtalyanca</option>
             </select>
-
-            <!-- Sayı Aralığı -->
-            <input type="number" id="min" value="1" placeholder="Min Sayı">
-            <input type="number" id="max" value="100" placeholder="Max Sayı">
-
-            <!-- Kontroller -->
-            <input type="range" id="hiz" min="0.5" max="5.0" step="0.1" value="1.0">
-            <input type="number" id="gecikme" value="0" placeholder="Geçiş Süresi (ms)">
+            </div>
             
-            <div style="display: flex; gap: 10px;">
-                <button id="baslat">BAŞLAT</button>
-                <button id="durdur" disabled>DURDUR</button>
+            <div class="control-row">
+                <span class="control-label">Sayı Aralığı:</span>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="minValue" value="1" min="0" placeholder="Min">
+                    <span style="align-self:center;">-</span>
+                    <input type="number" id="maxValue" value="100" min="1" placeholder="Max">
+                </div>
+            </div>
+            
+            <div class="control-row">
+                <span class="control-label">Okuma Hızı:</span>
+                <div class="speed-control">
+                    <input type="range" id="speedControl" min="0.5" max="5.0" step="0.1" value="1.0">
+                    <span id="speedDisplay" class="value-display">1.0x</span>
+                </div>
+            </div>
+            
+            <div class="control-row">
+                <span class="control-label">Geçiş Süresi:</span>
+                <div class="speed-control">
+                    <input type="range" id="delayControl" min="0" max="2000" step="100" value="0">
+                    <span id="delayDisplay" class="value-display">0ms</span>
+                </div>
             </div>
 
-            <!-- Sonuç -->
-            <div id="sonuc">---</div>
+            <div style="text-align:center; margin-top:25px;">
+                <button id="startBtn">BAŞLAT</button>
+                <button id="stopBtn" disabled>DURDUR</button>
+            </div>
+        </div>
+        
+        <div id="resultDisplay">---</div>
         </div>
 
         <script>
-            let calisiyor = false;
-            let timeoutID = null;
-            const ses = new SpeechSynthesisUtterance();
-            const sesSentezi = window.speechSynthesis;
-            const dilSecimi = document.getElementById('dilSecimi');
-
-            // Ses Yönetimi
-            function sesleriYukle() {
-                return new Promise(resolve => {
-                    if(sesSentezi.getVoices().length > 0) {
-                        sesler = sesSentezi.getVoices();
-                        resolve(sesler);
+        // Tema Değiştirme
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                themeIcon.textContent = '☀️';
+                themeToggle.innerHTML = '<span id="themeIcon">☀️</span> Açık Mod';
                     } else {
-                        sesSentezi.onvoiceschanged = () => {
-                            sesler = sesSentezi.getVoices();
-                            resolve(sesler);
-                        };
-                    }
-                });
+                themeIcon.textContent = '🌙';
+                themeToggle.innerHTML = '<span id="themeIcon">🌙</span> Koyu Mod';
             }
-                // 2. DİL DEĞİŞİMİNDE SESİ GÜNCELLE
-                function sesiGuncelle() {
-                            const secilenDil = dilSecimi.value;
-                            const uygunSes = sesler.find(s => s.lang === secilenDil);
-                            
-                            if(uygunSes) {
-                                ses.voice = uygunSes;
-                                ses.lang = secilenDil;
+        });
+
+        // Sistem teması kontrolü
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+            themeIcon.textContent = '☀️';
+            themeToggle.innerHTML = '<span id="themeIcon">☀️</span> Açık Mod';
+        }
+
+        // Dil ve Okuma Sistemi
+        const speech = new SpeechSynthesisUtterance();
+        const languageSelect = document.getElementById('languageSelect');
+        const speedControl = document.getElementById('speedControl');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const delayControl = document.getElementById('delayControl');
+        const delayDisplay = document.getElementById('delayDisplay');
+        const resultDisplay = document.getElementById('resultDisplay');
+
+        // Hız Ayarları
+        speedControl.addEventListener('input', () => {
+            let speed = parseFloat(speedControl.value);
+            
+            // Türkçe dışındaki diller için hız sınırlaması
+            if (languageSelect.value !== 'tr-TR' && speed > 2.0) {
+                speed = 2.0;
+                speedControl.value = 2.0;
+            }
+            
+            speedDisplay.textContent = speed.toFixed(1) + 'x';
+            
+            // Turbo mod renk efekti
+            if (speed >= 3.0) {
+                speedDisplay.style.color = '#ff8a00';
+                speech.pitch = 1.4; // Yüksek hızda netlik
                             } else {
-                                alert('Bu dil desteklenmiyor!');
-                                dilSecimi.value = ses.lang; // Eski değere dön
-                            }
+                speedDisplay.style.color = '#2ecc71';
+                speech.pitch = 1.1;
             }
-            // 3. OKUMA FONKSİYONUNU GÜNCELLE
-            function sayiOku() {
-                if(!calisiyor) return;
-                
-                sesiGuncelle(); // Her okumada sesi kontrol et
-                
-                const min = parseInt(document.getElementById('min').value);
-                const max = parseInt(document.getElementById('max').value);
-                const gecikme = parseInt(document.getElementById('gecikme').value);
-                const hiz = parseFloat(document.getElementById('hiz').value);
-                const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+        });
 
-                document.getElementById('sonuc').textContent = sayi;
-                ses.text = sayi.toString();
-                ses.rate = hiz;
+        // Gecikme Ayarları
+        delayControl.addEventListener('input', () => {
+            delayDisplay.textContent = delayControl.value + 'ms';
+        });
 
-                sesSentezi.cancel();
-                sesSentezi.speak(ses);
+        // Sayı Üretme
+        function generateNumber() {
+            const min = parseInt(document.getElementById('minValue').value) || 0;
+            const max = parseInt(document.getElementById('maxValue').value) || 100;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
-                ses.onend = () => {
-                    if(calisiyor) timeoutID = setTimeout(sayiOku, gecikme);
-                };
+        // Okuma Fonksiyonu
+        let isActive = false;
+        
+        function readNumber() {
+            if (!isActive) return;
+            
+            const number = generateNumber();
+            resultDisplay.textContent = number;
+            
+            speech.text = number.toString();
+            speech.lang = languageSelect.value;
+            speech.rate = parseFloat(speedControl.value);
+            
+            speech.onend = () => {
+                if (isActive) {
+                    setTimeout(readNumber, parseInt(delayControl.value));
+                }
+            };
+            
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Kontroller
+        document.getElementById('startBtn').addEventListener('click', () => {
+            const min = parseInt(document.getElementById('minValue').value) || 0;
+            const max = parseInt(document.getElementById('maxValue').value) || 100;
+            
+            if (min >= max) {
+                alert("Maksimum değer minimumdan büyük olmalı!");
+                return;
             }
-            // 4. DİL DEĞİŞİM OLAYINI GÜNCELLE
-            dilSecimi.addEventListener('change', () => {
-                if(calisiyor) {
-                    sesSentezi.cancel(); // Mevcut okumayı durdur
-                    clearTimeout(timeoutID);
-                    sayiOku(); // Yeni dille yeniden başlat
+            
+            isActive = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            readNumber();
+        });
+        
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            isActive = false;
+            window.speechSynthesis.cancel();
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        });
+
+        // Dil değişikliğinde hız kontrolü
+        languageSelect.addEventListener('change', () => {
+            if (languageSelect.value !== 'tr-TR') {
+                const currentSpeed = parseFloat(speedControl.value);
+                if (currentSpeed > 2.0) {
+                    speedControl.value = 2.0;
+                    speedDisplay.textContent = '2.0x';
+                    speedDisplay.style.color = '#ff8a00';
+                }
+            }
+            
+            if (isActive) {
+                window.speechSynthesis.cancel();
+                readNumber();
+            }
+        });
+
+        // Ses Yönetimi
+        let sesler = [];
+        let seciliSes = null;
+
+        function sesleriYukle() {
+            return new Promise(resolve => {
+                if(window.speechSynthesis.getVoices().length > 0) {
+                    sesler = window.speechSynthesis.getVoices();
+                    resolve(sesler);
+                } else {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        sesler = window.speechSynthesis.getVoices();
+                        resolve(sesler);
+                    };
                 }
             });
-            // 5. UYGULAMAYI BAŞLAT
-            sesleriYukle().then(() => {
-                sesiGuncelle(); // İlk sesi ayarla
-                
-                document.getElementById('baslat').addEventListener('click', () => {
-                    if(document.getElementById('min').value >= document.getElementById('max').value) {
-                        alert("Max değer min'den büyük olmalı!");
-                        return;
-                    }
-                    dilSecimi.disabled = true;
-                    calisiyor = true;
-                    document.getElementById('baslat').disabled = true;
-                    document.getElementById('durdur').disabled = false;
-                    sayiOku();
-                });
+        }
+
+        function sesiGuncelle() {
+            const secilenDil = languageSelect.value;
+            const uygunSesler = sesler.filter(s => s.lang === secilenDil);
             
+            if(uygunSesler.length > 0) {
+                // En uygun sesi seç
+                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                           uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                           uygunSesler[0];
+                
+                speech.voice = seciliSes;
+                speech.lang = secilenDil;
+                console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
+            } else {
+                console.error('Ses bulunamadı:', secilenDil);
+                alert(`${languageSelect.options[languageSelect.selectedIndex].text} için ses paketi bulunamadı!`);
+            }
+        }
 
-            // Olay Yöneticileri
-            sesleriYukle().then(() => {
-                document.getElementById('baslat').addEventListener('click', () => {
-                    if(document.getElementById('min').value >= document.getElementById('max').value) {
-                        alert("Max değer min'den büyük olmalı!");
-                        return;
-                    }
-                    
-                    dilSecimi.disabled = true;
-                    calisiyor = true;
-                    document.getElementById('baslat').disabled = true;
-                    document.getElementById('durdur').disabled = false;
-                    sayiOku();
-                });
+        function sayiOku() {
+            if(!isActive) return;
+            
+            const min = parseInt(document.getElementById('minValue').value);
+            const max = parseInt(document.getElementById('maxValue').value);
+            const gecikme = parseInt(document.getElementById('delayControl').value);
+            let hiz = parseFloat(document.getElementById('speedControl').value);
+            const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
 
-                document.getElementById('durdur').addEventListener('click', () => {
-                    calisiyor = false;
-                    dilSecimi.disabled = false;
-                    sesSentezi.cancel();
-                    clearTimeout(timeoutID);
-                    document.getElementById('baslat').disabled = false;
-                    document.getElementById('durdur').disabled = true;
-                });
+            // Türkçe dışındaki diller için hız sınırlaması
+            if (languageSelect.value !== 'tr-TR' && hiz > 2.0) {
+                hiz = 2.0;
+            }
 
-                dilSecimi.addEventListener('change', () => {
-                    if(calisiyor) {
-                        alert("Lütfen önce DURDUR butonuna basın!");
-                        dilSecimi.value = ses.lang;
-                    }
-                });
+            document.getElementById('resultDisplay').textContent = sayi;
+            speech.text = sayi.toString();
+            speech.rate = hiz;
+            speech.voice = seciliSes;
+            speech.lang = languageSelect.value;
 
-                document.getElementById('hiz').addEventListener('input', () => {
-                    if(calisiyor) {
-                        sesSentezi.cancel();
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(speech);
+
+            speech.onend = () => {
+                if(isActive) timeoutID = setTimeout(sayiOku, gecikme);
+            };
+        }
+
+        // Dil değişikliğinde ses kontrolü
+        languageSelect.addEventListener('change', () => {
+            sesiGuncelle();
+            if(isActive) {
+                window.speechSynthesis.cancel();
                         clearTimeout(timeoutID);
                         sayiOku();
                     }
                 });
-            });
 
-            // Tema Değiştirme
-            document.body.innerHTML += `
-                <button onclick="document.body.classList.toggle('dark-mode')" 
-                        style="position:fixed; bottom:20px; right:20px; padding:10px 20px; border-radius:20px;">
-                    🌓 Tema Değiştir
-                </button>
-            `;
+        // Uygulama başlangıcında sesleri yükle
+        sesleriYukle().then(() => {
+            sesiGuncelle();
+            console.log('Mevcut sesler:', sesler.map(s => `${s.name} (${s.lang})`));
+        });
         </script>
     </body>
     </html>
