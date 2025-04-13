@@ -861,21 +861,29 @@
 
                         // Panoya kopyalama için izin kontrolü
                         try {
-                            await navigator.permissions.query({ name: 'clipboard-write' });
+                            if (navigator.permissions && navigator.permissions.query) {
+                                await navigator.permissions.query({ name: 'clipboard-write' });
+                            }
                         } catch (e) {
-                            console.log('Panoya kopyalama izni kontrolü desteklenmiyor');
+                            console.log('Panoya kopyalama izni kontrolü desteklenmiyor, devam ediliyor...');
                         }
 
                         // Ses sentezi için test konuşması
-                        const testSpeech = new SpeechSynthesisUtterance(' ');
-                        testSpeech.volume = 0;
-                        window.speechSynthesis.speak(testSpeech);
-
-                        // İzinler verildi, özellikleri aktifleştir
-                        activateFeatures();
-
-                        modal.style.display = 'none';
-                        resolve(true);
+                        try {
+                            const testSpeech = new SpeechSynthesisUtterance(' ');
+                            testSpeech.volume = 0;
+                            window.speechSynthesis.speak(testSpeech);
+                            
+                            // Test konuşması başarılı olduysa özellikleri aktifleştir
+                            activateFeatures();
+                            modal.style.display = 'none';
+                            resolve(true);
+                        } catch (speechError) {
+                            console.error('Ses sentezi hatası:', speechError);
+                            alert('Ses sentezi başlatılamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.');
+                            modal.style.display = 'none';
+                            resolve(false);
+                        }
                     } catch (error) {
                         console.error('İzin hatası:', error);
                         alert('Sistem izinleri alınamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.');
@@ -894,44 +902,87 @@
 
         // Özellikleri aktifleştirme fonksiyonu
         function activateFeatures() {
-            // Başlat butonunu aktifleştir
-            document.getElementById('startBtn').disabled = false;
-            
-            // Dil seçimini aktifleştir
-            document.getElementById('languageSelect').disabled = false;
-            
-            // Ses sistemini başlat
-            sesleriYukle().then(() => {
-                sesiGuncelle();
-                console.log('Ses sistemi başlatıldı');
-            });
-
-            // Kopyalama özelliğini aktifleştir
-            document.getElementById('resultDisplay').addEventListener('click', function() {
-                const text = this.textContent;
-                navigator.clipboard.writeText(text).then(() => {
-                    this.classList.add('copied');
-                    setTimeout(() => this.classList.remove('copied'), 500);
+            try {
+                // Başlat butonunu aktifleştir
+                document.getElementById('startBtn').disabled = false;
+                
+                // Dil seçimini aktifleştir
+                document.getElementById('languageSelect').disabled = false;
+                
+                // Ses sistemini başlat
+                sesleriYukle().then(() => {
+                    sesiGuncelle();
+                    console.log('Ses sistemi başlatıldı');
+                }).catch(error => {
+                    console.error('Ses sistemi başlatılamadı:', error);
                 });
-            });
 
-            // Kullanıcıya bilgi ver
+                // Kopyalama özelliğini aktifleştir
+                const resultDisplay = document.getElementById('resultDisplay');
+                if (resultDisplay) {
+                    resultDisplay.addEventListener('click', async function() {
+                        try {
+                            const text = this.textContent;
+                            await navigator.clipboard.writeText(text);
+                            this.classList.add('copied');
+                            setTimeout(() => this.classList.remove('copied'), 500);
+                        } catch (error) {
+                            console.error('Kopyalama hatası:', error);
+                            // Kopyalama başarısız olursa kullanıcıya bilgi ver
+                            const notification = createNotification('Kopyalama başarısız oldu. Lütfen manuel olarak kopyalayın.', '❌');
+                            showNotification(notification);
+                        }
+                    });
+                }
+
+                // Kullanıcıya bilgi ver
+                const notification = createNotification('Tüm özellikler aktifleştirildi!', '✅');
+                showNotification(notification);
+            } catch (error) {
+                console.error('Özellikler aktifleştirilirken hata oluştu:', error);
+                const notification = createNotification('Bazı özellikler aktifleştirilemedi. Lütfen sayfayı yenileyin.', '⚠️');
+                showNotification(notification);
+            }
+        }
+
+        // Bildirim oluşturma yardımcı fonksiyonu
+        function createNotification(text, icon) {
             const notification = document.createElement('div');
             notification.className = 'notification';
             notification.innerHTML = `
                 <div class="notification-content">
-                    <span class="notification-icon">✅</span>
-                    <span class="notification-text">Tüm özellikler aktifleştirildi!</span>
+                    <span class="notification-icon">${icon}</span>
+                    <span class="notification-text">${text}</span>
                 </div>
             `;
-            document.body.appendChild(notification);
+            return notification;
+        }
 
-            // 3 saniye sonra bildirimi kaldır
+        // Bildirim gösterme yardımcı fonksiyonu
+        function showNotification(notification) {
+            document.body.appendChild(notification);
             setTimeout(() => {
                 notification.classList.add('fade-out');
                 setTimeout(() => notification.remove(), 500);
             }, 3000);
         }
+
+        // Sayfa yüklendiğinde izinleri iste
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const permissionsGranted = await requestPermissions();
+                if (!permissionsGranted) {
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('languageSelect').disabled = true;
+                    const notification = createNotification('Uygulama bazı özellikleri kullanmak için izinlere ihtiyaç duyuyor. İzinleri vermek için sayfayı yenileyin.', '⚠️');
+                    showNotification(notification);
+                }
+            } catch (error) {
+                console.error('İzin isteme sırasında hata oluştu:', error);
+                const notification = createNotification('Bir hata oluştu. Lütfen sayfayı yenileyin.', '⚠️');
+                showNotification(notification);
+            }
+        });
 
         // Tema Değiştirme
         const themeToggle = document.getElementById('themeToggle');
