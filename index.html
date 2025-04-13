@@ -497,14 +497,9 @@
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 
                 // Ses kalitesi ayarları
-                if (secilenDil === 'de-DE') {
-                    if (isMobile) {
-                        speech.pitch = 1.0;  // Mobilde daha net ses
-                        speech.rate = Math.min(parseFloat(speedControl.value), 1.2); // Mobilde daha yavaş
-                    } else {
-                        speech.pitch = 1.1;
-                        speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
-                    }
+                if (isMobile) {
+                    speech.pitch = 1.0;  // Mobilde daha net ses
+                    speech.rate = 1.0;   // Mobilde standart hız
                 } else {
                     speech.pitch = 1.1;
                     speech.rate = parseFloat(speedControl.value);
@@ -603,10 +598,10 @@
             // Yeni bir SpeechSynthesisUtterance oluştur
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
             
-            // Mobil cihazlarda ve Almanca için özel ayarlar
-            if (isMobile && secilenDil === 'de-DE') {
-                newSpeech.rate = Math.min(hiz, 1.2);
-                newSpeech.pitch = 1.0;
+            // Mobil cihazlarda özel ayarlar
+            if (isMobile) {
+                newSpeech.rate = 1.0;    // Mobilde standart hız
+                newSpeech.pitch = 1.0;   // Mobilde daha net ses
             } else {
                 newSpeech.rate = hiz;
                 newSpeech.pitch = 1.1;
