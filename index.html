@@ -482,39 +482,23 @@
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             
             if(uygunSesler.length > 0) {
-                // Mac için özel ses seçimi
-                if (navigator.platform.includes('Mac')) {
-                    // Almanca için özel Mac ses seçimi
-                    if (secilenDil === 'de-DE') {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    } else {
-                        // Diğer diller için Mac ses seçimi
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    }
-                } else {
-                    // Windows için ses seçimi
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('default')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                               uygunSesler[0];
-                }
+                // Tüm işletim sistemleri için standart ses seçimi
+                seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                           uygunSesler.find(s => s.voiceURI.includes('default')) || 
+                           uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
+                           uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                           uygunSesler[0];
                 
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
+                // Mobil cihaz kontrolü
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
                 // Ses kalitesi ayarları
-                if (secilenDil === 'de-DE') {
-                    speech.pitch = 1.0;  // Almanca için daha doğal ses
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5); // Almanca için hız sınırlaması
+                if (isMobile) {
+                    speech.pitch = 1.0;  // Mobilde daha net ses
+                    speech.rate = 1.0;   // Mobilde standart hız
                 } else {
                     speech.pitch = 1.1;
                     speech.rate = parseFloat(speedControl.value);
@@ -540,8 +524,11 @@
                             const bIsDefault = b.voiceURI.includes('default') ? 1 : 0;
                             const aIsMicrosoft = a.voiceURI.includes('Microsoft') ? 1 : 0;
                             const bIsMicrosoft = b.voiceURI.includes('Microsoft') ? 1 : 0;
+                            const aIsGoogle = a.voiceURI.includes('Google') ? 1 : 0;
+                            const bIsGoogle = b.voiceURI.includes('Google') ? 1 : 0;
                             
-                            return (bIsNative + bIsDefault + bIsMicrosoft) - (aIsNative + aIsDefault + aIsMicrosoft);
+                            return (bIsNative + bIsDefault + bIsMicrosoft + bIsGoogle) - 
+                                   (aIsNative + aIsDefault + aIsMicrosoft + aIsGoogle);
                         });
                         resolve(sesler);
                     } else {
@@ -549,7 +536,7 @@
                     }
                 };
 
-                // Mac için ses yükleme gecikmesi
+                // Ses yükleme gecikmesi
                 setTimeout(() => {
                     checkVoices();
                     window.speechSynthesis.onvoiceschanged = checkVoices;
@@ -601,6 +588,7 @@
             const hiz = parseFloat(document.getElementById('speedControl').value);
             const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
             const secilenDil = languageSelect.value;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
             // Sayıyı formatla ve göster
             const formattedNumber = formatNumber(sayi, secilenDil);
@@ -612,10 +600,10 @@
             // Yeni bir SpeechSynthesisUtterance oluştur
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
             
-            // Almanca için özel ayarlar
-            if (secilenDil === 'de-DE') {
-                newSpeech.rate = Math.min(hiz, 1.5);
-                newSpeech.pitch = 1.0;
+            // Mobil cihazlarda özel ayarlar
+            if (isMobile) {
+                newSpeech.rate = 1.0;    // Mobilde standart hız
+                newSpeech.pitch = 1.0;   // Mobilde daha net ses
             } else {
                 newSpeech.rate = hiz;
                 newSpeech.pitch = 1.1;
@@ -623,9 +611,6 @@
             
             newSpeech.voice = seciliSes;
             newSpeech.lang = secilenDil;
-
-            // Mac için ses kontrolünü başlat
-            startResumeInterval();
 
             // Sayıyı okut
             try {
@@ -641,7 +626,6 @@
                 if(isActive) {
                     if(timeoutID) clearTimeout(timeoutID);
                     timeoutID = setTimeout(() => {
-                        stopResumeInterval();
                         readNumber();
                     }, gecikme);
                 }
