@@ -796,6 +796,45 @@
         updateHistoryDisplay();
     }
 
+    function startReading() {
+        const min = parseInt(document.getElementById('minValue').value) || 0;
+        const max = parseInt(document.getElementById('maxValue').value) || 100;
+        const isMac = navigator.platform.includes('Mac');
+        
+        if (min >= max) {
+            alert("Maksimum değer minimumdan büyük olmalı!");
+            return;
+        }
+        
+        // Geçmişi temizle
+        numberHistory = [];
+        updateHistoryDisplay();
+        
+        // Mac için ses sistemini sıfırla
+        window.speechSynthesis.cancel();
+        
+        isActive = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+        languageSelect.disabled = true;
+        document.getElementById('minValue').disabled = true;
+        document.getElementById('maxValue').disabled = true;
+        
+        // Mac için uzun başlangıç gecikmesi
+        if (isMac) {
+            setTimeout(() => {
+                window.speechSynthesis.cancel();
+                setTimeout(() => {
+                    readNumber();
+                }, 2000);
+            }, 1000);
+        } else {
+            setTimeout(() => {
+                readNumber();
+            }, 500);
+        }
+    }
+
     function readNumber() {
         if(!isActive) return;
         
@@ -845,18 +884,19 @@
         newSpeech.voice = seciliSes;
         newSpeech.lang = secilenDil;
 
-        // Mac için ses kontrolünü başlat
-        if (isMac) {
-            startResumeInterval();
-        }
-
         // Sayıyı okut
         try {
-            // Mac için ekstra gecikme
             if (isMac) {
+                // Mac için iki aşamalı ses gönderimi
                 setTimeout(() => {
                     window.speechSynthesis.speak(newSpeech);
-                }, 500);
+                    // Ses gönderildikten sonra kontrol
+                    setTimeout(() => {
+                        if (window.speechSynthesis.paused) {
+                            window.speechSynthesis.resume();
+                        }
+                    }, 500);
+                }, 1000);
             } else {
                 window.speechSynthesis.speak(newSpeech);
             }
@@ -871,48 +911,10 @@
             if(isActive) {
                 if(timeoutID) clearTimeout(timeoutID);
                 timeoutID = setTimeout(() => {
-                    if (isMac) {
-                        stopResumeInterval();
-                    }
                     readNumber();
                 }, gecikme);
             }
         };
-    }
-
-    function startReading() {
-        const min = parseInt(document.getElementById('minValue').value) || 0;
-        const max = parseInt(document.getElementById('maxValue').value) || 100;
-        const isMac = navigator.platform.includes('Mac');
-        
-        if (min >= max) {
-            alert("Maksimum değer minimumdan büyük olmalı!");
-            return;
-        }
-        
-        // Geçmişi temizle
-        numberHistory = [];
-        updateHistoryDisplay();
-        
-        // Mac için ses sistemini sıfırla
-        window.speechSynthesis.cancel();
-        
-        isActive = true;
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = false;
-        languageSelect.disabled = true;
-        document.getElementById('minValue').disabled = true;
-        document.getElementById('maxValue').disabled = true;
-        
-        // Mac için ses kontrolünü başlat
-        if (isMac) {
-            startResumeInterval();
-        }
-        
-        // Okumayı başlat
-        setTimeout(() => {
-            readNumber();
-        }, 1000); // Mac için başlangıç gecikmesini artır
     }
 
     function stopReading() {
@@ -920,9 +922,6 @@
         
         isActive = false;
         window.speechSynthesis.cancel();
-        if (isMac) {
-            stopResumeInterval();
-        }
         clearTimeout(timeoutID);
         document.getElementById('startBtn').disabled = false;
         document.getElementById('stopBtn').disabled = true;
