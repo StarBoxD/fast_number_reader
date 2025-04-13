@@ -1,8 +1,8 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!DOCTYPE html>
+    <html lang="tr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sayı Okuyucu - Çoklu Dil Desteği ile Sayıları Sesli Okuyun</title>
     
     <!-- SEO Meta Tags -->
@@ -30,31 +30,31 @@
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://fast-number-reader.vercel.app/">
-    <style>
-        :root {
-            --primary: #6e48aa;
-            --secondary: #9d50bb;
+        <style>
+            :root {
+                --primary: #6e48aa;
+                --secondary: #9d50bb;
             --text-light: #f5f5f5;
             --text-dark: #333;
-            --bg-light: #f8f9fa;
-            --bg-dark: #1a1a2e;
+                --bg-light: #f8f9fa;
+                --bg-dark: #1a1a2e;
             --card-light: #ffffff;
             --card-dark: #16213e;
-        }
+            }
 
-        body {
+            body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background: var(--bg-light);
-            color: var(--text-dark);
+                background: var(--bg-light);
+                color: var(--text-dark);
             transition: all 0.3s;
-        }
+            }
 
-        body.dark-mode {
-            background: var(--bg-dark);
-            color: var(--text-light);
-        }
+            body.dark-mode {
+                background: var(--bg-dark);
+                color: var(--text-light);
+            }
 
         .container {
             max-width: 650px;
@@ -81,7 +81,7 @@
 
         .control-card {
             background: var(--card-light);
-            padding: 25px;
+                padding: 25px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             margin-bottom: 25px;
@@ -140,8 +140,8 @@
         select {
             padding: 10px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
+                border-radius: 8px;
+                font-size: 16px;
             background: white;
             cursor: pointer;
             transition: all 0.3s;
@@ -151,9 +151,9 @@
             background: #0f3460;
             border-color: #1a1a2e;
             color: white;
-        }
+            }
 
-        button {
+            button {
             padding: 12px 25px;
             font-size: 16px;
             font-weight: 600;
@@ -165,8 +165,8 @@
         }
 
         #startBtn {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
+                background: linear-gradient(45deg, var(--primary), var(--secondary));
+                color: white;
             box-shadow: 0 5px 15px rgba(110, 72, 170, 0.4);
         }
 
@@ -174,9 +174,9 @@
             background: linear-gradient(45deg, #ff416c, #ff4b2b);
             color: white;
             box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
-        }
+            }
 
-        button:hover {
+            button:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
@@ -216,7 +216,7 @@
         }
 
         .theme-toggle:hover {
-            transform: translateY(-2px);
+                transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
 
@@ -277,7 +277,7 @@
             font-weight: 700;
             min-width: 50px;
             display: inline-block;
-            text-align: center;
+                text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -293,10 +293,10 @@
         }
 
         /* Dil seçimi devre dışı bırakıldığında stil */
-        select:disabled {
+            select:disabled {
             background-color: #f0f0f0;
-            cursor: not-allowed;
-            opacity: 0.7;
+                cursor: not-allowed;
+                opacity: 0.7;
             pointer-events: none;
         }
         
@@ -327,10 +327,10 @@
             text-align: center;
             display: none;
             margin-top: 5px;
-        }
-    </style>
-</head>
-<body>
+            }
+        </style>
+    </head>
+    <body>
     <div class="container">
         <div class="header">
             <h1><span style="font-size: 1.2em;">🌐</span> <span class="lang-text" data-key="title">Sayı Okuyucu</span></h1>
@@ -344,7 +344,7 @@
                 <span class="control-label lang-text" data-key="language">Dil Seçimi:</span>
                 <div class="language-container">
                     <select id="languageSelect">
-                        <option value="tr-TR">Türkçe</option>
+                <option value="tr-TR">Türkçe</option>
                         <option value="en-US">English</option>
                         <option value="de-DE">Deutsch</option>
                         <option value="fr-FR">Français</option>
@@ -353,7 +353,7 @@
                         <option value="ru-RU">Русский</option>
                         <option value="zh-CN">中文</option>
                         <option value="it-IT">Italiano</option>
-                    </select>
+            </select>
                 </div>
             </div>
             
@@ -381,7 +381,7 @@
                     <span id="delayDisplay" class="value-display">0s</span>
                 </div>
             </div>
-            
+
             <div style="text-align:center; margin-top:25px;">
                 <button id="startBtn" class="lang-text" data-key="start">BAŞLAT</button>
                 <button id="stopBtn" disabled class="lang-text" data-key="stop">DURDUR</button>
@@ -389,9 +389,9 @@
         </div>
         
         <div id="resultDisplay">---</div>
-    </div>
+        </div>
 
-    <script>
+        <script>
         // Tema Değiştirme
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
@@ -427,11 +427,12 @@
         // Hız Ayarları
         speedControl.addEventListener('input', () => {
             let speed = parseFloat(speedControl.value);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
-            // Türkçe dışındaki diller için hız sınırlaması
-            if (languageSelect.value !== 'tr-TR' && speed > 2.0) {
-                speed = 2.0;
-                speedControl.value = 2.0;
+            // Mobil cihazlarda ve Almanca için hız sınırlaması
+            if ((isMobile && languageSelect.value === 'de-DE') || languageSelect.value === 'de-DE') {
+                speed = Math.min(speed, 1.2);
+                speedControl.value = speed;
             }
             
             speedDisplay.textContent = speed.toFixed(1) + 'x';
@@ -439,7 +440,7 @@
             // Turbo mod renk efekti
             if (speed >= 3.0) {
                 speedDisplay.style.color = '#ff8a00';
-                speech.pitch = 1.4; // Yüksek hızda netlik
+                speech.pitch = 1.4;
             } else {
                 speedDisplay.style.color = '#2ecc71';
                 speech.pitch = 1.1;
@@ -454,7 +455,7 @@
         // Ses Yönetimi
         let sesler = [];
         let seciliSes = null;
-        let timeoutID = null;
+            let timeoutID = null;
         let isActive = false;
         let resumeTimeout = null;
 
@@ -492,9 +493,22 @@
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
-                // Standart ses kalitesi ayarları
-                speech.pitch = 1.1;
-                speech.rate = parseFloat(speedControl.value);
+                // Mobil cihaz kontrolü
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                // Ses kalitesi ayarları
+                if (secilenDil === 'de-DE') {
+                    if (isMobile) {
+                        speech.pitch = 1.0;  // Mobilde daha net ses
+                        speech.rate = Math.min(parseFloat(speedControl.value), 1.2); // Mobilde daha yavaş
+                    } else {
+                        speech.pitch = 1.1;
+                        speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
+                    }
+                } else {
+                    speech.pitch = 1.1;
+                    speech.rate = parseFloat(speedControl.value);
+                }
                 
                 console.log('Seçilen ses:', seciliSes.name, 'Dil:', secilenDil);
             } else {
@@ -503,8 +517,8 @@
             }
         }
 
-        function sesleriYukle() {
-            return new Promise(resolve => {
+            function sesleriYukle() {
+                return new Promise(resolve => {
                 const checkVoices = () => {
                     const availableVoices = window.speechSynthesis.getVoices();
                     if (availableVoices.length > 0) {
@@ -577,6 +591,7 @@
             const hiz = parseFloat(document.getElementById('speedControl').value);
             const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
             const secilenDil = languageSelect.value;
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
             // Sayıyı formatla ve göster
             const formattedNumber = formatNumber(sayi, secilenDil);
@@ -587,7 +602,16 @@
             
             // Yeni bir SpeechSynthesisUtterance oluştur
             const newSpeech = new SpeechSynthesisUtterance(sayi.toString());
-            newSpeech.rate = hiz;
+            
+            // Mobil cihazlarda ve Almanca için özel ayarlar
+            if (isMobile && secilenDil === 'de-DE') {
+                newSpeech.rate = Math.min(hiz, 1.2);
+                newSpeech.pitch = 1.0;
+            } else {
+                newSpeech.rate = hiz;
+                newSpeech.pitch = 1.1;
+            }
+            
             newSpeech.voice = seciliSes;
             newSpeech.lang = secilenDil;
 
@@ -617,8 +641,8 @@
             
             if (min >= max) {
                 alert("Maksimum değer minimumdan büyük olmalı!");
-                return;
-            }
+                        return;
+                    }
             
             // Ses sistemini sıfırla
             window.speechSynthesis.cancel();
@@ -818,6 +842,6 @@
             const defaultLang = languageSelect.value;
             updateLanguage(defaultLang);
         });
-    </script>
-</body>
-</html>
+        </script>
+    </body>
+    </html>
