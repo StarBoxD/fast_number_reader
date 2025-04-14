@@ -795,6 +795,39 @@
                 opacity: 0;
             }
         }
+
+        /* Dark mode için stil ekle */
+        body.dark-mode input[type="text"] {
+            background: linear-gradient(135deg, rgba(36,40,59,0.5), rgba(26,27,38,0.5));
+            border: 1px solid var(--border-dark);
+            color: var(--text-light);
+            box-shadow: 0 4px 6px var(--shadow-dark);
+        }
+
+        input[type="text"]:hover {
+            background: linear-gradient(135deg, rgba(79,70,229,0.05), rgba(99,102,241,0.05));
+            border-color: var(--primary);
+            box-shadow: 0 6px 8px var(--shadow-light);
+        }
+
+        body.dark-mode input[type="text"]:hover {
+            background: linear-gradient(135deg, rgba(36,40,59,0.6), rgba(26,27,38,0.6));
+            border-color: var(--secondary);
+            box-shadow: 0 6px 8px var(--shadow-dark);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(99,102,241,0.08));
+            border-color: var(--primary);
+            box-shadow: 0 8px 12px var(--shadow-light);
+        }
+
+        body.dark-mode input[type="text"]:focus {
+            background: linear-gradient(135deg, rgba(36,40,59,0.7), rgba(26,27,38,0.7));
+            border-color: var(--secondary);
+            box-shadow: 0 8px 12px var(--shadow-dark);
+        }
         </style>
     </head>
     <body>
@@ -864,9 +897,9 @@
                 <div class="control-row">
                     <span class="control-label lang-text" data-key="range">Sayı Aralığı:</span>
                     <div style="display:flex; gap:10px;">
-                        <input type="number" id="minValue" value="1" min="0" placeholder="Min">
+                        <input type="text" id="minValue" value="100.000" min="0" placeholder="Min" style="text-align: left; font-family: monospace; letter-spacing: 1px; background: #1e293b; border: 1px solid var(--border-light); color: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow-light); transition: all 0.3s; width: 120px; font-weight: 600;">
                         <span style="align-self:center;">-</span>
-                        <input type="number" id="maxValue" value="100" min="1" placeholder="Max">
+                        <input type="text" id="maxValue" value="1.000.000" min="1" placeholder="Max" style="text-align: left; font-family: monospace; letter-spacing: 1px; background: #1e293b; border: 1px solid var(--border-light); color: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow-light); transition: all 0.3s; width: 120px; font-weight: 600;">
                     </div>
                 </div>
                 
@@ -1172,22 +1205,26 @@
             });
         }
 
-        // Sayı formatlama fonksiyonları
-        const numberFormatters = {
-            'tr-TR': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."),
-            'en-US': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-            'en-GB': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","),
-            'de-DE': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."),
-            'fr-FR': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
-            'es-ES': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."),
-            'ja-JP': (num) => num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ","),
-            'ru-RU': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "),
-            'zh-CN': (num) => num.toString().replace(/\B(?=(\d{4})+(?!\d))/g, ","),
-            'it-IT': (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-        };
+        // Sayı formatlama fonksiyonu
+        function formatNumberWithDots(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
 
-        function formatNumber(num, lang) {
-            return numberFormatters[lang] ? numberFormatters[lang](num) : num.toString();
+        // Input değerlerini formatla
+        document.getElementById('minValue').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^\d]/g, '');
+            e.target.value = formatNumberWithDots(value);
+        });
+
+        document.getElementById('maxValue').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/[^\d]/g, '');
+            e.target.value = formatNumberWithDots(value);
+        });
+
+        // Sayı okuma fonksiyonunda kullanılacak
+        function getNumericValue(inputId) {
+            const value = document.getElementById(inputId).value.replace(/\./g, '');
+            return parseInt(value) || 0;
         }
 
         function updateHistoryDisplay() {
@@ -1211,7 +1248,7 @@
         }
 
         function addToHistory(number, lang) {
-            const formattedNumber = formatNumber(number, lang);
+            const formattedNumber = formatNumberWithDots(number);
             
             // Yeni sayıyı başa ekle
             numberHistory.unshift({
@@ -1232,8 +1269,8 @@
         }
 
         function startReading() {
-            const min = parseInt(document.getElementById('minValue').value) || 0;
-            const max = parseInt(document.getElementById('maxValue').value) || 100;
+            const min = getNumericValue('minValue');
+            const max = getNumericValue('maxValue');
             const isChrome = /Chrome/.test(navigator.userAgent);
             const isSafari = /Safari/.test(navigator.userAgent) && !isChrome;
             const isFirefox = /Firefox/.test(navigator.userAgent);
@@ -1381,8 +1418,8 @@
         function readNumber() {
             if(!isActive) return;
             
-            const min = parseInt(document.getElementById('minValue').value);
-            const max = parseInt(document.getElementById('maxValue').value);
+            const min = getNumericValue('minValue');
+            const max = getNumericValue('maxValue');
             const gecikme = parseFloat(document.getElementById('delayControl').value) * 1000;
             const hiz = parseFloat(document.getElementById('speedControl').value);
             const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -1391,7 +1428,7 @@
             const isChromeMac = isChromeOnMac();
 
             // Sayıyı formatla ve göster
-            const formattedNumber = formatNumber(sayi, secilenDil);
+            const formattedNumber = formatNumberWithDots(sayi);
             const resultDisplay = document.getElementById('resultDisplay');
             resultDisplay.textContent = formattedNumber;
             
