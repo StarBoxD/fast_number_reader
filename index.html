@@ -828,6 +828,18 @@
             border-color: var(--secondary);
             box-shadow: 0 8px 12px var(--shadow-dark);
         }
+
+        body:not(.dark-mode) input[type="text"] {
+            background: white;
+            border: 1px solid var(--border-light);
+            color: var(--text-dark);
+        }
+
+        body.dark-mode input[type="text"] {
+            background: #1e293b;
+            border: 1px solid var(--border-dark);
+            color: white;
+        }
         </style>
     </head>
     <body>
@@ -897,9 +909,9 @@
                 <div class="control-row">
                     <span class="control-label lang-text" data-key="range">Sayı Aralığı:</span>
                     <div style="display:flex; gap:10px;">
-                        <input type="text" id="minValue" value="100.000" min="0" placeholder="Min" style="text-align: left; font-family: monospace; letter-spacing: 1px; background: #1e293b; border: 1px solid var(--border-light); color: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow-light); transition: all 0.3s; width: 120px; font-weight: 600;">
+                        <input type="text" id="minValue" value="100.000" min="0" placeholder="Min" style="text-align: left; font-family: monospace; letter-spacing: 1px; background: #1e293b; border: 1px solid var(--border-dark); color: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow-light); transition: all 0.3s; width: 120px; font-weight: 600;">
                         <span style="align-self:center;">-</span>
-                        <input type="text" id="maxValue" value="1.000.000" min="1" placeholder="Max" style="text-align: left; font-family: monospace; letter-spacing: 1px; background: #1e293b; border: 1px solid var(--border-light); color: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow-light); transition: all 0.3s; width: 120px; font-weight: 600;">
+                        <input type="text" id="maxValue" value="1.000.000" min="1" placeholder="Max" style="text-align: left; font-family: monospace; letter-spacing: 1px; background: #1e293b; border: 1px solid var(--border-dark); color: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px var(--shadow-light); transition: all 0.3s; width: 120px; font-weight: 600;">
                     </div>
                 </div>
                 
