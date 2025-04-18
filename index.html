@@ -1154,7 +1154,7 @@
                 seciliSes = findMacVoice(secilenDil, uygunSesler);
             } else if (isWindows) {
                 seciliSes = findWindowsVoice(secilenDil, uygunSesler);
-            } else {
+                } else {
                 seciliSes = findDefaultVoice(secilenDil, uygunSesler);
             }
 
@@ -1169,11 +1169,11 @@
             if (!seciliSes) {
                 showVoicePackageNotification(secilenDil);
                 return;
-            }
-            
-            speech.voice = seciliSes;
-            speech.lang = secilenDil;
-            
+                }
+                
+                speech.voice = seciliSes;
+                speech.lang = secilenDil;
+                
             // Dil-spesifik ses ayarları
             setVoiceSettings(secilenDil);
         }
@@ -1271,20 +1271,38 @@
             return findDefaultVoice(lang, voices);
         }
 
-        function findDefaultVoice(lang, voices) {
-            // Önce native sesleri dene
-            const nativeVoice = voices.find(v => v.voiceURI.includes('native'));
-            if (nativeVoice) return nativeVoice;
+                    function findAlternativeVoice(lang, voices) {
+                const langPriority = {
+                    'de-DE': ['de-DE', 'de-AT', 'de-CH', 'de'],
+                    'fr-FR': ['fr-FR', 'fr-CA', 'fr-BE', 'fr'],
+                    'es-ES': ['es-ES', 'es-MX', 'es-AR', 'es'],
+                    'ja-JP': ['ja-JP', 'ja'],
+                    'ru-RU': ['ru-RU', 'ru-UA', 'ru'],
+                    'zh-CN': ['zh-CN', 'zh-HK', 'zh-TW', 'zh'],
+                    'it-IT': ['it-IT', 'it-CH', 'it']
+                };
 
-            // Sonra default sesleri dene
-            const defaultVoice = voices.find(v => v.voiceURI.includes('default'));
-            if (defaultVoice) return defaultVoice;
+                // Öncelikli dil varyantlarını kontrol et
+                if(langPriority[lang]) {
+                    for(const variant of langPriority[lang]) {
+                        const voice = voices.find(v => v.lang === variant);
+                        if(voice) return voice;
+                    }
+                }
+                
+                // Bulunamazsa genel dil koduna göre ara
+                const baseLang = lang.split('-')[0];
+                return voices.find(v => v.lang.startsWith(baseLang)) || voices[0];
+            }
 
-            // Son olarak ilk bulunan sesi kullan
-            return voices[0];
+                    function detectBrowser() {
+            const ua = navigator.userAgent;
+            if(ua.includes('Chrome')) return 'Chrome';
+            if(ua.includes('Safari')) return 'Safari';
+            if(ua.includes('Firefox')) return 'Firefox';
+            return 'Other';
         }
-
-        function setVoiceSettings(lang) {
+            function setVoiceSettings(lang) {
             const langCode = lang.split('-')[0];
             
             // Dil-spesifik ses ayarları
@@ -1305,10 +1323,8 @@
             speech.rate = Math.min(parseFloat(speedControl.value), settings.rate);
         }
 
-        function showVoicePackageNotification(lang) {
+                function showVoicePackageNotification(lang) {
             const langNames = {
-                'tr-TR': 'Türkçe',
-                'en-GB': 'İngilizce (UK)',
                 'de-DE': 'Almanca',
                 'fr-FR': 'Fransızca',
                 'es-ES': 'İspanyolca',
@@ -1318,18 +1334,22 @@
                 'it-IT': 'İtalyanca'
             };
 
-            const isMac = navigator.platform.includes('Mac');
-            const isWindows = navigator.platform.includes('Win');
-            const isLinux = navigator.platform.includes('Linux');
+            const installGuide = {
+                'de-DE': {
+                    Windows: 'https://support.microsoft.com/tr-tr/help/4028316/windows-change-your-display-language',
+                    MacOS: 'https://support.apple.com/tr-tr/guide/mac-help/mchlp1406/mac',
+                    Linux: 'https://wiki.archlinux.org/title/Text-to-speech'
+                },
+                'fr-FR': {
+                    Windows: 'https://support.microsoft.com/tr-tr/help/4028316/windows-change-your-display-language',
+                    MacOS: 'https://support.apple.com/tr-tr/guide/mac-help/mchlp1406/mac',
+                    Linux: 'https://wiki.archlinux.org/title/Text-to-speech'
+                },
+                // Diğer diller için benzer şekilde ekle
+            };
 
-            let installInstructions = '';
-            if (isMac) {
-                installInstructions = 'Sistem Tercihleri > Erişilebilirlik > Konuşma > Sistem Sesi > Sesler > İndir';
-            } else if (isWindows) {
-                installInstructions = 'Ayarlar > Zaman ve Dil > Konuşma > Konuşma Dili > Dil Ekle';
-            } else if (isLinux) {
-                installInstructions = 'Sistem Ayarları > Erişilebilirlik > Metin Okuma > Ses Paketleri';
-            }
+            const os = navigator.platform.includes('Win') ? 'Windows' : 
+                    navigator.platform.includes('Mac') ? 'MacOS' : 'Linux';
 
             const notification = document.createElement('div');
             notification.className = 'notification';
@@ -1337,15 +1357,18 @@
                 <div class="notification-content">
                     <span class="notification-icon">⚠️</span>
                     <span class="notification-text">
-                        ${langNames[lang]} için ses paketi bulunamadı. 
-                        Lütfen ${installInstructions} adımlarını takip ederek "${langNames[lang]}" ses paketini yükleyin.
+                        ${langNames[lang]} ses paketi yüklü değil.<br>
+                        <a href="${installGuide[lang][os]}" target="_blank" style="color:var(--primary); text-decoration:underline">
+                            ${os} için yükleme kılavuzu
+                        </a>
                     </span>
                 </div>
             `;
+            
             document.body.appendChild(notification);
             setTimeout(() => {
                 notification.classList.add('fade-out');
-                setTimeout(() => notification.remove(), 5000);
+                setTimeout(() => notification.remove(), 500);
             }, 5000);
         }
 
@@ -1378,10 +1401,10 @@
                 };
 
                 // Önce mevcut sesleri kontrol et
-                checkVoices();
+                    checkVoices();
                 
                 // Sesler değiştiğinde tekrar kontrol et
-                window.speechSynthesis.onvoiceschanged = checkVoices;
+                    window.speechSynthesis.onvoiceschanged = checkVoices;
             });
         }
 
