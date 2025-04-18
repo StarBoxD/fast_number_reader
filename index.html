@@ -1128,6 +1128,10 @@
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             const isMac = navigator.platform.includes('Mac');
             
+            // Tüm mevcut sesleri logla
+            console.log('Mevcut sesler:', sesler.map(s => `${s.name} (${s.lang})`));
+            console.log('Seçilen dil için uygun sesler:', uygunSesler.map(s => `${s.name} (${s.lang})`));
+            
             // Dil için uygun ses var mı kontrol et
             if(uygunSesler.length === 0) {
                 showVoicePackageNotification(secilenDil);
@@ -1207,6 +1211,14 @@
                     seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
                                uygunSesler.find(s => s.voiceURI.includes('default')) ||
                                uygunSesler[0];
+            }
+
+            // Seçilen sesi logla
+            console.log('Seçilen ses:', seciliSes ? `${seciliSes.name} (${seciliSes.lang})` : 'Bulunamadı');
+            
+            if (!seciliSes) {
+                showVoicePackageNotification(secilenDil);
+                return;
             }
             
             speech.voice = seciliSes;
@@ -1296,19 +1308,26 @@
                             const bIsDefault = b.voiceURI.includes('default') ? 1 : 0;
                             const aIsMicrosoft = a.voiceURI.includes('Microsoft') ? 1 : 0;
                             const bIsMicrosoft = b.voiceURI.includes('Microsoft') ? 1 : 0;
+                            const aIsGoogle = a.voiceURI.includes('Google') ? 1 : 0;
+                            const bIsGoogle = b.voiceURI.includes('Google') ? 1 : 0;
                             
-                            return (bIsNative + bIsDefault + bIsMicrosoft) - (aIsNative + aIsDefault + aIsMicrosoft);
+                            return (bIsNative + bIsDefault + bIsMicrosoft + bIsGoogle) - 
+                                   (aIsNative + aIsDefault + aIsMicrosoft + aIsGoogle);
                         });
+                        
+                        // Tüm sesleri logla
+                        console.log('Yüklenen sesler:', sesler.map(s => `${s.name} (${s.lang})`));
                         resolve(sesler);
                     } else {
                         setTimeout(checkVoices, 100);
                     }
                 };
 
-                setTimeout(() => {
-                    checkVoices();
-                    window.speechSynthesis.onvoiceschanged = checkVoices;
-                }, 500);
+                // Önce mevcut sesleri kontrol et
+                checkVoices();
+                
+                // Sesler değiştiğinde tekrar kontrol et
+                window.speechSynthesis.onvoiceschanged = checkVoices;
             });
         }
 
