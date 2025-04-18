@@ -1013,6 +1013,22 @@
         </div>
 
         <script>
+
+        function loadAdSense() {
+        if (typeof adsbygoogle === 'undefined') {
+            console.warn('AdSense yüklenemedi - Reklam engelleyici tespit edildi');
+            document.querySelectorAll('.ad-container').forEach(container => {
+            container.innerHTML = `
+                <div style="padding:20px; text-align:center; color:var(--text-dark);">
+                <p>Reklamları görmek için lütfen reklam engelleyicinizi devre dışı bırakın</p>
+                <small>Bu site reklamlarla desteklenmektedir</small>
+                </div>
+            `;
+            });
+            return false;
+        }
+        return true;
+        }
                     // Tarayıcı çerez politikası bilgilendirmesi
         if(navigator.userAgent.includes('Chrome')) {
             console.info('Chrome üçüncü taraf çerez politikası nedeniyle bazı özellikler etkilenebilir.');
@@ -2095,6 +2111,21 @@
             }
         });
 
+                function checkChromeRestrictions() {
+        if (navigator.userAgent.includes('Chrome')) {
+            console.info('Chrome üçüncü taraf çerez politikası uyarısı');
+            
+            setTimeout(() => {
+            if (!loadAdSense() || typeof window.va === 'undefined') {
+                const notification = createNotification(
+                'Chrome ayarlarınız bazı özellikleri engelliyor. Lütfen çerez ve site verilerine izin verin.',
+                'ℹ️'
+                );
+                showNotification(notification);
+            }
+            }, 3000);
+        }
+        }
         // Sayfa yüklendiğinde varsayılan dili ayarla
         document.addEventListener('DOMContentLoaded', () => {
             const defaultLang = languageSelect.value;
