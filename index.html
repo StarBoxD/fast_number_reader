@@ -14,7 +14,7 @@
     
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366"
-        crossorigin="anonymous"></script>
+    crossorigin="anonymous"></script>
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="Sayı Okuyucu ile farklı dillerde sayıları sesli olarak dinleyin. Türkçe, İngilizce, Almanca, Fransızca ve daha birçok dil desteği ile sayıları kolayca öğrenin.">
@@ -890,20 +890,20 @@
         <!-- AdSense Blokları -->
         <div class="ad-container ad-left">
             <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-3050374663523366"
-                 data-ad-slot="1234567890"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
+                style="display:block"
+                data-ad-client="ca-pub-3050374663523366"
+                data-ad-slot="1234567890" <!-- GERÇEK slot ID ile değiştirin -->
+                data-ad-format="auto"
+                data-full-width-responsive="true"></ins>
         </div>
-
+        
         <div class="ad-container ad-right">
             <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-3050374663523366"
-                 data-ad-slot="0987654321"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
+                style="display:block"
+                data-ad-client="ca-pub-3050374663523366"
+                data-ad-slot="0987654321" <!-- GERÇEK slot ID ile değiştirin -->
+                data-ad-format="auto"
+                data-full-width-responsive="true"></ins>
         </div>
 
         <!-- İzin İsteme Modalı -->
@@ -1013,6 +1013,10 @@
         </div>
 
         <script>
+                    // Tarayıcı çerez politikası bilgilendirmesi
+        if(navigator.userAgent.includes('Chrome')) {
+            console.info('Chrome üçüncü taraf çerez politikası nedeniyle bazı özellikler etkilenebilir.');
+        }
                     if (!window.va) {
             window.va = {
                 trackPageView: () => console.log('Analytics yüklenmedi'),
@@ -1093,15 +1097,28 @@
                 </div>
             `;
             return notification;
+                }
+                
+                function createNotification(text, icon) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">${icon}</span>
+                    <span class="notification-text">${text}</span>
+                </div>
+            `;
+            return notification;
         }
 
-        // Bildirim gösterme fonksiyonu
+        // Var olan showNotification fonksiyonu
         function showNotification(notification) {
             document.body.appendChild(notification);
             setTimeout(() => {
                 notification.classList.add('fade-out');
                 setTimeout(() => notification.remove(), 500);
             }, 3000);
+
         }
         // Özellikleri aktifleştirme fonksiyonu
         function activateFeatures() {
@@ -2111,9 +2128,13 @@
         (adsbygoogle = window.adsbygoogle || []).push({});
         (adsbygoogle = window.adsbygoogle || []).push({});
 
-        // Vercel Analytics React bileşeni
-        const Analytics = () => {
+                const Analytics = () => {
             React.useEffect(() => {
+                // EKLENEN KONTROL
+                if (typeof window.va === 'undefined') {
+                    console.error('Vercel Analytics yüklenemedi!');
+                    return;
+                }
                 // Analytics başlatma
                 window.va?.trackPageView();
                 
