@@ -1158,6 +1158,11 @@
                 seciliSes = findDefaultVoice(secilenDil, uygunSesler);
             }
 
+            // Eğer hala ses bulunamadıysa, alternatif sesleri dene
+            if (!seciliSes) {
+                seciliSes = findAlternativeVoice(secilenDil, uygunSesler);
+            }
+
             // Seçilen sesi logla
             console.log('Seçilen ses:', seciliSes ? `${seciliSes.name} (${seciliSes.lang})` : 'Bulunamadı');
             
@@ -1173,95 +1178,131 @@
             setVoiceSettings(secilenDil);
         }
 
-        function findMacVoice(lang, voices) {
-            switch(lang) {
-                case 'tr-TR':
-                    return voices.find(s => s.voiceURI.includes('Yelda')) || 
-                           voices.find(s => s.voiceURI.includes('native')) ||
-                           voices.find(s => s.voiceURI.includes('default')) ||
-                           voices[0];
-                case 'en-GB':
-                    return voices.find(s => s.voiceURI.includes('Daniel')) || 
-                           voices.find(s => s.voiceURI.includes('Kate')) ||
-                           voices.find(s => s.voiceURI.includes('Oliver')) ||
-                           voices.find(s => s.voiceURI.includes('Serena')) ||
-                           voices.find(s => s.voiceURI.includes('native')) ||
-                           voices.find(s => s.voiceURI.includes('default')) ||
-                           voices[0];
-                default:
-                    return findDefaultVoice(lang, voices);
+        function findAlternativeVoice(lang, voices) {
+            // Dil kodunu al (örn: tr-TR -> tr)
+            const langCode = lang.split('-')[0];
+            
+            // Önce aynı dil koduna sahip tüm sesleri dene
+            const sameLangVoices = voices.filter(v => v.lang.startsWith(langCode));
+            if (sameLangVoices.length > 0) {
+                return sameLangVoices[0];
             }
+            
+            // Sonra benzer dilleri dene
+            const similarLangs = {
+                'tr': ['az', 'tk'], // Türkçe için Azerice ve Türkmence
+                'de': ['nl', 'da'], // Almanca için Hollandaca ve Danca
+                'fr': ['it', 'es'], // Fransızca için İtalyanca ve İspanyolca
+                'es': ['pt', 'it'], // İspanyolca için Portekizce ve İtalyanca
+                'ja': ['ko', 'zh'], // Japonca için Korece ve Çince
+                'ru': ['uk', 'bg'], // Rusça için Ukraynaca ve Bulgarca
+                'zh': ['ja', 'ko'], // Çince için Japonca ve Korece
+                'it': ['es', 'fr']  // İtalyanca için İspanyolca ve Fransızca
+            };
+
+            if (similarLangs[langCode]) {
+                for (const similarLang of similarLangs[langCode]) {
+                    const similarVoices = voices.filter(v => v.lang.startsWith(similarLang));
+                    if (similarVoices.length > 0) {
+                        return similarVoices[0];
+                    }
+                }
+            }
+
+            // Hiçbir ses bulunamazsa, varsayılan İngilizce sesi dene
+            const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+            if (englishVoices.length > 0) {
+                return englishVoices[0];
+            }
+
+            // Son çare olarak ilk bulunan sesi kullan
+            return voices[0];
+        }
+
+        function findMacVoice(lang, voices) {
+            const langCode = lang.split('-')[0];
+            
+            // Mac için özel ses isimleri
+            const macVoices = {
+                'tr': ['Yelda', 'native', 'default'],
+                'en': ['Daniel', 'Kate', 'Oliver', 'Serena', 'native', 'default'],
+                'de': ['Anna', 'Yannick', 'Petra', 'Markus', 'native', 'default'],
+                'fr': ['Amelie', 'Thomas', 'native', 'default'],
+                'es': ['Monica', 'Jorge', 'native', 'default'],
+                'ja': ['Kyoko', 'Otoya', 'native', 'default'],
+                'ru': ['Milena', 'Dmitri', 'native', 'default'],
+                'zh': ['Ting-Ting', 'Li-Mu', 'native', 'default'],
+                'it': ['Alice', 'Luca', 'native', 'default']
+            };
+
+            if (macVoices[langCode]) {
+                for (const voiceName of macVoices[langCode]) {
+                    const voice = voices.find(v => v.voiceURI.includes(voiceName));
+                    if (voice) return voice;
+                }
+            }
+
+            return findDefaultVoice(lang, voices);
         }
 
         function findWindowsVoice(lang, voices) {
-            switch(lang) {
-                case 'tr-TR':
-                    return voices.find(s => s.voiceURI.includes('Microsoft')) || 
-                           voices.find(s => s.voiceURI.includes('Google')) ||
-                           voices.find(s => s.voiceURI.includes('native')) ||
-                           voices.find(s => s.voiceURI.includes('default')) ||
-                           voices[0];
-                case 'en-GB':
-                    return voices.find(s => s.voiceURI.includes('Hazel')) || 
-                           voices.find(s => s.voiceURI.includes('George')) ||
-                           voices.find(s => s.voiceURI.includes('Susan')) ||
-                           voices.find(s => s.voiceURI.includes('UK')) ||
-                           voices.find(s => s.voiceURI.includes('native')) ||
-                           voices.find(s => s.voiceURI.includes('default')) ||
-                           voices[0];
-                default:
-                    return findDefaultVoice(lang, voices);
+            const langCode = lang.split('-')[0];
+            
+            // Windows için özel ses isimleri
+            const windowsVoices = {
+                'tr': ['Microsoft', 'Google', 'native', 'default'],
+                'en': ['Hazel', 'George', 'Susan', 'UK', 'native', 'default'],
+                'de': ['Microsoft', 'Google', 'native', 'default'],
+                'fr': ['Microsoft', 'Google', 'native', 'default'],
+                'es': ['Microsoft', 'Google', 'native', 'default'],
+                'ja': ['Microsoft', 'Google', 'native', 'default'],
+                'ru': ['Microsoft', 'Google', 'native', 'default'],
+                'zh': ['Microsoft', 'Google', 'native', 'default'],
+                'it': ['Microsoft', 'Google', 'native', 'default']
+            };
+
+            if (windowsVoices[langCode]) {
+                for (const voiceName of windowsVoices[langCode]) {
+                    const voice = voices.find(v => v.voiceURI.includes(voiceName));
+                    if (voice) return voice;
+                }
             }
+
+            return findDefaultVoice(lang, voices);
         }
 
         function findDefaultVoice(lang, voices) {
-            return voices.find(s => s.voiceURI.includes('native')) || 
-                   voices.find(s => s.voiceURI.includes('default')) ||
-                   voices[0];
+            // Önce native sesleri dene
+            const nativeVoice = voices.find(v => v.voiceURI.includes('native'));
+            if (nativeVoice) return nativeVoice;
+
+            // Sonra default sesleri dene
+            const defaultVoice = voices.find(v => v.voiceURI.includes('default'));
+            if (defaultVoice) return defaultVoice;
+
+            // Son olarak ilk bulunan sesi kullan
+            return voices[0];
         }
 
         function setVoiceSettings(lang) {
-            switch(lang) {
-                case 'tr-TR':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    break;
-                case 'en-GB':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.3);
-                    break;
-                case 'de-DE':
-                    speech.pitch = 0.9;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    break;
-                case 'fr-FR':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    break;
-                case 'es-ES':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    break;
-                case 'ja-JP':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.1);
-                    break;
-                case 'ru-RU':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    break;
-                case 'zh-CN':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.1);
-                    break;
-                case 'it-IT':
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    break;
-                default:
-                    speech.pitch = 1.1;
-                    speech.rate = parseFloat(speedControl.value);
-            }
+            const langCode = lang.split('-')[0];
+            
+            // Dil-spesifik ses ayarları
+            const voiceSettings = {
+                'tr': { pitch: 1.0, rate: 1.2 },
+                'en': { pitch: 1.0, rate: 1.3 },
+                'de': { pitch: 0.9, rate: 1.2 },
+                'fr': { pitch: 1.0, rate: 1.2 },
+                'es': { pitch: 1.0, rate: 1.2 },
+                'ja': { pitch: 1.0, rate: 1.1 },
+                'ru': { pitch: 1.0, rate: 1.2 },
+                'zh': { pitch: 1.0, rate: 1.1 },
+                'it': { pitch: 1.0, rate: 1.2 }
+            };
+
+            const settings = voiceSettings[langCode] || { pitch: 1.1, rate: 1.0 };
+            speech.pitch = settings.pitch;
+            speech.rate = Math.min(parseFloat(speedControl.value), settings.rate);
         }
 
         function showVoicePackageNotification(lang) {
