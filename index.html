@@ -290,30 +290,52 @@
         }
 
         /* Geçmiş Listesi */
-        .history-section {
-            margin-top: 1.5rem;
+                .history-section {
+            position: relative; /* Başlık için referans oluşturuyoruz */
+            margin-top: 1rem;
+            padding: 0;
         }
 
-        .history-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 0.5rem;
-            max-height: 100px;
-            overflow-y: auto;
-            padding: 0.5rem;
+        .history-title {
+            position: absolute; /* Başlığı normal akıştan çıkarıyoruz */
+            top: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            margin: 0;
+            padding: 0.5rem 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none; /* Tıklamalara engel olmaması için */
         }
 
-        .history-item {
-            padding: 0.5rem;
+        .history-title.active {
+            opacity: 0;
+        }
+
+                .history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem; /* Aralıkları artırdık */
+            padding: 0.6rem; /* Padding'i biraz artırdık */
+            margin: 0;
+            align-content: flex-start;
+        }
+
+                body.dark-mode .history-item {
+            background: rgba(30, 41, 59, 0.7);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+                .history-item {
+            padding: 0.5rem 0.8rem; /* Daha geniş padding */
             background: rgba(255,255,255,0.9);
             border-radius: 0.5rem;
             text-align: center;
             font-weight: 600;
             color: var(--primary);
-        }
-
-        body.dark-mode .history-item {
-            background: rgba(30, 41, 59, 0.7);
+            font-size: 0.95rem; /* Yazı boyutunu ayarladık */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Hafif gölge */
+            min-width: 80px; /* Sabit genişlik */
         }
 
         /* İstatistikler */
@@ -480,7 +502,7 @@
         <div id="resultDisplay">---</div>
 
         <div class="card history-section">
-            <h3 class="lang-text" data-key="history" style="margin-bottom:1rem;">Okunan Sayılar</h3>
+            <h3 class="history-title lang-text" data-key="history">Okunan Sayılar</h3>
             <div class="history-list" id="historyList"></div>
         </div>
 
@@ -621,22 +643,27 @@
             setVoiceSettings(secilenDil);
         }
         
-        // 5. OKUMA İŞLEMLERİ
-        function addToHistory(number, lang) {
+                // 5. OKUMA İŞLEMLERİ
+                        function addToHistory(number, lang) {
             const formattedNumber = formatNumberWithDots(number);
             numberHistory.unshift({ number: formattedNumber, lang: lang });
             if (numberHistory.length > 20) numberHistory.pop();
             
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
-            [...numberHistory].reverse().forEach(item => {
+            
+            numberHistory.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'history-item';
-                div.innerHTML = `<span class="number">${item.number}</span>`;
+                div.textContent = item.number;
                 historyList.appendChild(div);
             });
             
-            historyList.classList.toggle('active', numberHistory.length > 0);
+            // Başlığı gizle
+            document.querySelector('.history-title').classList.toggle('active', numberHistory.length > 0);
+            
+            // Scroll'u en üste sabitle
+            historyList.scrollTop = 0;
         }
         
         function readNumber() {
