@@ -1130,28 +1130,41 @@
             
             if(uygunSesler.length > 0) {
                 // Mac için özel ses seçimi
-                if (isMac && secilenDil === 'de-DE') {
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                } else if (isMac && secilenDil === 'en-GB') {
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Daniel')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Kate')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Oliver')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Serena')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                } else if (isMac) {
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
+                if (isMac) {
+                    if (secilenDil === 'tr-TR') {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Yelda')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    } else if (secilenDil === 'de-DE') {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    } else if (secilenDil === 'en-GB') {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Daniel')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('Kate')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Oliver')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('Serena')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    } else {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    }
                 } else {
-                    if (secilenDil === 'en-GB') {
+                    if (secilenDil === 'tr-TR') {
+                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Microsoft')) || 
+                                   uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                                   uygunSesler[0];
+                    } else if (secilenDil === 'en-GB') {
                         seciliSes = uygunSesler.find(s => s.voiceURI.includes('Hazel')) || 
                                    uygunSesler.find(s => s.voiceURI.includes('George')) ||
                                    uygunSesler.find(s => s.voiceURI.includes('Susan')) ||
@@ -1171,21 +1184,39 @@
                 speech.voice = seciliSes;
                 speech.lang = secilenDil;
                 
-                if (isMac && secilenDil === 'de-DE') {
-                    speech.pitch = 0.9;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                } else if (isMac && secilenDil === 'en-GB') {
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.3);
-                } else if (isMac) {
-                    speech.pitch = 1.0;
-                    speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
+                if (isMac) {
+                    if (secilenDil === 'tr-TR') {
+                        speech.pitch = 1.0;
+                        speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    } else if (secilenDil === 'de-DE') {
+                        speech.pitch = 0.9;
+                        speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    } else if (secilenDil === 'en-GB') {
+                        speech.pitch = 1.0;
+                        speech.rate = Math.min(parseFloat(speedControl.value), 1.3);
+                    } else {
+                        speech.pitch = 1.0;
+                        speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
+                    }
                 } else {
                     speech.pitch = 1.1;
                     speech.rate = parseFloat(speedControl.value);
                 }
             } else {
-                alert(`${languageSelect.options[languageSelect.selectedIndex].text} için ses paketi bulunamadı!`);
+                // Ses paketi bulunamadığında daha açıklayıcı bir mesaj göster
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <span class="notification-icon">⚠️</span>
+                        <span class="notification-text">${languageSelect.options[languageSelect.selectedIndex].text} için ses paketi bulunamadı. Lütfen sistem ayarlarınızdan ses paketlerini kontrol edin.</span>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.classList.add('fade-out');
+                    setTimeout(() => notification.remove(), 500);
+                }, 5000);
             }
         }
 
