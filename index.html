@@ -1128,96 +1128,160 @@
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             const isMac = navigator.platform.includes('Mac');
             
-            if(uygunSesler.length > 0) {
-                // Mac için özel ses seçimi
-                if (isMac) {
-                    if (secilenDil === 'tr-TR') {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Yelda')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    } else if (secilenDil === 'de-DE') {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    } else if (secilenDil === 'en-GB') {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Daniel')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('Kate')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Oliver')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Serena')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    } else {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    }
-                } else {
-                    if (secilenDil === 'tr-TR') {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Microsoft')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    } else if (secilenDil === 'en-GB') {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('Hazel')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('George')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Susan')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('UK')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                                   uygunSesler[0];
-                    } else {
-                        seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('default')) || 
-                                   uygunSesler.find(s => s.voiceURI.includes('Microsoft')) ||
-                                   uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                                   uygunSesler[0];
-                    }
-                }
-                
-                speech.voice = seciliSes;
-                speech.lang = secilenDil;
-                
-                if (isMac) {
-                    if (secilenDil === 'tr-TR') {
-                        speech.pitch = 1.0;
-                        speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    } else if (secilenDil === 'de-DE') {
-                        speech.pitch = 0.9;
-                        speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
-                    } else if (secilenDil === 'en-GB') {
-                        speech.pitch = 1.0;
-                        speech.rate = Math.min(parseFloat(speedControl.value), 1.3);
-                    } else {
-                        speech.pitch = 1.0;
-                        speech.rate = Math.min(parseFloat(speedControl.value), 1.5);
-                    }
-                } else {
+            // Dil için uygun ses var mı kontrol et
+            if(uygunSesler.length === 0) {
+                showVoicePackageNotification(secilenDil);
+                return;
+            }
+
+            // Dil-spesifik ses seçimi
+            switch(secilenDil) {
+                case 'tr-TR':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Microsoft')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'en-GB':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Hazel')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('George')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Susan')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('UK')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'de-DE':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'fr-FR':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Amelie')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Thomas')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'es-ES':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Monica')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Jorge')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'ja-JP':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Kyoko')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Otoya')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'ru-RU':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Milena')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Dmitri')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'zh-CN':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Ting-Ting')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Li-Mu')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                case 'it-IT':
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Alice')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('Luca')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+                    break;
+                default:
+                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
+                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
+                               uygunSesler[0];
+            }
+            
+            speech.voice = seciliSes;
+            speech.lang = secilenDil;
+            
+            // Dil-spesifik ses ayarları
+            switch(secilenDil) {
+                case 'tr-TR':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    break;
+                case 'en-GB':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.3);
+                    break;
+                case 'de-DE':
+                    speech.pitch = 0.9;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    break;
+                case 'fr-FR':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    break;
+                case 'es-ES':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    break;
+                case 'ja-JP':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.1);
+                    break;
+                case 'ru-RU':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    break;
+                case 'zh-CN':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.1);
+                    break;
+                case 'it-IT':
+                    speech.pitch = 1.0;
+                    speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
+                    break;
+                default:
                     speech.pitch = 1.1;
                     speech.rate = parseFloat(speedControl.value);
-                }
-            } else {
-                // Ses paketi bulunamadığında daha açıklayıcı bir mesaj göster
-                const notification = document.createElement('div');
-                notification.className = 'notification';
-                notification.innerHTML = `
-                    <div class="notification-content">
-                        <span class="notification-icon">⚠️</span>
-                        <span class="notification-text">${languageSelect.options[languageSelect.selectedIndex].text} için ses paketi bulunamadı. Lütfen sistem ayarlarınızdan ses paketlerini kontrol edin.</span>
-                    </div>
-                `;
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                    notification.classList.add('fade-out');
-                    setTimeout(() => notification.remove(), 500);
-                }, 5000);
             }
+        }
+
+        function showVoicePackageNotification(lang) {
+            const langNames = {
+                'tr-TR': 'Türkçe',
+                'en-GB': 'İngilizce (UK)',
+                'de-DE': 'Almanca',
+                'fr-FR': 'Fransızca',
+                'es-ES': 'İspanyolca',
+                'ja-JP': 'Japonca',
+                'ru-RU': 'Rusça',
+                'zh-CN': 'Çince',
+                'it-IT': 'İtalyanca'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">⚠️</span>
+                    <span class="notification-text">${langNames[lang]} için ses paketi bulunamadı. Lütfen sistem ayarlarınızdan "${langNames[lang]}" ses paketini yükleyin.</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.classList.add('fade-out');
+                setTimeout(() => notification.remove(), 500);
+            }, 5000);
         }
 
         function sesleriYukle() {
