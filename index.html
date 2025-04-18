@@ -1127,6 +1127,8 @@
             const secilenDil = languageSelect.value;
             const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
             const isMac = navigator.platform.includes('Mac');
+            const isWindows = navigator.platform.includes('Win');
+            const isLinux = navigator.platform.includes('Linux');
             
             // Tüm mevcut sesleri logla
             console.log('Mevcut sesler:', sesler.map(s => `${s.name} (${s.lang})`));
@@ -1138,79 +1140,15 @@
                 return;
             }
 
-            // Dil-spesifik ses seçimi
-            switch(secilenDil) {
-                case 'tr-TR':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Microsoft')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Google')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'en-GB':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Hazel')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('George')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Susan')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('UK')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'de-DE':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Anna')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Yannick')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Petra')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('Markus')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'fr-FR':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Amelie')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Thomas')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'es-ES':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Monica')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Jorge')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'ja-JP':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Kyoko')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Otoya')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'ru-RU':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Milena')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Dmitri')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'zh-CN':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Ting-Ting')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Li-Mu')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                case 'it-IT':
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('Alice')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('Luca')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('native')) ||
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
-                    break;
-                default:
-                    seciliSes = uygunSesler.find(s => s.voiceURI.includes('native')) || 
-                               uygunSesler.find(s => s.voiceURI.includes('default')) ||
-                               uygunSesler[0];
+            // İşletim sistemine göre ses seçimi
+            let seciliSes = null;
+            
+            if (isMac) {
+                seciliSes = findMacVoice(secilenDil, uygunSesler);
+            } else if (isWindows) {
+                seciliSes = findWindowsVoice(secilenDil, uygunSesler);
+            } else {
+                seciliSes = findDefaultVoice(secilenDil, uygunSesler);
             }
 
             // Seçilen sesi logla
@@ -1225,7 +1163,58 @@
             speech.lang = secilenDil;
             
             // Dil-spesifik ses ayarları
-            switch(secilenDil) {
+            setVoiceSettings(secilenDil);
+        }
+
+        function findMacVoice(lang, voices) {
+            switch(lang) {
+                case 'tr-TR':
+                    return voices.find(s => s.voiceURI.includes('Yelda')) || 
+                           voices.find(s => s.voiceURI.includes('native')) ||
+                           voices.find(s => s.voiceURI.includes('default')) ||
+                           voices[0];
+                case 'en-GB':
+                    return voices.find(s => s.voiceURI.includes('Daniel')) || 
+                           voices.find(s => s.voiceURI.includes('Kate')) ||
+                           voices.find(s => s.voiceURI.includes('Oliver')) ||
+                           voices.find(s => s.voiceURI.includes('Serena')) ||
+                           voices.find(s => s.voiceURI.includes('native')) ||
+                           voices.find(s => s.voiceURI.includes('default')) ||
+                           voices[0];
+                default:
+                    return findDefaultVoice(lang, voices);
+            }
+        }
+
+        function findWindowsVoice(lang, voices) {
+            switch(lang) {
+                case 'tr-TR':
+                    return voices.find(s => s.voiceURI.includes('Microsoft')) || 
+                           voices.find(s => s.voiceURI.includes('Google')) ||
+                           voices.find(s => s.voiceURI.includes('native')) ||
+                           voices.find(s => s.voiceURI.includes('default')) ||
+                           voices[0];
+                case 'en-GB':
+                    return voices.find(s => s.voiceURI.includes('Hazel')) || 
+                           voices.find(s => s.voiceURI.includes('George')) ||
+                           voices.find(s => s.voiceURI.includes('Susan')) ||
+                           voices.find(s => s.voiceURI.includes('UK')) ||
+                           voices.find(s => s.voiceURI.includes('native')) ||
+                           voices.find(s => s.voiceURI.includes('default')) ||
+                           voices[0];
+                default:
+                    return findDefaultVoice(lang, voices);
+            }
+        }
+
+        function findDefaultVoice(lang, voices) {
+            return voices.find(s => s.voiceURI.includes('native')) || 
+                   voices.find(s => s.voiceURI.includes('default')) ||
+                   voices[0];
+        }
+
+        function setVoiceSettings(lang) {
+            switch(lang) {
                 case 'tr-TR':
                     speech.pitch = 1.0;
                     speech.rate = Math.min(parseFloat(speedControl.value), 1.2);
@@ -1281,12 +1270,28 @@
                 'it-IT': 'İtalyanca'
             };
 
+            const isMac = navigator.platform.includes('Mac');
+            const isWindows = navigator.platform.includes('Win');
+            const isLinux = navigator.platform.includes('Linux');
+
+            let installInstructions = '';
+            if (isMac) {
+                installInstructions = 'Sistem Tercihleri > Erişilebilirlik > Konuşma > Sistem Sesi > Sesler > İndir';
+            } else if (isWindows) {
+                installInstructions = 'Ayarlar > Zaman ve Dil > Konuşma > Konuşma Dili > Dil Ekle';
+            } else if (isLinux) {
+                installInstructions = 'Sistem Ayarları > Erişilebilirlik > Metin Okuma > Ses Paketleri';
+            }
+
             const notification = document.createElement('div');
             notification.className = 'notification';
             notification.innerHTML = `
                 <div class="notification-content">
                     <span class="notification-icon">⚠️</span>
-                    <span class="notification-text">${langNames[lang]} için ses paketi bulunamadı. Lütfen sistem ayarlarınızdan "${langNames[lang]}" ses paketini yükleyin.</span>
+                    <span class="notification-text">
+                        ${langNames[lang]} için ses paketi bulunamadı. 
+                        Lütfen ${installInstructions} adımlarını takip ederek "${langNames[lang]}" ses paketini yükleyin.
+                    </span>
                 </div>
             `;
             document.body.appendChild(notification);
@@ -1296,6 +1301,7 @@
             }, 5000);
         }
 
+        // Ses yükleme fonksiyonunu güncelle
         function sesleriYukle() {
             return new Promise(resolve => {
                 const checkVoices = () => {
