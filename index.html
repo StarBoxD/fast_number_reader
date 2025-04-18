@@ -847,6 +847,63 @@
             border: 1px solid var(--border-dark);
             color: white;
         }
+
+                /* Dil desteği uyarı bildirimi */
+        #langSupportWarning {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-light);
+            color: var(--text-dark);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px var(--shadow-light);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            max-width: 90%;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        body.dark-mode #langSupportWarning {
+            background: var(--card-dark);
+            color: var(--text-light);
+            box-shadow: 0 5px 15px var(--shadow-dark);
+            border-color: var(--border-dark);
+        }
+
+        #langSupportWarning .notification-icon {
+            font-size: 1.4em;
+            min-width: 30px;
+        }
+
+        #langSupportWarning .notification-text {
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        #langSupportWarning a {
+            color: var(--primary);
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        /* Animasyon */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -30px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
         </style>
     </head>
     <body>
@@ -966,6 +1023,11 @@
                     <div class="stat-label">En Çok Kullanılan Dil</div>
                 </div>
             </div>
+        </div>
+
+        <div id="langSupportWarning" class="notification" style="display:none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);">
+            <span class="notification-icon">⚠️</span>
+            <span id="langWarningText"></span>
         </div>
 
         <script>
@@ -1271,56 +1333,58 @@
             return findDefaultVoice(lang, voices);
         }
 
-                    function findAlternativeVoice(lang, voices) {
-                const langPriority = {
-                    'de-DE': ['de-DE', 'de-AT', 'de-CH', 'de'],
-                    'fr-FR': ['fr-FR', 'fr-CA', 'fr-BE', 'fr'],
-                    'es-ES': ['es-ES', 'es-MX', 'es-AR', 'es'],
-                    'ja-JP': ['ja-JP', 'ja'],
-                    'ru-RU': ['ru-RU', 'ru-UA', 'ru'],
-                    'zh-CN': ['zh-CN', 'zh-HK', 'zh-TW', 'zh'],
-                    'it-IT': ['it-IT', 'it-CH', 'it']
-                };
+                function findAlternativeVoice(lang, voices) {
+            const langPriority = {
+                'de-DE': ['de-DE', 'de-AT', 'de-CH', 'de'],
+                'fr-FR': ['fr-FR', 'fr-CA', 'fr-BE', 'fr'],
+                'es-ES': ['es-ES', 'es-MX', 'es-AR', 'es'],
+                'ja-JP': ['ja-JP', 'ja'],
+                'ru-RU': ['ru-RU', 'ru-UA', 'ru'],
+                'zh-CN': ['zh-CN', 'zh-HK', 'zh-TW', 'zh'],
+                'it-IT': ['it-IT', 'it-CH', 'it']
+            };
 
-                // Öncelikli dil varyantlarını kontrol et
-                if(langPriority[lang]) {
-                    for(const variant of langPriority[lang]) {
-                        const voice = voices.find(v => v.lang === variant);
-                        if(voice) return voice;
-                    }
+            // Öncelikli dil varyantlarını kontrol et
+            if(langPriority[lang]) {
+                for(const variant of langPriority[lang]) {
+                    const voice = voices.find(v => v.lang === variant);
+                    if(voice) return voice;
                 }
-                
-                // Bulunamazsa genel dil koduna göre ara
-                const baseLang = lang.split('-')[0];
-                return voices.find(v => v.lang.startsWith(baseLang)) || voices[0];
             }
+            
+            // Bulunamazsa genel dil koduna göre ara
+            const baseLang = lang.split('-')[0];
+            return voices.find(v => v.lang.startsWith(baseLang)) || voices[0];
+        }
 
-                    function detectBrowser() {
+                function detectBrowser() {
             const ua = navigator.userAgent;
             if(ua.includes('Chrome')) return 'Chrome';
             if(ua.includes('Safari')) return 'Safari';
             if(ua.includes('Firefox')) return 'Firefox';
             return 'Other';
         }
-            function setVoiceSettings(lang) {
-            const langCode = lang.split('-')[0];
-            
-            // Dil-spesifik ses ayarları
-            const voiceSettings = {
-                'tr': { pitch: 1.0, rate: 1.2 },
-                'en': { pitch: 1.0, rate: 1.3 },
-                'de': { pitch: 0.9, rate: 1.2 },
-                'fr': { pitch: 1.0, rate: 1.2 },
-                'es': { pitch: 1.0, rate: 1.2 },
-                'ja': { pitch: 1.0, rate: 1.1 },
-                'ru': { pitch: 1.0, rate: 1.2 },
-                'zh': { pitch: 1.0, rate: 1.1 },
-                'it': { pitch: 1.0, rate: 1.2 }
+                function setVoiceSettings(lang) {
+            const browser = detectBrowser();
+            const browserSettings = {
+                Chrome: {
+                    'de-DE': {rate: 1.1, pitch: 1.0},
+                    'fr-FR': {rate: 1.0, pitch: 1.0},
+                    // Diğer diller için ekle
+                },
+                Safari: {
+                    'de-DE': {rate: 0.9, pitch: 1.1},
+                    // Diğer diller için ekle
+                },
+                Firefox: {
+                    'de-DE': {rate: 1.0, pitch: 1.0},
+                    // Diğer diller için ekle
+                }
             };
 
-            const settings = voiceSettings[langCode] || { pitch: 1.1, rate: 1.0 };
+            const settings = browserSettings[browser]?.[lang] || {rate: 1.0, pitch: 1.0};
+            speech.rate = Math.min(speedControl.value, settings.rate);
             speech.pitch = settings.pitch;
-            speech.rate = Math.min(parseFloat(speedControl.value), settings.rate);
         }
 
                 function showVoicePackageNotification(lang) {
@@ -1391,8 +1455,8 @@
                             return (bIsNative + bIsDefault + bIsMicrosoft + bIsGoogle) - 
                                    (aIsNative + aIsDefault + aIsMicrosoft + aIsGoogle);
                         });
-                        
-                        // Tüm sesleri logla
+                       
+                        checkLanguageSupport();
                         console.log('Yüklenen sesler:', sesler.map(s => `${s.name} (${s.lang})`));
                         resolve(sesler);
                     } else {
@@ -1406,6 +1470,33 @@
                 // Sesler değiştiğinde tekrar kontrol et
                     window.speechSynthesis.onvoiceschanged = checkVoices;
             });
+        }
+
+                function checkLanguageSupport() {
+        const voices = window.speechSynthesis.getVoices();
+        const supportedLangs = [...new Set(voices.map(v => v.lang))];
+        
+        document.querySelectorAll('#languageSelect option').forEach(option => {
+            const langCode = option.value;
+            const isSupported = supportedLangs.some(lang => lang.startsWith(langCode.split('-')[0]));
+            
+            option.disabled = !isSupported;
+            if (!isSupported) {
+            option.title = "Bu dil tarayıcınızda yüklü değil";
+            showLangWarning(langCode);
+            }
+        });
+        }
+
+        function showLangWarning(langCode) {
+        const warning = document.getElementById('langSupportWarning');
+        const langName = document.querySelector(`#languageSelect option[value="${langCode}"]`).text;
+        
+        document.getElementById('langWarningText').textContent = 
+            `${langName} ses paketi yüklü değil!`;
+        
+        warning.style.display = 'flex';
+        setTimeout(() => warning.style.display = 'none', 5000);
         }
 
         // Sayı formatlama fonksiyonu
@@ -1989,6 +2080,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             const defaultLang = languageSelect.value;
             updateLanguage(defaultLang);
+
+            setTimeout(checkLanguageSupport, 1000); // 1 saniye gecikmeli
+            window.speechSynthesis.onvoiceschanged = checkLanguageSupport;
         });
 
         // İstatistikleri tutacak değişkenler
@@ -2077,6 +2171,35 @@
         const analyticsRoot = document.createElement('div');
         document.body.appendChild(analyticsRoot);
         ReactDOM.createRoot(analyticsRoot).render(React.createElement(Analytics));
+
+                function testAllLanguages() {
+            const originalLang = languageSelect.value;
+            const results = {};
+            
+            Array.from(languageSelect.options).forEach(async (option) => {
+                languageSelect.value = option.value;
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                results[option.value] = {
+                    voices: window.speechSynthesis.getVoices().filter(v => v.lang === option.value),
+                    testSpeech: await testSpeechSynthesis(option.value)
+                };
+            });
+            
+            languageSelect.value = originalLang;
+            console.log('Dil Test Sonuçları:', results);
+            return results;
+        }
+
+        function testSpeechSynthesis(lang) {
+            return new Promise(resolve => {
+                const test = new SpeechSynthesisUtterance('123');
+                test.lang = lang;
+                test.onend = () => resolve(true);
+                test.onerror = (e) => resolve(false);
+                window.speechSynthesis.speak(test);
+            });
+        }
         </script>
     </body>
     </html>
