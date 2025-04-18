@@ -5,6 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sayı Okuyucu - Çoklu Dil Desteği ile Sayıları Sesli Okuyun</title>
     
+    <!-- React ve ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Vercel Analytics -->
+    <script src="https://unpkg.com/@vercel/analytics@1.1.1/dist/analytics.min.js"></script>
+    
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366"
         crossorigin="anonymous"></script>
@@ -1297,7 +1304,7 @@
             document.body.appendChild(notification);
             setTimeout(() => {
                 notification.classList.add('fade-out');
-                setTimeout(() => notification.remove(), 500);
+                setTimeout(() => notification.remove(), 5000);
             }, 5000);
         }
 
@@ -1946,6 +1953,66 @@
         // AdSense reklamlarını yükle
         (adsbygoogle = window.adsbygoogle || []).push({});
         (adsbygoogle = window.adsbygoogle || []).push({});
+
+        // Vercel Analytics React bileşeni
+        const Analytics = () => {
+            React.useEffect(() => {
+                // Analytics başlatma
+                window.va?.trackPageView();
+                
+                // Analytics durumunu kontrol et
+                const checkAnalytics = () => {
+                    if (window.va) {
+                        console.log('Vercel Analytics başarıyla yüklendi');
+                        // Analytics verilerini görmek için yönlendirme
+                        setTimeout(() => {
+                            const notification = document.createElement('div');
+                            notification.className = 'notification';
+                            notification.innerHTML = `
+                                <div class="notification-content">
+                                    <span class="notification-icon">📊</span>
+                                    <span class="notification-text">
+                                        Analytics verilerinizi görmek için Vercel Dashboard'a gidin: 
+                                        <a href="https://vercel.com/dashboard" target="_blank" style="color: var(--primary); text-decoration: underline;">
+                                            Vercel Dashboard
+                                        </a>
+                                    </span>
+                                </div>
+                            `;
+                            document.body.appendChild(notification);
+                            setTimeout(() => {
+                                notification.classList.add('fade-out');
+                                setTimeout(() => notification.remove(), 500);
+                            }, 10000);
+                        }, 30000);
+                    } else {
+                        console.warn('Vercel Analytics yüklenemedi. Lütfen içerik engelleyicileri kontrol edin.');
+                    }
+                };
+
+                // Analytics kontrolünü başlat
+                checkAnalytics();
+
+                // Sayfa değişikliklerini takip et
+                const handleRouteChange = () => {
+                    window.va?.trackPageView();
+                };
+
+                // Sayfa değişikliklerini dinle
+                window.addEventListener('popstate', handleRouteChange);
+
+                return () => {
+                    window.removeEventListener('popstate', handleRouteChange);
+                };
+            }, []);
+
+            return null;
+        };
+
+        // Analytics bileşenini render et
+        const analyticsRoot = document.createElement('div');
+        document.body.appendChild(analyticsRoot);
+        ReactDOM.createRoot(analyticsRoot).render(React.createElement(Analytics));
         </script>
     </body>
     </html>
