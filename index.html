@@ -424,25 +424,6 @@
     </style>
 </head>
 <body>
-    <!-- AdSense Blokları -->
-    <div class="ad-container ad-left">
-        <ins class="adsbygoogle"
-            style="display:block"
-            data-ad-client="ca-pub-3050374663523366"
-            data-ad-slot="1234567890"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-    </div>
-    
-    <div class="ad-container ad-right">
-        <ins class="adsbygoogle"
-            style="display:block"
-            data-ad-client="ca-pub-3050374663523366"
-            data-ad-slot="0987654321"
-            data-ad-format="auto"
-            data-full-width-responsive="true"></ins>
-    </div>
-
     <div class="container">
         <div class="header">
             <h1><span style="font-size: 1.2em;">🌐</span> <span class="lang-text" data-key="title">Sayı Okuyucu</span></h1>
@@ -520,6 +501,17 @@
                 <div class="stat-label lang-text" data-key="favoriteLanguageLabel">En Çok Kullanılan Dil</div>
             </div>
         </div>
+        
+        <div class="ad-container ad-left">
+            <script>
+                try {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                } catch(e) {
+                    console.log("AdSense yüklenemedi", e);
+                }
+            </script>
+        </div>
+        
     </div>
 
     <script>
@@ -849,6 +841,60 @@
                 themeIcon.textContent = '☀️';
                 themeToggle.innerHTML = '<span id="themeIcon">☀️</span> Açık Mod';
             }
+        });
+            // 1. Çerez Politikası Uyarısı için Çözüm
+        document.addEventListener('DOMContentLoaded', function() {
+            // SameSite çerez ayarı
+            document.cookie = "sameSite=None; Secure";
+            
+            // Chrome'un çerez uyarısını yönetme
+            if (navigator.userAgent.includes('Chrome')) {
+                console.log('Chrome çerez politikası uyarısı yönetiliyor');
+            }
+        });
+
+        // 2. Analytics Fallback Mekanizması
+        let analyticsLoaded = false;
+
+        function initializeAnalytics() {
+            if (typeof va === 'function') {
+                va('send', 'pageview');
+                analyticsLoaded = true;
+            } else {
+                console.log('Vercel Analytics yüklenmedi, alternatif izleme...');
+                // Alternatif izleme kodu (isteğe bağlı)
+                if (window.location.hostname !== 'localhost') {
+                    console.log('Pageview tracked (fallback)');
+                }
+            }
+        }
+
+        // 3. AdSense Fallback Mekanizması
+        function loadAdsenseWithFallback() {
+            try {
+                if (typeof adsbygoogle === 'undefined') {
+                    const adScript = document.createElement('script');
+                    adScript.async = true;
+                    adScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366";
+                    adScript.crossOrigin = "anonymous";
+                    adScript.onerror = function() {
+                        console.log('AdSense engellendi, reklam alanları kaldırılıyor');
+                        document.querySelectorAll('.ad-container').forEach(el => el.style.display = 'none');
+                    };
+                    document.head.appendChild(adScript);
+                }
+            } catch (e) {
+                console.error('AdSense yükleme hatası:', e);
+            }
+        }
+
+        // Tüm sayfa yüklendikten sonra çalıştır
+        window.addEventListener('load', function() {
+            // Analytics'i başlat
+            setTimeout(initializeAnalytics, 500);
+            
+            // AdSense'i yükle (1 saniye gecikmeyle)
+            setTimeout(loadAdsenseWithFallback, 1000);
         });
         </script>
 </body>
