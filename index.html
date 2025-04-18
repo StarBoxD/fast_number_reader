@@ -848,62 +848,42 @@
             color: white;
         }
 
-                /* Dil desteği uyarı bildirimi */
-        #langSupportWarning {
+        /* Hata container stilleri */
+        #error-container {
             position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--card-light);
-            color: var(--text-dark);
-            padding: 15px 25px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px var(--shadow-light);
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
             display: none;
             align-items: center;
-            gap: 12px;
-            max-width: 90%;
-            text-align: center;
-            border: 1px solid var(--border-light);
-            animation: slideIn 0.3s ease-out;
+            justify-content: center;
         }
 
-        body.dark-mode #langSupportWarning {
+        .error-card {
+            background: var(--card-light);
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 80%;
+            box-shadow: 0 5px 15px var(--shadow-light);
+        }
+
+        body.dark-mode .error-card {
             background: var(--card-dark);
-            color: var(--text-light);
             box-shadow: 0 5px 15px var(--shadow-dark);
-            border-color: var(--border-dark);
         }
 
-        #langSupportWarning .notification-icon {
-            font-size: 1.4em;
-            min-width: 30px;
+        .error-card button {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
-
-        #langSupportWarning .notification-text {
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        #langSupportWarning a {
-            color: var(--primary);
-            text-decoration: underline;
-            font-weight: 600;
-        }
-
-        /* Animasyon */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -30px);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, 0);
-            }
-        }
-
         </style>
     </head>
     <body>
@@ -1024,13 +1004,31 @@
                 </div>
             </div>
         </div>
-
-        <div id="langSupportWarning" class="notification" style="display:none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);">
-            <span class="notification-icon">⚠️</span>
-            <span id="langWarningText"></span>
+        <div id="error-container" style="display:none;">
+            <div class="error-card">
+                <h3>Hata</h3>
+                <p id="error-message"></p>
+                <button onclick="hideError()">Tamam</button>
+            </div>
         </div>
 
         <script>
+                    if (!window.va) {
+            window.va = {
+                trackPageView: () => console.log('Analytics yüklenmedi'),
+                trackEvent: () => console.log('Analytics yüklenmedi')
+            };
+        }
+
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            document.getElementById('error-message').textContent = message;
+            container.style.display = 'flex';
+        }
+
+        function hideError() {
+            document.getElementById('error-container').style.display = 'none';
+        }
         // İzin isteme fonksiyonu
         async function requestPermissions() {
             const modal = document.getElementById('permissionModal');
@@ -1084,7 +1082,27 @@
                 };
             });
         }
+        // Bildirim oluşturma fonksiyonu
+        function createNotification(text, icon) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">${icon}</span>
+                    <span class="notification-text">${text}</span>
+                </div>
+            `;
+            return notification;
+        }
 
+        // Bildirim gösterme fonksiyonu
+        function showNotification(notification) {
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.classList.add('fade-out');
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
         // Özellikleri aktifleştirme fonksiyonu
         function activateFeatures() {
             // Başlat butonunu aktifleştir
@@ -1332,59 +1350,70 @@
 
             return findDefaultVoice(lang, voices);
         }
-
-                function findAlternativeVoice(lang, voices) {
-            const langPriority = {
-                'de-DE': ['de-DE', 'de-AT', 'de-CH', 'de'],
-                'fr-FR': ['fr-FR', 'fr-CA', 'fr-BE', 'fr'],
-                'es-ES': ['es-ES', 'es-MX', 'es-AR', 'es'],
-                'ja-JP': ['ja-JP', 'ja'],
-                'ru-RU': ['ru-RU', 'ru-UA', 'ru'],
-                'zh-CN': ['zh-CN', 'zh-HK', 'zh-TW', 'zh'],
-                'it-IT': ['it-IT', 'it-CH', 'it']
-            };
-
-            // Öncelikli dil varyantlarını kontrol et
-            if(langPriority[lang]) {
-                for(const variant of langPriority[lang]) {
-                    const voice = voices.find(v => v.lang === variant);
-                    if(voice) return voice;
-                }
-            }
+                function findDefaultVoice(lang, voices) {
+            // Önce tam eşleşme ara
+            const exactMatch = voices.find(v => v.lang === lang);
+            if (exactMatch) return exactMatch;
             
-            // Bulunamazsa genel dil koduna göre ara
-            const baseLang = lang.split('-')[0];
-            return voices.find(v => v.lang.startsWith(baseLang)) || voices[0];
+            // Sonra dil koduna göre ara (tr-TR -> tr)
+            const langCode = lang.split('-')[0];
+            const langMatch = voices.find(v => v.lang.startsWith(langCode));
+            if (langMatch) return langMatch;
+            
+            // Son çare olarak varsayılan sesi döndür
+            return voices.find(v => v.default) || voices[0];
         }
 
-                function detectBrowser() {
+           function findAlternativeVoice(lang, voices) {
+                const langPriority = {
+                    'de-DE': ['de-DE', 'de-AT', 'de-CH', 'de'],
+                    'fr-FR': ['fr-FR', 'fr-CA', 'fr-BE', 'fr'],
+                    'es-ES': ['es-ES', 'es-MX', 'es-AR', 'es'],
+                    'ja-JP': ['ja-JP', 'ja'],
+                    'ru-RU': ['ru-RU', 'ru-UA', 'ru'],
+                    'zh-CN': ['zh-CN', 'zh-HK', 'zh-TW', 'zh'],
+                    'it-IT': ['it-IT', 'it-CH', 'it']
+                };
+
+                // Öncelikli dil varyantlarını kontrol et
+                if(langPriority[lang]) {
+                    for(const variant of langPriority[lang]) {
+                        const voice = voices.find(v => v.lang === variant);
+                        if(voice) return voice;
+                    }
+                }
+                
+                // Bulunamazsa genel dil koduna göre ara
+                const baseLang = lang.split('-')[0];
+                return voices.find(v => v.lang.startsWith(baseLang)) || voices[0];
+        }    
+
+                    function detectBrowser() {
             const ua = navigator.userAgent;
             if(ua.includes('Chrome')) return 'Chrome';
             if(ua.includes('Safari')) return 'Safari';
             if(ua.includes('Firefox')) return 'Firefox';
             return 'Other';
         }
-                function setVoiceSettings(lang) {
-            const browser = detectBrowser();
-            const browserSettings = {
-                Chrome: {
-                    'de-DE': {rate: 1.1, pitch: 1.0},
-                    'fr-FR': {rate: 1.0, pitch: 1.0},
-                    // Diğer diller için ekle
-                },
-                Safari: {
-                    'de-DE': {rate: 0.9, pitch: 1.1},
-                    // Diğer diller için ekle
-                },
-                Firefox: {
-                    'de-DE': {rate: 1.0, pitch: 1.0},
-                    // Diğer diller için ekle
-                }
+            function setVoiceSettings(lang) {
+            const langCode = lang.split('-')[0];
+            
+            // Dil-spesifik ses ayarları
+            const voiceSettings = {
+                'tr': { pitch: 1.0, rate: 1.2 },
+                'en': { pitch: 1.0, rate: 1.3 },
+                'de': { pitch: 0.9, rate: 1.2 },
+                'fr': { pitch: 1.0, rate: 1.2 },
+                'es': { pitch: 1.0, rate: 1.2 },
+                'ja': { pitch: 1.0, rate: 1.1 },
+                'ru': { pitch: 1.0, rate: 1.2 },
+                'zh': { pitch: 1.0, rate: 1.1 },
+                'it': { pitch: 1.0, rate: 1.2 }
             };
 
-            const settings = browserSettings[browser]?.[lang] || {rate: 1.0, pitch: 1.0};
-            speech.rate = Math.min(speedControl.value, settings.rate);
+            const settings = voiceSettings[langCode] || { pitch: 1.1, rate: 1.0 };
             speech.pitch = settings.pitch;
+            speech.rate = Math.min(parseFloat(speedControl.value), settings.rate);
         }
 
                 function showVoicePackageNotification(lang) {
@@ -1455,8 +1484,8 @@
                             return (bIsNative + bIsDefault + bIsMicrosoft + bIsGoogle) - 
                                    (aIsNative + aIsDefault + aIsMicrosoft + aIsGoogle);
                         });
-                       
-                        checkLanguageSupport();
+                        
+                        // Tüm sesleri logla
                         console.log('Yüklenen sesler:', sesler.map(s => `${s.name} (${s.lang})`));
                         resolve(sesler);
                     } else {
@@ -1470,33 +1499,6 @@
                 // Sesler değiştiğinde tekrar kontrol et
                     window.speechSynthesis.onvoiceschanged = checkVoices;
             });
-        }
-
-                function checkLanguageSupport() {
-        const voices = window.speechSynthesis.getVoices();
-        const supportedLangs = [...new Set(voices.map(v => v.lang))];
-        
-        document.querySelectorAll('#languageSelect option').forEach(option => {
-            const langCode = option.value;
-            const isSupported = supportedLangs.some(lang => lang.startsWith(langCode.split('-')[0]));
-            
-            option.disabled = !isSupported;
-            if (!isSupported) {
-            option.title = "Bu dil tarayıcınızda yüklü değil";
-            showLangWarning(langCode);
-            }
-        });
-        }
-
-        function showLangWarning(langCode) {
-        const warning = document.getElementById('langSupportWarning');
-        const langName = document.querySelector(`#languageSelect option[value="${langCode}"]`).text;
-        
-        document.getElementById('langWarningText').textContent = 
-            `${langName} ses paketi yüklü değil!`;
-        
-        warning.style.display = 'flex';
-        setTimeout(() => warning.style.display = 'none', 5000);
         }
 
         // Sayı formatlama fonksiyonu
@@ -2080,9 +2082,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const defaultLang = languageSelect.value;
             updateLanguage(defaultLang);
-
-            setTimeout(checkLanguageSupport, 1000); // 1 saniye gecikmeli
-            window.speechSynthesis.onvoiceschanged = checkLanguageSupport;
         });
 
         // İstatistikleri tutacak değişkenler
@@ -2147,6 +2146,12 @@
                         console.warn('Vercel Analytics yüklenemedi. Lütfen içerik engelleyicileri kontrol edin.');
                     }
                 };
+                                // Reklam engelleme kontrolü
+                if (typeof adsbygoogle === 'undefined') {
+                    document.querySelectorAll('.ad-container').forEach(ad => {
+                        ad.innerHTML = '<div class="ad-alternative">Reklamları görmek için lütfen reklam engelleyicinizi kapatın</div>';
+                    });
+                }
 
                 // Analytics kontrolünü başlat
                 checkAnalytics();
@@ -2171,35 +2176,6 @@
         const analyticsRoot = document.createElement('div');
         document.body.appendChild(analyticsRoot);
         ReactDOM.createRoot(analyticsRoot).render(React.createElement(Analytics));
-
-                function testAllLanguages() {
-            const originalLang = languageSelect.value;
-            const results = {};
-            
-            Array.from(languageSelect.options).forEach(async (option) => {
-                languageSelect.value = option.value;
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                results[option.value] = {
-                    voices: window.speechSynthesis.getVoices().filter(v => v.lang === option.value),
-                    testSpeech: await testSpeechSynthesis(option.value)
-                };
-            });
-            
-            languageSelect.value = originalLang;
-            console.log('Dil Test Sonuçları:', results);
-            return results;
-        }
-
-        function testSpeechSynthesis(lang) {
-            return new Promise(resolve => {
-                const test = new SpeechSynthesisUtterance('123');
-                test.lang = lang;
-                test.onend = () => resolve(true);
-                test.onerror = (e) => resolve(false);
-                window.speechSynthesis.speak(test);
-            });
-        }
         </script>
     </body>
     </html>
