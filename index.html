@@ -931,14 +931,13 @@
                 startTime = null;
             }
             updateStats();
-        }
-        
-        // 6. DİL ve TEMA YÖNETİMİ
+         }
+                
+                // 6. DİL ve TEMA YÖNETİMİ
                 const translations = {
             'tr-TR': {
                 title: 'Sayı Okuyucu',
                 theme: 'Koyu Mod',
-                language: 'Dil Seçimi:',
                 range: 'Sayı Aralığı:',
                 speed: 'Okuma Hızı:',
                 delay: 'Geçiş Süresi:',
@@ -950,16 +949,14 @@
                 help: 'Yardım',
                 helpTitle: 'Dil Desteği Yardım',
                 helpText1: 'Uygulamamız tüm dilleri desteklemektedir, ancak tarayıcınızın ve işletim sisteminizin ilgili dil paketlerini yüklemiş olması gerekmektedir.',
-                helpSubtitle: 'Nasıl Dil Paketi Yüklerim?',
-                helpWin: 'Windows: Ayarlar > Zaman ve Dil > Dil > Dil ekle',
-                helpMac: 'Mac: Sistem Tercihleri > Klavye > Metinden Konuşma',
-                helpChrome: 'Chrome: Ayarlar > Gelişmiş > Erişilebilirlik > Metin okuma ayarları',
-                closeHelp: 'Tamam'
+                closeHelp: 'Tamam',
+                totalNumbersLabel: 'Toplam Sayı',
+                totalTimeLabel: 'Toplam Süre (dk)',
+                favoriteLanguageLabel: 'En Çok Kullanılan Dil'
             },
-                    'en-US': {
+            'en-US': {
                 title: 'Number Reader',
                 theme: 'Dark Mode',
-                language: 'Language:',
                 range: 'Number Range:',
                 speed: 'Reading Speed:',
                 delay: 'Delay:',
@@ -971,12 +968,14 @@
                 help: 'Help',
                 helpTitle: 'Language Support Help',
                 helpText1: 'Our application supports all languages, but your browser and operating system must have the relevant language packages installed.',
-                closeHelp: 'OK'
+                closeHelp: 'OK',
+                totalNumbersLabel: 'Total Numbers',
+                totalTimeLabel: 'Total Time (min)',
+                favoriteLanguageLabel: 'Most Used Language'
             },
             'en-GB': {
                 title: 'Number Reader',
                 theme: 'Dark Mode',
-                language: 'Language:',
                 range: 'Number Range:',
                 speed: 'Reading Speed:',
                 delay: 'Delay:',
@@ -988,25 +987,144 @@
                 help: 'Help',
                 helpTitle: 'Language Support Help',
                 helpText1: 'Our application supports all languages, but your browser and operating system must have the relevant language packages installed.',
-                closeHelp: 'OK'
+                closeHelp: 'OK',
+                totalNumbersLabel: 'Total Numbers',
+                totalTimeLabel: 'Total Time (min)',
+                favoriteLanguageLabel: 'Most Used Language'
             },
             'de-DE': {
                 title: 'Zahlenleser',
                 theme: 'Dunkelmodus',
-                language: 'Sprache:',
                 range: 'Zahlenbereich:',
                 speed: 'Lesegeschwindigkeit:',
                 delay: 'Verzögerung:',
                 start: 'START',
-                stop: 'STOP',
+                stop: 'STOPP',
                 min: 'Min',
                 max: 'Max',
                 history: 'Verlauf',
                 help: 'Hilfe',
                 helpTitle: 'Sprachunterstützung Hilfe',
                 helpText1: 'Unsere Anwendung unterstützt alle Sprachen, aber Ihr Browser und Betriebssystem müssen die entsprechenden Sprachpakete installiert haben.',
-                closeHelp: 'OK'
+                closeHelp: 'OK',
+                totalNumbersLabel: 'Gesamtzahlen',
+                totalTimeLabel: 'Gesamtzeit (min)',
+                favoriteLanguageLabel: 'Am häufigsten verwendete Sprache'
             },
+            'fr-FR': {
+                title: 'Lecteur de Nombres',
+                theme: 'Mode Sombre',
+                range: 'Plage de Nombres:',
+                speed: 'Vitesse de Lecture:',
+                delay: 'Délai:',
+                start: 'DÉMARRER',
+                stop: 'ARRÊTER',
+                min: 'Min',
+                max: 'Max',
+                history: 'Historique',
+                help: 'Aide',
+                helpTitle: 'Aide pour le Support Linguistique',
+                helpText1: 'Notre application prend en charge toutes les langues, mais votre navigateur et système d\'exploitation doivent avoir les packages linguistiques correspondants installés.',
+                closeHelp: 'OK',
+                totalNumbersLabel: 'Nombres Totaux',
+                totalTimeLabel: 'Temps Total (min)',
+                favoriteLanguageLabel: 'Langue la Plus Utilisée'
+            },
+            'es-ES': {
+                title: 'Lector de Números',
+                theme: 'Modo Oscuro',
+                range: 'Rango de Números:',
+                speed: 'Velocidad de Lectura:',
+                delay: 'Retraso:',
+                start: 'COMENZAR',
+                stop: 'DETENER',
+                min: 'Mín',
+                max: 'Máx',
+                history: 'Historial',
+                help: 'Ayuda',
+                helpTitle: 'Ayuda de Soporte de Idioma',
+                helpText1: 'Nuestra aplicación soporta todos los idiomas, pero su navegador y sistema operativo deben tener los paquetes de idioma relevantes instalados.',
+                closeHelp: 'OK',
+                totalNumbersLabel: 'Números Totales',
+                totalTimeLabel: 'Tiempo Total (min)',
+                favoriteLanguageLabel: 'Idioma Más Usado'
+            },
+            'ja-JP': {
+                title: '数字リーダー',
+                theme: 'ダークモード',
+                range: '数字の範囲:',
+                speed: '読み上げ速度:',
+                delay: '遅延:',
+                start: '開始',
+                stop: '停止',
+                min: '最小',
+                max: '最大',
+                history: '履歴',
+                help: 'ヘルプ',
+                helpTitle: '言語サポートヘルプ',
+                helpText1: '当アプリケーションはすべての言語をサポートしていますが、お使いのブラウザとオペレーティングシステムに該当する言語パッケージがインストールされている必要があります。',
+                closeHelp: 'OK',
+                totalNumbersLabel: '総数',
+                totalTimeLabel: '総時間(分)',
+                favoriteLanguageLabel: '最も使用された言語'
+            },
+            'ru-RU': {
+                title: 'Читатель Чисел',
+                theme: 'Темный Режим',
+                range: 'Диапазон Чисел:',
+                speed: 'Скорость Чтения:',
+                delay: 'Задержка:',
+                start: 'СТАРТ',
+                stop: 'СТОП',
+                min: 'Мин',
+                max: 'Макс',
+                history: 'История',
+                help: 'Помощь',
+                helpTitle: 'Помощь по Поддержке Языков',
+                helpText1: 'Наше приложение поддерживает все языки, но ваш браузер и операционная система должны иметь установленные соответствующие языковые пакеты.',
+                closeHelp: 'OK',
+                totalNumbersLabel: 'Всего Чисел',
+                totalTimeLabel: 'Общее Время (мин)',
+                favoriteLanguageLabel: 'Самый Используемый Язык'
+            },
+            'zh-CN': {
+                title: '数字阅读器',
+                theme: '深色模式',
+                range: '数字范围:',
+                speed: '阅读速度:',
+                delay: '延迟:',
+                start: '开始',
+                stop: '停止',
+                min: '最小',
+                max: '最大',
+                history: '历史记录',
+                help: '帮助',
+                helpTitle: '语言支持帮助',
+                helpText1: '我们的应用程序支持所有语言，但您的浏览器和操作系统必须安装相关的语言包。',
+                closeHelp: '确定',
+                totalNumbersLabel: '总数',
+                totalTimeLabel: '总时间(分钟)',
+                favoriteLanguageLabel: '最常用语言'
+            },
+            'it-IT': {
+                title: 'Lettore di Numeri',
+                theme: 'Modalità Scura',
+                range: 'Intervallo Numeri:',
+                speed: 'Velocità Lettura:',
+                delay: 'Ritardo:',
+                start: 'INIZIA',
+                stop: 'FERMA',
+                min: 'Min',
+                max: 'Max',
+                history: 'Cronologia',
+                help: 'Aiuto',
+                helpTitle: 'Guida al Supporto Linguistico',
+                helpText1: 'La nostra applicazione supporta tutte le lingue, ma il tuo browser e sistema operativo devono avere i pacchetti linguistici pertinenti installati.',
+                closeHelp: 'OK',
+                totalNumbersLabel: 'Numeri Totali',
+                totalTimeLabel: 'Tempo Totale (min)',
+                favoriteLanguageLabel: 'Lingua Più Utilizzata'
+            }
         };
         
                 function updateLanguage(lang) {
