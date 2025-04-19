@@ -562,12 +562,15 @@
 
         <div id="helpModal">
             <div class="card">
-                <h2 class="lang-text" data-key="helpTitle">Dil Desteği Yardım</h2>
-                <p class="lang-text" data-key="helpText1">Uygulamamız tüm dilleri desteklemektedir, ancak tarayıcınızın ve işletim sisteminizin ilgili dil paketlerini yüklemiş olması gerekmektedir.</p>
-                
-                <div style="text-align: center; margin-top: 1.5rem;">
-                    <button id="closeHelp" class="btn btn-primary lang-text" data-key="closeHelp">Tamam</button>
-                </div>
+                <h2>Dil Desteği Yardım</h2>
+                <p><strong>Tüm dillerde ses desteği için:</strong></p>
+                <ul>
+                    <li>Windows: Ayarlar > Zaman ve Dil > Dil > Dil paketi ekle</li>
+                    <li>Mac: Sistem Tercihleri > Klavye > Metinden Konuşma</li>
+                    <li>Chrome: chrome://settings/languages adresinden dil ekleyin</li>
+                </ul>
+                <p>Desteklenmeyen dillerde otomatik olarak en yakın ses kullanılacaktır.</p>
+                <button id="closeHelp" class="btn btn-primary">Tamam</button>
             </div>
         </div>
         
@@ -656,6 +659,39 @@
                 notification.classList.add('fade-out');
                 setTimeout(() => notification.remove(), 500);
             }, 3000);
+        }
+
+                // Web Speech API fallback fonksiyonu
+        function getBestAvailableVoice(lang) {
+            const voices = window.speechSynthesis.getVoices();
+            const exactMatch = voices.find(v => v.lang === lang);
+            if (exactMatch) return exactMatch;
+
+            const langPrefix = lang.split('-')[0];
+            const langMatch = voices.find(v => v.lang.startsWith(langPrefix));
+            if (langMatch) return langMatch;
+
+            // Eğer hiçbir ses bulunamazsa, varsayılan İngilizce sesi kullan
+            const defaultVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+            return defaultVoice;
+        }
+
+        // Güncellenmiş sesiGuncelle fonksiyonu
+        function sesiGuncelle() {
+            const secilenDil = languageSelect.value;
+            seciliSes = getBestAvailableVoice(secilenDil);
+            
+            if (!seciliSes || !seciliSes.lang.startsWith(secilenDil.split('-')[0])) {
+                const notification = createNotification(
+                    `Seçilen dil (${secilenDil}) için en uygun ses kullanılacak: ${seciliSes?.name || 'Varsayılan ses'}`,
+                    '⚠️'
+                );
+                showNotification(notification);
+            }
+
+            speech.voice = seciliSes;
+            speech.lang = seciliSes.lang;
+            setVoiceSettings(secilenDil);
         }
         
         // 4. SES YÖNETİMİ
@@ -788,23 +824,42 @@
             if(!isActive) return;
             
             const sayi = Math.floor(Math.random() * (getNumericValue('maxValue') - getNumericValue('minValue') + 1)) + getNumericValue('minValue');
-            
             resultDisplay.textContent = formatNumberWithDots(sayi);
             addToHistory(sayi, languageSelect.value);
 
             window.speechSynthesis.cancel();
             
-            // Yeni fonksiyonu kullan
-            speakWithFallback(
-                sayi.toString(),
-                languageSelect.value,
-                parseFloat(speedControl.value)
-            ).then(() => {
+            const utterance = new SpeechSynthesisUtterance(sayi.toString());
+            utterance.voice = seciliSes;
+            utterance.lang = seciliSes.lang;
+            utterance.rate = parseFloat(speedControl.value);
+            
+            utterance.onend = () => {
                 if(isActive) {
                     const delay = parseFloat(delayControl.value) * 1000;
                     timeoutID = setTimeout(readNumber, delay);
                 }
-            });
+            };
+            
+            utterance.onerror = () => {
+                if(isActive) {
+                    const delay = parseFloat(delayControl.value) * 1000;
+                    timeoutID = setTimeout(readNumber, delay);
+                }
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Alternatif TTS fonksiyonu
+        function useAlternativeTTS(text, lang) {
+            // Burada alternatif bir TTS servisi kullanabilirsiniz
+            // Örnek olarak basit bir uyarı gösteriyoruz
+            const notification = createNotification(
+                `Alternatif ses motoru: ${text} (${lang})`,
+                '🔊'
+            );
+            showNotification(notification);
         }
 
         // Alternatif ses motoru için fallback fonksiyonunu ekleyin (readNumber'dan önce)
@@ -837,19 +892,8 @@
             });
         }
                 
-        function startReading() {
-            const { isSafari } = getBrowserInfo();
-            
-            if (isSafari) {
-                const initSpeech = new SpeechSynthesisUtterance(" ");
-                initSpeech.volume = 0;
-                window.speechSynthesis.speak(initSpeech);
-                initSpeech.onend = () => {
-                    setTimeout(readNumber, 200);
-                };
-            } else {
-                setTimeout(readNumber, 300);
-            }
+                function startReading() {
+            if(isActive) return; // Zaten çalışıyorsa tekrar başlatma
             
             isActive = true;
             document.getElementById('startBtn').disabled = true;
@@ -859,15 +903,33 @@
             document.getElementById('maxValue').disabled = true;
             
             startTime = Date.now();
-            totalNumbers = 0;
+            totalNumbers++;
             updateStats();
             document.querySelector('.history-title').style.opacity = '0';
+            
+            // Safari için özel başlatma
+            const { isSafari } = getBrowserInfo();
+            if (isSafari) {
+                const initSpeech = new SpeechSynthesisUtterance(" ");
+                initSpeech.volume = 0;
+                window.speechSynthesis.speak(initSpeech);
+                initSpeech.onend = () => {
+                    readNumber();
+                };
+            } else {
+                readNumber();
+            }
         }
         
-        function stopReading() {
+                function stopReading() {
+            if(!isActive) return; // Zaten durmuşsa tekrar durdurma
+            
             isActive = false;
             window.speechSynthesis.cancel();
-            if(timeoutID) clearTimeout(timeoutID);
+            if(timeoutID) {
+                clearTimeout(timeoutID);
+                timeoutID = null;
+            }
             
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
@@ -956,11 +1018,14 @@
             }
         });
         
-        languageSelect.addEventListener('change', () => {
+                languageSelect.addEventListener('change', () => {
             speedControl.value = 1.0;
             speedDisplay.textContent = '1.0x';
             updateLanguage(languageSelect.value);
+            
+            // Yeni ses kontrol fonksiyonu
             sesiGuncelle();
+            
             if(isActive) {
                 window.speechSynthesis.cancel();
                 clearTimeout(timeoutID);
@@ -978,32 +1043,56 @@
             delayDisplay.textContent = delayControl.value + 's';
         });
         
-        // 8. UYGULAMA BAŞLATMA
-        document.addEventListener('DOMContentLoaded', () => {
-            sesleriYukle().then(() => {
-                sesiGuncelle();
-                updateLanguage(languageSelect.value);
-            });
+          // 8. UYGULAMA BAŞLATMA
+                document.addEventListener('DOMContentLoaded', () => {
+            // Sesler yüklendikten sonra
+            window.speechSynthesis.onvoiceschanged = function() {
+                sesleriYukle().then(() => {
+                    sesiGuncelle();
+                    updateLanguage(languageSelect.value);
+                    
+                    // Tüm dillerin uygunluğunu kontrol et
+                    checkLanguageSupport();
+                });
+            };
             
-            // Tema ayarı
-            const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
-            themeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                if (document.body.classList.contains('dark-mode')) {
-                    themeIcon.textContent = '☀️';
-                    themeToggle.innerHTML = '<span id="themeIcon">☀️</span> Açık Mod';
-                } else {
-                    themeIcon.textContent = '🌙';
-                    themeToggle.innerHTML = '<span id="themeIcon">🌙</span> Koyu Mod';
+            // Manuel olarak sesleri yükle (Chrome için gerekli)
+            window.speechSynthesis.getVoices();
+        });
+
+        function checkLanguageSupport() {
+            const voices = window.speechSynthesis.getVoices();
+            const options = languageSelect.options;
+            
+            for (let i = 0; i < options.length; i++) {
+                const lang = options[i].value;
+                const isSupported = voices.some(v => v.lang.startsWith(lang.split('-')[0]));
+                
+                if (!isSupported && lang !== 'tr-TR' && lang !== 'en-US') {
+                    options[i].disabled = true;
+                    options[i].title = "Bu dil için sisteminizde ses paketi yüklü değil";
                 }
-            });
-            
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.body.classList.add('dark-mode');
-                themeIcon.textContent = '☀️';
-                themeToggle.innerHTML = '<span id="themeIcon">☀️</span> Açık Mod';
             }
+        }
+            
+                // Tema ayarı (DOMContentLoaded içinde)
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        // Sistem temasını kontrol et
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+            themeIcon.textContent = '☀️';
+            themeToggle.querySelector('.lang-text').textContent = 'Açık Mod';
+        }
+
+        // Tema değiştirme butonu
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            themeIcon.textContent = isDarkMode ? '☀️' : '🌙';
+            const themeText = isDarkMode ? 'Açık Mod' : 'Koyu Mod';
+            themeToggle.querySelector('.lang-text').textContent = themeText;
         });
 
         
