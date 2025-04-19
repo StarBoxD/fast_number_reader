@@ -451,6 +451,13 @@
         </div>
         
         <div class="card">
+
+            <div style="text-align: right; margin-bottom: 1rem;">
+                <button id="helpBtn" class="btn" style="background: var(--warning); color: white;">
+                    <span>❔</span> <span class="lang-text" data-key="help">Yardım</span>
+                </button>
+            </div
+
             <div class="form-group">
                 <span class="form-label lang-text" data-key="language">Dil Seçimi:</span>
                 <select id="languageSelect" class="form-control">
@@ -529,6 +536,24 @@
                 }
             </script>
         </div>
+
+        <div id="helpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+            <div class="card" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                <h2 class="lang-text" data-key="helpTitle">Dil Desteği Yardım</h2>
+                <p class="lang-text" data-key="helpText1">Uygulamamız tüm dilleri desteklemektedir, ancak tarayıcınızın ve işletim sisteminizin ilgili dil paketlerini yüklemiş olması gerekmektedir.</p>
+                
+                <h3 class="lang-text" data-key="helpSubtitle">Nasıl Dil Paketi Yüklerim?</h3>
+                <ul>
+                    <li class="lang-text" data-key="helpWin"><strong>Windows:</strong> Ayarlar > Zaman ve Dil > Dil > Dil ekle</li>
+                    <li class="lang-text" data-key="helpMac"><strong>Mac:</strong> Sistem Tercihleri > Klavye > Metinden Konuşma</li>
+                    <li class="lang-text" data-key="helpChrome"><strong>Chrome:</strong> Ayarlar > Gelişmiş > Erişilebilirlik > Metin okuma ayarları</li>
+                </ul>
+                
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button id="closeHelp" class="btn btn-primary lang-text" data-key="closeHelp">Tamam</button>
+                </div>
+            </div>
+        </div>
         
     </div>
 
@@ -562,6 +587,30 @@
                 isMac: navigator.platform.includes('Mac')
             };
         }
+
+                // Gelişmiş tarayıcı ve OS tespiti
+        function getSystemInfo() {
+            const ua = navigator.userAgent;
+            let os, browser;
+            
+            // İşletim Sistemi
+            if (ua.match(/Android/i)) os = 'Android';
+            else if (ua.match(/iPhone|iPad|iPod/i)) os = 'iOS';
+            else if (ua.match(/Windows/i)) os = 'Windows';
+            else if (ua.match(/Macintosh|Mac OS X/i)) os = 'MacOS';
+            else if (ua.match(/Linux/i)) os = 'Linux';
+            else os = 'Unknown OS';
+            
+            // Tarayıcı
+            if (ua.match(/Chrome/i) && !ua.match(/Edg/i)) browser = 'Chrome';
+            else if (ua.match(/Firefox/i)) browser = 'Firefox';
+            else if (ua.match(/Safari/i) && !ua.match(/Chrome/i)) browser = 'Safari';
+            else if (ua.match(/Edg/i)) browser = 'Edge';
+            else if (ua.match(/Opera|OPR/i)) browser = 'Opera';
+            else browser = 'Unknown Browser';
+            
+            return { os, browser };
+        }
         
         // 3. TEMEL FONKSİYONLAR
         function formatNumberWithDots(number) {
@@ -594,8 +643,9 @@
         }
         
         // 4. SES YÖNETİMİ
+         // Ses yükleme ve kontrol fonksiyonunu güncelleyelim
         function sesleriYukle() {
-            return new Promise(resolve => {
+            return new Promise((resolve, reject) => {
                 const checkVoices = () => {
                     const availableVoices = window.speechSynthesis.getVoices();
                     if (availableVoices.length > 0) {
@@ -604,16 +654,41 @@
                             const bIsNative = b.voiceURI.includes('native') ? 1 : 0;
                             return bIsNative - aIsNative;
                         });
+                        
+                        // Desteklenen dilleri kontrol et
+                        checkSupportedLanguages(availableVoices);
                         resolve(sesler);
                     } else {
-                        setTimeout(checkVoices, 100);
+                        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                            window.speechSynthesis.onvoiceschanged = checkVoices;
+                        } else {
+                            setTimeout(checkVoices, 100);
+                        }
                     }
                 };
                 checkVoices();
-                window.speechSynthesis.onvoiceschanged = checkVoices;
             });
         }
-        
+
+        // Desteklenen dilleri kontrol eden fonksiyon
+        function checkSupportedLanguages(voices) {
+            const supportedLanguages = {};
+            voices.forEach(voice => {
+                const langCode = voice.lang.split('-')[0];
+                supportedLanguages[langCode] = true;
+            });
+
+            // Seçenekleri filtrele
+            const languageSelect = document.getElementById('languageSelect');
+            Array.from(languageSelect.options).forEach(option => {
+                const langCode = option.value.split('-')[0];
+                if (!supportedLanguages[langCode] && option.value !== 'tr-TR' && option.value !== 'en-US') {
+                    option.disabled = true;
+                    option.title = "Bu dil tarayıcınızda desteklenmiyor";
+                }
+            });
+        }
+
         function setVoiceSettings(lang) {
             const { isMac, isChrome } = getBrowserInfo();
             const langCode = lang.split('-')[0];
@@ -630,23 +705,39 @@
             }
         }
         
-        function sesiGuncelle() {
+                function sesiGuncelle() {
             const secilenDil = languageSelect.value;
-            const uygunSesler = sesler.filter(s => s.lang.startsWith(secilenDil.split('-')[0]));
+            const langCode = secilenDil.split('-')[0];
+            const uygunSesler = sesler.filter(s => s.lang.startsWith(langCode));
             
             if(uygunSesler.length === 0) {
                 console.warn('Uygun ses bulunamadı:', secilenDil);
-                const notification = createNotification(
-                    `Seçilen dil (${secilenDil}) için ses paketi yüklü olmayabilir`,
-                    '⚠️'
-                );
+                
+                // Kullanıcı dostu uyarı mesajı
+                let notificationMessage = `Seçilen dil (${secilenDil}) için ses paketi yüklü değil`;
+                
+                if (secilenDil === 'tr-TR' || secilenDil === 'en-US') {
+                    notificationMessage += "<br><br>Türkçe ve İngilizce dışındaki diller için:";
+                    notificationMessage += "<br>- Windows: Dil paketlerini yükleyin";
+                    notificationMessage += "<br>- Mac: Sistem Tercihleri > Klavye > Metinden Konuşma";
+                    notificationMessage += "<br>- Chrome: Ayarlar > Gelişmiş > Erişilebilirlik > Metin okuma";
+                }
+                
+                const notification = createNotification(notificationMessage, '⚠️');
                 showNotification(notification);
+                
+                // Varsayılan olarak İngilizce'ye geç
+                if (secilenDil !== 'tr-TR' && secilenDil !== 'en-US') {
+                    languageSelect.value = 'en-US';
+                    updateLanguage('en-US');
+                }
+                
                 return;
             }
-        
+
             seciliSes = uygunSesler.find(v => v.lang === secilenDil) || 
-                       uygunSesler.find(v => v.default) || 
-                       uygunSesler[0];
+                    uygunSesler.find(v => v.default) || 
+                    uygunSesler[0];
             
             speech.voice = seciliSes;
             speech.lang = secilenDil;
@@ -677,40 +768,59 @@
             document.querySelector('.history-title').classList.toggle('active', numberHistory.length > 0);
         }
         
-        function readNumber() {
+                function readNumber() {
             if(!isActive) return;
             
-            const { isMac, isChrome } = getBrowserInfo();
             const sayi = Math.floor(Math.random() * (getNumericValue('maxValue') - getNumericValue('minValue') + 1)) + getNumericValue('minValue');
             
             resultDisplay.textContent = formatNumberWithDots(sayi);
             addToHistory(sayi, languageSelect.value);
-        
+
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(sayi.toString());
-            Object.assign(utterance, {
-                voice: seciliSes,
-                lang: languageSelect.value,
-                rate: parseFloat(speedControl.value),
-                pitch: 1.0
-            });
-        
-            if (isChrome && isMac) {
-                setTimeout(() => {
-                    window.speechSynthesis.speak(utterance);
-                }, 300);
-            } else {
-                window.speechSynthesis.speak(utterance);
-            }
-        
-            utterance.onend = () => {
+            
+            // Yeni fonksiyonu kullan
+            speakWithFallback(
+                sayi.toString(),
+                languageSelect.value,
+                parseFloat(speedControl.value)
+            ).then(() => {
                 if(isActive) {
                     const delay = parseFloat(delayControl.value) * 1000;
                     timeoutID = setTimeout(readNumber, delay);
                 }
-            };
+            });
         }
-        
+
+        // Alternatif ses motoru için fallback fonksiyonunu ekleyin (readNumber'dan önce)
+        function speakWithFallback(text, lang, rate) {
+            return new Promise((resolve) => {
+                // Önce tarayıcının yerel ses motorunu dene
+                try {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = lang;
+                    utterance.rate = rate;
+                    utterance.onend = resolve;
+                    utterance.onerror = () => {
+                        console.log('Yerel ses motoru hatası, fallback deneniyor');
+                        fallbackTTS(text, lang).then(resolve);
+                    };
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                    console.log('Yerel ses motoru hatası:', e);
+                    fallbackTTS(text, lang).then(resolve);
+                }
+            });
+        }
+
+        // Basit bir fallback mekanizması
+        function fallbackTTS(text, lang) {
+            return new Promise((resolve) => {
+                console.log(`Fallback TTS: ${text} in ${lang}`);
+                // Burada bir TTS API'si kullanabilirsiniz
+                setTimeout(resolve, text.length * 100); // Basit bir simülasyon
+            });
+        }
+                
         function startReading() {
             const { isSafari } = getBrowserInfo();
             
@@ -757,7 +867,7 @@
         }
         
         // 6. DİL ve TEMA YÖNETİMİ
-        const translations = {
+                const translations = {
             'tr-TR': {
                 title: 'Sayı Okuyucu',
                 theme: 'Koyu Mod',
@@ -769,9 +879,17 @@
                 stop: 'DURDUR',
                 min: 'Min',
                 max: 'Max',
-                history: 'Okunan Sayılar'
+                history: 'Okunan Sayılar',
+                help: 'Yardım',
+                helpTitle: 'Dil Desteği Yardım',
+                helpText1: 'Uygulamamız tüm dilleri desteklemektedir, ancak tarayıcınızın ve işletim sisteminizin ilgili dil paketlerini yüklemiş olması gerekmektedir.',
+                helpSubtitle: 'Nasıl Dil Paketi Yüklerim?',
+                helpWin: 'Windows: Ayarlar > Zaman ve Dil > Dil > Dil ekle',
+                helpMac: 'Mac: Sistem Tercihleri > Klavye > Metinden Konuşma',
+                helpChrome: 'Chrome: Ayarlar > Gelişmiş > Erişilebilirlik > Metin okuma ayarları',
+                closeHelp: 'Tamam'
             },
-            // ... Diğer dil çevirileri aynen kalacak
+            // ... diğer diller için de benzer çeviriler ekleyin ...
         };
         
         function updateLanguage(lang) {
@@ -802,6 +920,16 @@
         }
         
         // 7. OLAY DİNLEYİCİLERİ
+
+                // Yardım sistemi
+        document.getElementById('helpBtn').addEventListener('click', function() {
+            document.getElementById('helpModal').style.display = 'flex';
+        });
+
+        document.getElementById('closeHelp').addEventListener('click', function() {
+            document.getElementById('helpModal').style.display = 'none';
+        });
+
         document.getElementById('startBtn').addEventListener('click', startReading);
         document.getElementById('stopBtn').addEventListener('click', stopReading);
         
