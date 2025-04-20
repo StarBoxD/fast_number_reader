@@ -682,10 +682,12 @@
             return parseInt(value) || 0;
         }
         
-        function updateUIForReading(isReading) {
+                function updateUIForReading(isReading) {
             elements.startBtn.disabled = isReading;
             elements.stopBtn.disabled = !isReading;
             elements.languageSelect.disabled = isReading;
+            document.getElementById('minValue').disabled = isReading;
+            document.getElementById('maxValue').disabled = isReading;
         }
         
         // 5. SES FONKSİYONLARI
@@ -822,21 +824,30 @@
         }
         
         // 7. KONTROL FONKSİYONLARI
-        function startReading() {
+                function startReading() {
             if (!isReading) {
                 isReading = true;
                 updateUIForReading(true);
+                
+                // Sayı aralığı inputlarını devre dışı bırak
+                document.getElementById('minValue').disabled = true;
+                document.getElementById('maxValue').disabled = true;
+                
                 initSpeechEngine();
                 readNumber();
             }
         }
         
-        function stopReading() {
+                function stopReading() {
             if (isReading) {
                 isReading = false;
                 clearTimeout(readingTimeout);
                 window.speechSynthesis.cancel();
                 updateUIForReading(false);
+                
+                // Sayı aralığı inputlarını tekrar aktif et
+                document.getElementById('minValue').disabled = false;
+                document.getElementById('maxValue').disabled = false;
             }
         }
         
@@ -850,7 +861,9 @@
                 historyTitle.classList.remove('hidden');
             }
             
+            // İstatistikleri sıfırla (isteğe bağlı)
             stats.totalNumbers = 0;
+            stats.totalTime = 0;
             stats.languageUsage = {};
             updateStats();
         }
@@ -880,8 +893,11 @@
             elements.languageSelect.addEventListener('change', () => {
                 updateVoice();
                 updateLanguage(elements.languageSelect.value);
+                
+                // Dil değiştiğinde geçmişi temizle
+                clearHistory();
             });
-            
+                
             // Butonlar
             elements.startBtn.addEventListener('click', startReading);
             elements.stopBtn.addEventListener('click', stopReading);
