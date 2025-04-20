@@ -607,18 +607,15 @@
 
     <script>
         // 1. TARAYICI TESPİT ve TEMEL AYARLAR
-        function getBrowserInfo() {
+                function getBrowserInfo() {
             const ua = navigator.userAgent;
-            const chromeVersion = parseInt(ua.match(/Chrome\/(\d+)/)?.[1]) || 0;
-            const safariVersion = parseInt(ua.match(/Version\/(\d+).*Safari/)?.[1]) || 0;
-            
             return {
-                isOldChrome: chromeVersion > 0 && chromeVersion < 70,
+                isChrome: /Chrome/.test(ua) && !/Edge|Edg|OPR/.test(ua),
+                isFirefox: /Firefox/.test(ua),
                 isSafari: /Safari/.test(ua) && !/Chrome|Chromium|Edg|Edge|Firefox|OPR/.test(ua),
                 isIOS: /iPhone|iPad|iPod/.test(ua),
-                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua),
-                chromeVersion,
-                safariVersion
+                isAndroid: /Android/.test(ua),
+                isMobile: /Mobi|Android|iPhone|iPad|iPod/.test(ua)
             };
         }
         
@@ -754,7 +751,8 @@
         }
         
         // 6. OKUMA İŞLEMLERİ
-                async function readNumber() {
+            // 6. OKUMA İŞLEMLERİ
+        async function readNumber() {
             if (!isReading) return;
 
             try {
@@ -774,7 +772,27 @@
                 utterance.voice = currentVoice;
                 utterance.rate = parseFloat(elements.speedControl.value);
                 
-                // Okuma işlemi
+                // Safari ve iOS için özel ayarlar
+                if (browserInfo.isSafari || browserInfo.isIOS) {
+                    utterance.onend = null;
+                    utterance.onerror = null;
+                    
+                    window.speechSynthesis.speak(utterance);
+                    
+                    // Safari'de onend düzgün çalışmayabilir, bu yüzden setTimeout kullanıyoruz
+                    const delay = parseFloat(elements.delayControl.value) * 1000;
+                    const duration = number.toString().length * 200 * (1 / utterance.rate); // Tahmini okuma süresi
+                    
+                    readingTimeout = setTimeout(() => {
+                        if (isReading) {
+                            readNumber();
+                        }
+                    }, delay + duration);
+                    
+                    return;
+                }
+                
+                // Diğer tarayıcılar için standart yaklaşım
                 await new Promise((resolve) => {
                     utterance.onend = () => {
                         if (isReading) {
@@ -842,7 +860,7 @@
         }
         
         // 7. KONTROL FONKSİYONLARI
-        function startReading() {
+                function startReading() {
             if (isReading) return;
             
             isReading = true;
@@ -852,14 +870,19 @@
             document.getElementById('minValue').disabled = true;
             document.getElementById('maxValue').disabled = true;
             
-            // Safari için ön ısıtma
-            if (browserInfo.isSafari || browserInfo.isIOS) {
+            // Chrome ve Safari için ön ısıtma
+            if (browserInfo.isSafari || browserInfo.isIOS || browserInfo.isOldChrome) {
                 const warmUp = new SpeechSynthesisUtterance(" ");
                 warmUp.volume = 0;
                 window.speechSynthesis.speak(warmUp);
             }
             
-            readNumber();
+            // Android Chrome için özel işlem
+            if (/Android/.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent)) {
+                setTimeout(readNumber, 300); // Küçük bir gecikme ekliyoruz
+            } else {
+                readNumber();
+            }
         }
 
         function stopReading() {
@@ -874,21 +897,14 @@
             document.getElementById('minValue').disabled = false;
             document.getElementById('maxValue').disabled = false;
         }
-        
-        function clearHistory() {
-            numberHistory = [];
-            elements.historyList.innerHTML = '';
-            
-            // Başlığı tekrar göster
-            const historyTitle = document.querySelector('.history-title');
-            if (historyTitle) {
-                historyTitle.classList.remove('hidden');
-            }
-            
-            // İstatistikleri sıfırla
-            stats.totalNumbers = 0;
-            stats.languageUsage = {};
-            updateStats();
+
+                // Sayının uzunluğuna ve okuma hızına göre tahmini süre (ms)
+        function estimateReadingTime(number, rate) {
+            const digits = number.toString().length;
+            const words = digits <= 3 ? 1 : 
+                        digits <= 6 ? 2 : 
+                        digits <= 9 ? 3 : 4;
+            return Math.max(800, words * 800 * (1 / rate));
         }
         
         // 8. OLAY DİNLEYİCİLERİ
