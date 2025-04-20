@@ -750,8 +750,7 @@
             }
         }
         
-        // 6. OKUMA İŞLEMLERİ
-            // 6. OKUMA İŞLEMLERİ
+       // 6. OKUMA İŞLEMLERİ
         async function readNumber() {
             if (!isReading) return;
 
@@ -772,39 +771,44 @@
                 utterance.voice = currentVoice;
                 utterance.rate = parseFloat(elements.speedControl.value);
                 
-                // Safari ve iOS için özel ayarlar
-                if (browserInfo.isSafari || browserInfo.isIOS) {
-                    utterance.onend = null;
-                    utterance.onerror = null;
-                    
-                    window.speechSynthesis.speak(utterance);
-                    
-                    // Safari'de onend düzgün çalışmayabilir, bu yüzden setTimeout kullanıyoruz
-                    const delay = parseFloat(elements.delayControl.value) * 1000;
-                    const duration = number.toString().length * 200 * (1 / utterance.rate); // Tahmini okuma süresi
-                    
-                    readingTimeout = setTimeout(() => {
-                        if (isReading) {
-                            readNumber();
-                        }
-                    }, delay + duration);
-                    
-                    return;
-                }
-                
-                // Diğer tarayıcılar için standart yaklaşım
+                // Tüm tarayıcılar için güvenilir çözüm
                 await new Promise((resolve) => {
+                    let resolved = false;
+                    let timeoutId = null;
+                    
+                    // Başarılı okuma durumu
                     utterance.onend = () => {
+                        if (!resolved) {
+                            clearTimeout(timeoutId);
+                            resolved = true;
+                            proceedToNext();
+                        }
+                    };
+                    
+                    // Hata durumu
+                    utterance.onerror = (event) => {
+                        console.error('Okuma hatası:', event.error);
+                        if (!resolved) {
+                            clearTimeout(timeoutId);
+                            resolved = true;
+                            proceedToNext();
+                        }
+                    };
+                    
+                    // Tarayıcıların bazılarında onend çalışmayabilir, bu yüzden yedek timeout
+                    const estimatedDuration = estimateReadingTime(number, utterance.rate);
+                    timeoutId = setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            console.warn('Timeout: Okuma süresi aşıldı, devam ediliyor');
+                            proceedToNext();
+                        }
+                    }, estimatedDuration + 1000); // Tahmini süre + 1sn buffer
+                    
+                    const proceedToNext = () => {
                         if (isReading) {
                             const delay = parseFloat(elements.delayControl.value) * 1000;
                             readingTimeout = setTimeout(readNumber, delay);
-                        }
-                        resolve();
-                    };
-                    
-                    utterance.onerror = () => {
-                        if (isReading) {
-                            readingTimeout = setTimeout(readNumber, 1000);
                         }
                         resolve();
                     };
@@ -859,27 +863,21 @@
             document.getElementById('favoriteLanguage').textContent = maxLang;
         }
         
-        // 7. KONTROL FONKSİYONLARI
+                // 7. KONTROL FONKSİYONLARI
                 function startReading() {
             if (isReading) return;
             
             isReading = true;
             updateUIForReading(true);
             
-            // Sayı aralığı inputlarını devre dışı bırak
-            document.getElementById('minValue').disabled = true;
-            document.getElementById('maxValue').disabled = true;
+            // Tüm tarayıcılar için ön ısıtma
+            const warmUp = new SpeechSynthesisUtterance(" ");
+            warmUp.volume = 0;
+            window.speechSynthesis.speak(warmUp);
             
-            // Chrome ve Safari için ön ısıtma
-            if (browserInfo.isSafari || browserInfo.isIOS || browserInfo.isOldChrome) {
-                const warmUp = new SpeechSynthesisUtterance(" ");
-                warmUp.volume = 0;
-                window.speechSynthesis.speak(warmUp);
-            }
-            
-            // Android Chrome için özel işlem
-            if (/Android/.test(navigator.userAgent) && /Chrome/.test(navigator.userAgent)) {
-                setTimeout(readNumber, 300); // Küçük bir gecikme ekliyoruz
+            // Android Chrome için küçük gecikme
+            if (/Android.*Chrome/.test(navigator.userAgent)) {
+                setTimeout(readNumber, 300);
             } else {
                 readNumber();
             }
@@ -892,21 +890,27 @@
             clearTimeout(readingTimeout);
             window.speechSynthesis.cancel();
             updateUIForReading(false);
-            
-            // Sayı aralığı inputlarını tekrar aktif et
-            document.getElementById('minValue').disabled = false;
-            document.getElementById('maxValue').disabled = false;
         }
 
                 // Sayının uzunluğuna ve okuma hızına göre tahmini süre (ms)
-        function estimateReadingTime(number, rate) {
-            const digits = number.toString().length;
-            const words = digits <= 3 ? 1 : 
-                        digits <= 6 ? 2 : 
-                        digits <= 9 ? 3 : 4;
-            return Math.max(800, words * 800 * (1 / rate));
+                        function estimateReadingTime(number, rate) {
+            const numStr = number.toString();
+            let wordCount;
+            
+            if (numStr.length <= 3) { // Binler
+                wordCount = 1;
+            } else if (numStr.length <= 6) { // Milyonlar
+                wordCount = 2;
+            } else if (numStr.length <= 9) { // Milyarlar
+                wordCount = 3;
+            } else { // Trilyonlar+
+                wordCount = 4;
+            }
+            
+            // Her "kelime" için 800ms temel süre, hıza göre ayarlanmış
+            return Math.max(1000, wordCount * 800 * (1 / rate));
         }
-        
+            
         // 8. OLAY DİNLEYİCİLERİ
         document.addEventListener('DOMContentLoaded', async () => {
             // Tema ayarı
