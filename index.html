@@ -544,13 +544,25 @@
         </div>
         
         <div class="ad-container ad-left">
-            <script>
+            <div class="ad-container ad-left">
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-3050374663523366"
+                     data-ad-slot="1234567890"  <!-- Bu kısmı gerçek slot ID ile değiştir -->
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+              </div>
+              <script>
                 try {
+                  const ad = document.querySelector('ins.adsbygoogle');
+                  if (ad && !ad.dataset.loaded) {
+                    ad.dataset.loaded = 'true';
                     (adsbygoogle = window.adsbygoogle || []).push({});
+                  }
                 } catch(e) {
-                    console.log("AdSense yüklenemedi", e);
+                  console.log("AdSense yüklenemedi", e);
                 }
-            </script>
+              </script>
         </div>
 
         <div id="helpModal">
@@ -626,7 +638,6 @@
                 sesleriYukle().then(() => {
                     sesiGuncelle();
                     updateLanguage(languageSelect.value);
-                    checkLanguageSupport();
                 });
             };
             window.speechSynthesis.getVoices();
@@ -1341,6 +1352,11 @@
         startTime = Date.now();
         totalNumbers = 0;
         updateStats();
+    }
+
+        function checkLanguageSupport() {
+    const voices = window.speechSynthesis.getVoices();
+    checkSupportedLanguages(voices);
     }
 
         // languageSelect event listener'ını güncelleyin
