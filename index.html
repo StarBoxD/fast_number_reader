@@ -576,69 +576,66 @@
     <script>
 
         const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
-            const body = document.body;
-            const themeTextSpan = themeToggle.querySelector('.lang-text'); // Metin için span'i seç
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+        const themeTextSpan = themeToggle ? themeToggle.querySelector('.lang-text') : null; // Element var mı kontrol et
 
-            // Sayfa yüklendiğinde localStorage'dan temayı kontrol et
-            function setTheme(theme) {
-            if (theme === 'dark') {
-                body.classList.add('dark-mode');
-                themeIcon.textContent = '☀️';
-                if (themeTextSpan) {
-                    themeTextSpan.textContent = 'Açık Mod';
-                    themeTextSpan.dataset.key = 'themeLight';
-                }
-                localStorage.setItem('theme', 'dark');
-            } else {
-                body.classList.remove('dark-mode');
-                themeIcon.textContent = '🌙';
-                if (themeTextSpan) {
-                    themeTextSpan.textContent = 'Koyu Mod';
-                    themeTextSpan.dataset.key = 'themeDark';
-                }
-                localStorage.setItem('theme', 'light');
-            }
-        }
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+                if (themeTextSpan) {
+                    themeTextSpan.textContent = 'Açık Mod';
+                    themeTextSpan.dataset.key = 'themeLight';
+                }
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙';
+                if (themeTextSpan) {
+                    themeTextSpan.textContent = 'Koyu Mod';
+                    themeTextSpan.dataset.key = 'themeDark';
+                }
+                localStorage.setItem('theme', 'light');
+            }
+        }
 
-        function toggleTheme() {
-            body.classList.toggle('dark-mode');
-            const isDarkMode = body.classList.contains('dark-mode');
-            setTheme(isDarkMode ? 'dark' : 'light');
-        }
+        function toggleTheme() {
+            body.classList.toggle('dark-mode');
+            const isDarkMode = body.classList.contains('dark-mode');
+            setTheme(isDarkMode ? 'dark' : 'light');
+        }
 
-                // Tema değiştirme butonuna tıklama olayı ekle
-        themeToggle.addEventListener('click', toggleTheme);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sayfa yüklendiğinde localStorage veya sistem tercihine göre temayı ayarla
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                setTheme('dark');
+            } else {
+                setTheme('light'); // Varsayılan tema
+            }
 
-        document.addEventListener('DOMContentLoaded', () => {
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-    const body = document.body;
-    const themeTextSpan = themeToggle.querySelector('.lang-text');
+            // Tema değiştirme butonuna tıklama olayı ekle (sadece bir kez tanımla)
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
 
-            // Sayfa yüklendiğinde localStorage veya sistem tercihine göre temayı ayarla
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                setTheme(savedTheme);
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                setTheme('dark');
-            } else {
-                setTheme('light'); // Varsayılan tema
-            }
+            // Diğer başlangıç kodları...
+            window.speechSynthesis.onvoiceschanged = function() {
+                sesleriYukle().then(() => {
+                    sesiGuncelle();
+                    updateLanguage(languageSelect.value);
+                    checkLanguageSupport();
+                });
+            };
+            window.speechSynthesis.getVoices();
+        });
 
-            // Tema değiştirme butonu
-            themeToggle.addEventListener('click', toggleTheme);
+ 
 
-            // Diğer başlangıç kodları...
-            window.speechSynthesis.onvoiceschanged = function() {
-                sesleriYukle().then(() => {
-                    sesiGuncelle();
-                    updateLanguage(languageSelect.value);
-                    checkLanguageSupport();
-                });
-            };
-            window.speechSynthesis.getVoices();
-        });
+
 
 
         // 1. GENEL AYARLAR ve DEĞİŞKENLER
@@ -1271,11 +1268,8 @@
         });
         
                 document.addEventListener('DOMContentLoaded', () => {
-            // Tema ayarlarını yükle
-            const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
-            
-            // Sistem temasını kontrol et
+          
+        
            
             
          
@@ -1357,11 +1351,9 @@
             }
         }
             
-                // Tema ayarı (DOMContentLoaded içinde)
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
+           
 
-        // Sistem temasını kontrol et
+     
     
         
             // 1. Çerez Politikası Uyarısı için Çözüm
