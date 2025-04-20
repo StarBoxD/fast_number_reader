@@ -740,15 +740,43 @@
         // Güncellenmiş sesiGuncelle fonksiyonu
         function sesiGuncelle() {
             const secilenDil = languageSelect.value;
-            seciliSes = getBestAvailableVoice(secilenDil);
-            
-            if (!seciliSes || !seciliSes.lang.startsWith(secilenDil.split('-')[0])) {
-                const notification = createNotification(
-                    `Seçilen dil (${secilenDil}) için en uygun ses kullanılacak: ${seciliSes?.name || 'Varsayılan ses'}`,
-                    '⚠️'
-                );
+            const langCode = secilenDil.split('-')[0];
+            const uygunSesler = sesler.filter(s => s.lang.startsWith(langCode));
+
+            if(uygunSesler.length === 0) {
+                console.warn('Uygun ses bulunamadı:', secilenDil);
+
+                let notificationMessage = `Seçilen dil (${secilenDil}) için uygun ses bulunamadı.`;
+
+                if (secilenDil === 'tr-TR' || secilenDil === 'en-US') {
+                    notificationMessage += "<br><br>Türkçe ve İngilizce dışındaki diller için:";
+                    notificationMessage += "<br>- Lütfen sisteminizin dil ayarlarını kontrol edin.";
+                    notificationMessage += "<br>- Tarayıcınızın metin okuma özelliklerini kontrol edin.";
+                } else {
+                    notificationMessage += "<br><br>Farklı bir dil seçmeyi deneyebilir veya sisteminizin dil ayarlarını kontrol edebilirsiniz.";
+                }
+
+                const notification = createNotification(notificationMessage, '⚠️');
                 showNotification(notification);
+
+                // Varsayılan olarak İngilizce'ye geç
+                if (secilenDil !== 'tr-TR' && secilenDil !== 'en-US') {
+                    languageSelect.value = 'en-US';
+                    updateLanguage('en-US');
+                    // Burada sesi tekrar güncellememiz gerekiyor ki İngilizce bir ses seçilsin
+                    setTimeout(sesiGuncelle, 100);
+                }
+
+                seciliSes = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('en')) || window.speechSynthesis.getVoices()[0];
+                speech.voice = seciliSes;
+                speech.lang = seciliSes?.lang || 'en-US';
+                setVoiceSettings(speech.lang);
+                return;
             }
+
+            seciliSes = uygunSesler.find(v => v.lang === secilenDil) ||
+                        uygunSesler.find(v => v.default) ||
+                        uygunSesler[0];
 
             speech.voice = seciliSes;
             speech.lang = seciliSes.lang;
@@ -868,11 +896,6 @@
             div.textContent = formattedNumber;
             historyList.appendChild(div); // Sağa ekle
             
-            // 50 sayıdan sonra en soldakini (ilkini) sil
-            if (numberHistory.length > 50) {
-                numberHistory.shift();
-                historyList.removeChild(historyList.firstChild);
-            }
             
             // Scroll'u en alta kaydır
             historyList.scrollTop = historyList.scrollHeight;
