@@ -574,6 +574,45 @@
     </div>
 
     <script>
+
+        const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const body = document.body;
+            const themeTextSpan = themeToggle.querySelector('.lang-text'); // Metin için span'i seç
+
+            // Sayfa yüklendiğinde localStorage'dan temayı kontrol et
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️'; // Güneş ikonu
+                if (themeTextSpan) themeTextSpan.textContent = 'Açık Mod'; // Buton metnini güncelle (varsa)
+                if (themeTextSpan) themeTextSpan.dataset.key = 'themeLight'; // Dil anahtarını güncelle (varsa)
+            } else {
+                body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙'; // Ay ikonu
+                if (themeTextSpan) themeTextSpan.textContent = 'Koyu Mod'; // Buton metnini güncelle (varsa)
+                if (themeTextSpan) themeTextSpan.dataset.key = 'themeDark'; // Dil anahtarını güncelle (varsa)
+            }
+
+            // Tema değiştirme butonuna tıklama olayı ekle
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode'); // dark-mode sınıfını ekle/kaldır
+
+                if (body.classList.contains('dark-mode')) {
+                    // Koyu Moda Geçildi
+                    themeIcon.textContent = '☀️'; // Güneş ikonu
+                    if (themeTextSpan) themeTextSpan.textContent = 'Açık Mod';
+                    if (themeTextSpan) themeTextSpan.dataset.key = 'themeLight'; // Dil anahtarını değiştir
+                    localStorage.setItem('theme', 'dark'); // Tercihi kaydet
+                } else {
+                    // Açık Moda Geçildi
+                    themeIcon.textContent = '🌙'; // Ay ikonu
+                    if (themeTextSpan) themeTextSpan.textContent = 'Koyu Mod';
+                    if (themeTextSpan) themeTextSpan.dataset.key = 'themeDark'; // Dil anahtarını değiştir
+                    localStorage.setItem('theme', 'light'); // Tercihi kaydet
+                }
+            });
+
         // 1. GENEL AYARLAR ve DEĞİŞKENLER
         const speech = new SpeechSynthesisUtterance();
         const languageSelect = document.getElementById('languageSelect');
