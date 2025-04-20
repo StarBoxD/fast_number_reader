@@ -935,72 +935,35 @@
         }
 
         // Alternatif TTS fonksiyonu
-        function useAlternativeTTS(text, lang) {
-            // Burada alternatif bir TTS servisi kullanabilirsiniz
-            // Örnek olarak basit bir uyarı gösteriyoruz
-            const notification = createNotification(
-                `Alternatif ses motoru: ${text} (${lang})`,
-                '🔊'
-            );
-            showNotification(notification);
-        }
+                function useAlternativeTTS(text, lang) {
+            console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
 
-        // Alternatif ses motoru için fallback fonksiyonunu ekleyin (readNumber'dan önce)
-        function speakWithFallback(text, lang, rate) {
-            return new Promise((resolve) => {
-                // Önce tarayıcının yerel ses motorunu dene
-                try {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = lang;
-                    utterance.rate = rate;
-                    utterance.onend = resolve;
-                    utterance.onerror = () => {
-                        console.log('Yerel ses motoru hatası, fallback deneniyor');
-                        fallbackTTS(text, lang).then(resolve);
-                    };
-                    window.speechSynthesis.speak(utterance);
-                } catch (e) {
-                    console.log('Yerel ses motoru hatası:', e);
-                    fallbackTTS(text, lang).then(resolve);
+            // Basit bir fallback seslendirme için (örneğin, İngilizce robotik bir ses)
+            const fallbackUtterance = new SpeechSynthesisUtterance(text);
+            fallbackUtterance.lang = 'en-US'; // Basit bir İngilizce ses kullan
+            fallbackUtterance.rate = parseFloat(speedControl.value);
+
+            // Fallback seslendirme başlatılsın
+            window.speechSynthesis.speak(fallbackUtterance);
+
+            fallbackUtterance.onend = () => {
+                if(isActive) {
+                    const delay = parseFloat(delayControl.value) * 1000;
+                    timeoutID = setTimeout(readNumber, delay);
                 }
-            });
+            };
+
+            fallbackUtterance.onerror = (event) => {
+                console.error("Fallback TTS hatası:", event);
+                const notification = createNotification(
+                    `Seslendirme sırasında bir hata oluştu.`,
+                    '❌'
+                );
+                showNotification(notification);
+                stopReading(); // Hata olursa okumayı durdur
+            };
         }
 
-        // Basit bir fallback mekanizması
-        function fallbackTTS(text, lang) {
-            return new Promise((resolve) => {
-                console.log(`Fallback TTS: ${text} in ${lang}`);
-                // Burada bir TTS API'si kullanabilirsiniz
-                setTimeout(resolve, text.length * 100); // Basit bir simülasyon
-            });
-        }
-                
-        function startReading() {
-            const { isSafari } = getBrowserInfo();
-            
-            if (isSafari) {
-                const initSpeech = new SpeechSynthesisUtterance(" ");
-                initSpeech.volume = 0;
-                window.speechSynthesis.speak(initSpeech);
-                initSpeech.onend = () => {
-                    setTimeout(readNumber, 200);
-                };
-            } else {
-                setTimeout(readNumber, 300);
-            }
-            
-            isActive = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            languageSelect.disabled = true;
-            document.getElementById('minValue').disabled = true;
-            document.getElementById('maxValue').disabled = true;
-            
-            startTime = Date.now();
-            totalNumbers = 0;
-            updateStats();
-            document.querySelector('.history-title').style.opacity = '0';
-        }
         
         function stopReading() {
             isActive = false;
@@ -1342,22 +1305,6 @@
         totalNumbers = 0;
         updateStats();
     }
-
-    // languageSelect event listener'ını güncelleyin
-    languageSelect.addEventListener('change', () => {
-        speedControl.value = 1.0;
-        speedDisplay.textContent = '1.0x';
-        updateLanguage(languageSelect.value);
-        clearHistory(); // Dil değiştiğinde geçmişi temizle
-        
-        sesiGuncelle();
-        
-        if(isActive) {
-            window.speechSynthesis.cancel();
-            clearTimeout(timeoutID);
-            readNumber();
-        }
-    });
 
         function checkLanguageSupport() {
             const voices = window.speechSynthesis.getVoices();
