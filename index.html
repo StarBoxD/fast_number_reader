@@ -549,49 +549,49 @@
         
         <div class="card">
             <h2 style="margin-bottom: 1rem; color: var(--primary);">
-              <span style="font-size: 1.2em;">📖</span> 
-              <span class="lang-text" data-key="howToUseTitle">Sayı Okuyucu Nasıl Kullanılır?</span>
+                <span style="font-size: 1.2em;">📖</span> 
+                <span class="lang-text" data-key="howToUseTitle">Sayı Okuyucu Nasıl Kullanılır?</span>
             </h2>
             
             <div class="usage-steps">
-              <div class="step">
-                <span class="step-icon">1</span>
-                <div>
-                  <h3 class="lang-text" data-key="step1Title">Dil Seçimi</h3>
-                  <p class="lang-text" data-key="step1Desc">Açılır menüden istediğiniz dili seçin. Türkçe, İngilizce, Almanca gibi 10+ dil desteği mevcuttur.</p>
+                <div class="step">
+                    <span class="step-icon">1</span>
+                    <div>
+                        <h3><span class="lang-text" data-key="step1Title">Dil Seçimi</span></h3>
+                        <p><span class="lang-text" data-key="step1Desc">Açılır menüden istediğiniz dili seçin. Türkçe, İngilizce, Almanca gibi 10+ dil desteği mevcuttur.</span></p>
+                    </div>
                 </div>
-              </div>
-              
-              <div class="step">
-                <span class="step-icon">2</span>
-                <div>
-                  <h3 class="lang-text" data-key="step2Title">Sayı Aralığı Belirleme</h3>
-                  <p class="lang-text" data-key="step2Desc">Min ve Max alanlarına istediğiniz sayı aralığını girin (ör: 100-1000).</p>
+                
+                <div class="step">
+                    <span class="step-icon">2</span>
+                    <div>
+                        <h3><span class="lang-text" data-key="step2Title">Sayı Aralığı Belirleme</span></h3>
+                        <p><span class="lang-text" data-key="step2Desc">Min ve Max alanlarına istediğiniz sayı aralığını girin (ör: 100-1000).</span></p>
+                    </div>
                 </div>
-              </div>
-              
-              <div class="step">
-                <span class="step-icon">3</span>
-                <div>
-                  <h3 class="lang-text" data-key="step3Title">Hız ve Gecikme Ayarları</h3>
-                  <p class="lang-text" data-key="step3Desc">Okuma hızını ve sayılar arası geçiş süresini ayarlayabilirsiniz.</p>
+                
+                <div class="step">
+                    <span class="step-icon">3</span>
+                    <div>
+                        <h3><span class="lang-text" data-key="step3Title">Hız ve Gecikme Ayarları</span></h3>
+                        <p><span class="lang-text" data-key="step3Desc">Okuma hızını ve sayılar arası geçiş süresini ayarlayabilirsiniz.</span></p>
+                    </div>
                 </div>
-              </div>
-              
-              <div class="step">
-                <span class="step-icon">4</span>
-                <div>
-                  <h3 class="lang-text" data-key="step4Title">Başlat ve Durdur</h3>
-                  <p class="lang-text" data-key="step4Desc">"BAŞLAT" butonuyla uygulamayı çalıştırın, "DURDUR" ile duraklatın.</p>
+                
+                <div class="step">
+                    <span class="step-icon">4</span>
+                    <div>
+                        <h3><span class="lang-text" data-key="step4Title">Başlat ve Durdur</span></h3>
+                        <p><span class="lang-text" data-key="step4Desc">"BAŞLAT" butonuyla uygulamayı çalıştırın, "DURDUR" ile duraklatın.</span></p>
+                    </div>
                 </div>
-              </div>
             </div>
             
             <div class="usage-tip">
-              <span class="lang-text" data-key="tipTitle">İPUCU:</span>
-              <span class="lang-text" data-key="tipText">Boşluk tuşuyla hızlıca başlat/durdur yapabilirsiniz.</span>
+                <strong><span class="lang-text" data-key="tipTitle">İPUCU:</span></strong>
+                <span class="lang-text" data-key="tipText">Boşluk tuşuyla hızlıca başlat/durdur yapabilirsiniz.</span>
             </div>
-          </div>
+        </div>
 
         <div class="card">
 
@@ -1075,7 +1075,7 @@
                 elements.delayDisplay.textContent = elements.delayControl.value + 's';
             });
             
-                    elements.languageSelect.addEventListener('change', function() {
+                        elements.languageSelect.addEventListener('change', function() {
                 const selectedLang = this.value;
                 console.log("Seçilen dil:", selectedLang); // Hata ayıklama
                 
@@ -1084,11 +1084,11 @@
                 
                 // Dil değiştiğinde geçmişi temizle (isteğe bağlı)
                 clearHistory();
-            });   
+            }); 
 
-             // Sayfa yüklendiğinde mevcut dili ayarla
-             updateLanguage(elements.languageSelect.value);
-       
+                    // Sayfa yüklendiğinde varsayılan dili ayarla
+            const defaultLang = elements.languageSelect.value;
+            updateLanguage(defaultLang);
 
             // Butonlar
             elements.startBtn.addEventListener('click', startReading);
@@ -1133,9 +1133,19 @@
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
                     clearHistory: 'Geçmişi Temizle',
-                    contentTitle: 'Sayı Okuyucu Nasıl Kullanılır?',
-                    contentDesc: 'Bu uygulama, rastgele sayıları seçtiğiniz dilde sesli olarak okur. Öğrenciler, dil öğrenenler veya pratik yapmak isteyenler için idealdir. Başlamak için dil seçin, aralık belirleyin ve "BAŞLAT" butonuna basın.'
+                    step1Title: 'Dil Seçimi',
+                    step1Desc: 'Açılır menüden istediğiniz dili seçin. Türkçe, İngilizce, Almanca gibi 10+ dil desteği mevcuttur.',
+                    step2Title: 'Sayı Aralığı Belirleme',
+                    step2Desc: 'Min ve Max alanlarına istediğiniz sayı aralığını girin (ör: 100-1000).',
+                    step3Title: 'Hız ve Gecikme Ayarları',
+                    step3Desc: 'Okuma hızını ve sayılar arası geçiş süresini ayarlayabilirsiniz.',
+                    step4Title: 'Başlat ve Durdur',
+                    step4Desc: '"BAŞLAT" butonuyla uygulamayı çalıştırın, "DURDUR" ile duraklatın.',
+                    tipTitle: 'İPUCU:',
+                    tipText: 'Boşluk tuşuyla hızlıca başlat/durdur yapabilirsiniz.',
+                    howToUseTitle: 'Nasıl Kullanılır?',
                 },
+
                 'en-US': {
                     title: 'Number Reader',
                     theme: 'Dark Mode',
@@ -1154,12 +1164,22 @@
                     totalNumbersLabel: 'Total Numbers',
                     totalTimeLabel: 'Total Time (min)',
                     favoriteLanguageLabel: 'Most Used Language',
-                    themeDark: 'Koyu Mod',
-                    themeLight: 'Açık Mod',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
                     clearHistory: 'Clear History',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: 'Language Selection',
+                    step1Desc: 'Select the language you want from the dropdown menu. We support 10+ languages like Turkish, English, German, etc.',
+                    step2Title: 'Number Range Selection',
+                    step2Desc: 'Enter the number range you want (e.g., 100-1000).',
+                    step3Title: 'Speed and Delay Settings',
+                    step3Desc: 'Adjust the reading speed and the transition time between numbers.',
+                    step4Title: 'Start and Stop',
+                    step4Desc: 'Click the "START" button to start the application, and "STOP" to pause it.',
+                    tipTitle: 'TIP:',
+                    tipText: 'Use the spacebar to quickly start/stop the application.',
+                    howToUseTitle: 'How to Use?'
                 },
+
                 'en-GB': {
                     title: 'Number Reader',
                     theme: 'Dark Mode',
@@ -1178,12 +1198,22 @@
                     totalNumbersLabel: 'Total Numbers',
                     totalTimeLabel: 'Total Time (min)',
                     favoriteLanguageLabel: 'Most Used Language',
-                    themeDark: 'Koyu Mod',
-                    themeLight: 'Açık Mod',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
                     clearHistory: 'Clear History',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: 'Language Selection',
+                    step1Desc: 'Select the language you want from the dropdown menu. We support 10+ languages like Turkish, English, German, etc.',
+                    step2Title: 'Number Range Selection',
+                    step2Desc: 'Enter the number range you want (e.g., 100-1000).',
+                    step3Title: 'Speed and Delay Settings',
+                    step3Desc: 'Adjust the reading speed and the transition time between numbers.',
+                    step4Title: 'Start and Stop',
+                    step4Desc: 'Click the "START" button to start the application, and "STOP" to pause it.',
+                    tipTitle: 'TIP:',
+                    tipText: 'Use the spacebar to quickly start/stop the application.',
+                    howToUseTitle: 'How to Use?'
                 },
+
                 'de-DE': {
                     title: 'Zahlenleser',
                     theme: 'Dunkelmodus',
@@ -1202,12 +1232,22 @@
                     totalNumbersLabel: 'Gesamtzahlen',
                     totalTimeLabel: 'Gesamtzeit (min)',
                     favoriteLanguageLabel: 'Am häufigsten verwendete Sprache',
-                    themeDark: 'Koyu Mod',
-                    themeLight: 'Açık Mod',
+                    themeDark: 'Dunkelmodus',
+                    themeLight: 'Hellmodus',
                     clearHistory: 'Verlauf Löschen',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: 'Sprache auswählen',
+                    step1Desc: 'Select the language you want from the dropdown menu. We support 10+ languages like Turkish, English, German, etc.',
+                    step2Title: 'Zahlenbereich auswählen',
+                    step2Desc: 'Geben Sie den Zahlenbereich ein, den Sie möchten (z.B. 100-1000).',
+                    step3Title: 'Lesegeschwindigkeit und Verzögerung einstellen',
+                    step3Desc: 'Adjust the reading speed and the transition time between numbers.',
+                    step4Title: 'Start und Stop',
+                    step4Desc: 'Klicken Sie auf die "START" Schaltfläche, um die Anwendung zu starten, und "STOP" um sie zu pausieren.',
+                    tipTitle: 'TIP:',
+                    tipText: 'Verwenden Sie die Leertaste, um die Anwendung schnell zu starten/stoppen.',
+                    howToUseTitle: 'Wie benutzt man?'
                 },
+
                 'fr-FR': {
                     title: 'Lecteur de Nombres',
                     theme: 'Mode Sombre',
@@ -1226,12 +1266,22 @@
                     totalNumbersLabel: 'Nombres Totaux',
                     totalTimeLabel: 'Temps Total (min)',
                     favoriteLanguageLabel: 'Langue la Plus Utilisée',
-                    themeDark: 'Koyu Mod',
-                    themeLight: 'Açık Mod',
+                    themeDark: 'Mode Sombre',
+                    themeLight: 'Mode Clair',
                     clearHistory: 'Historique Effacer',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: 'Sélection de la Langue',
+                    step1Desc: 'Select the language you want from the dropdown menu. We support 10+ languages like Turkish, English, German, etc.',
+                    step2Title: 'Sélection de la Plage de Nombres',
+                    step2Desc: 'Entrez la plage de nombres que vous souhaitez (par exemple, 100-1000).',
+                    step3Title: 'Réglage de la Vitesse et du Délai',
+                    step3Desc: 'Adjust the reading speed and the transition time between numbers.',
+                    step4Title: 'Démarrer et Arrêter',
+                    step4Desc: 'Cliquez sur le bouton "DÉMARRER" pour démarrer l\'application, et "ARRÊTER" pour la mettre en pause.',
+                    tipTitle: 'TIP:',
+                    tipText: 'Utilisez la barre d\'espace pour démarrer/arrêter rapidement l\'application.',
+                    howToUseTitle: 'Comment utiliser?'
                 },
+
                 'es-ES': {
                     title: 'Lector de Números',
                     theme: 'Modo Oscuro',
@@ -1250,12 +1300,22 @@
                     totalNumbersLabel: 'Números Totales',
                     totalTimeLabel: 'Tiempo Total (min)',
                     favoriteLanguageLabel: 'Idioma Más Usado',
-                    themeDark: 'Koyu Mod',
-                    themeLight: 'Açık Mod',
+                    themeDark: 'Modo Oscuro',
+                    themeLight: 'Modo Claro',
                     clearHistory: 'Historial Limpiar',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: 'Selección de la Lengua',
+                    step1Desc: 'Selecciona el idioma que quieres del menú desplegable. Nosotros soportamos 10+ idiomas como turco, inglés, alemán, etc.',
+                    step2Title: 'Selección del Rango de Números',
+                    step2Desc: 'Ingresa el rango de números que deseas (por ejemplo, 100-1000).',
+                    step3Title: 'Ajuste de la Velocidad y el Retraso',
+                    step3Desc: 'Ajusta la velocidad de lectura y el tiempo de transición entre los números.',
+                    step4Title: 'Iniciar y Detener',
+                    step4Desc: 'Haz clic en el botón "INICIAR" para iniciar la aplicación y "DETENER" para pausarla.',
+                    tipTitle: 'NOTA:',
+                    tipText: 'Utiliza el espacio para iniciar/detener rápidamente la aplicación.',
+                    howToUseTitle: 'Cómo usar?'
                 },
+
                 'ja-JP': {
                     title: '数字リーダー',
                     theme: 'ダークモード',
@@ -1274,12 +1334,22 @@
                     totalNumbersLabel: '総数',
                     totalTimeLabel: '総時間(分)',
                     favoriteLanguageLabel: '最も使用された言語',
-                    themeDark: 'Koyu Mod',
-                    themeLight: 'Açık Mod',
+                    themeDark: 'ダークモード',
+                    themeLight: 'ライトモード',
                     clearHistory: '履歴をクリア',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: '言語選択',
+                    step1Desc: 'ドロップダウンメニューから希望する言語を選択してください。Türkçe, İngilizce, Almancaなど10+言語がサポートされています。',
+                    step2Title: '数字範囲の選択',
+                    step2Desc: '希望する数値範囲を入力してください (例: 100-1000).',
+                    step3Title: '読み上げ速度と遅延の設定',
+                    step3Desc: '読み上げ速度と数値間の遷移時間を調整できます。',
+                    step4Title: '開始と停止',
+                    step4Desc: '「START」ボタンをクリックしてアプリケーションを開始し、「STOP」で一時停止します。',
+                    tipTitle: 'TIP:',
+                    tipText: 'スペースバーを使用してアプリケーションを迅速に開始/停止できます。',
+                    howToUseTitle: 'どうやって使う？'
                 },
+
                 'ru-RU': {
                     title: 'Читатель Чисел',
                     theme: 'Темный Режим',
@@ -1298,12 +1368,22 @@
                     totalNumbersLabel: 'Всего Чисел',
                     totalTimeLabel: 'Общее Время (мин)',
                     favoriteLanguageLabel: 'Самый Используемый Язык',
-                    themeLight: 'Açık Mod',
-                    themeDark: 'Koyu Mod',    
+                    themeLight: 'Светлый режим',
+                    themeDark: 'Темный режим',    
                     clearHistory: 'История Очистить',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: 'Выбор Языка',
+                    step1Desc: 'Выберите язык, который хотите использовать из выпадающего меню. Мы поддерживаем 10+ языков, таких как турецкий, английский, немецкий и т.д.',
+                    step2Title: 'Выбор Диапазона Чисел',
+                    step2Desc: 'Введите желаемый диапазон чисел (например, 100-1000).',
+                    step3Title: 'Скорость и Задержка',
+                    step3Desc: 'Вы можете настроить скорость чтения и время перехода между числами.',
+                    step4Title: 'Начать и Остановить',
+                    step4Desc: 'Нажмите на кнопку "СТАРТ" для запуска приложения и "СТОП" для его приостановки.',
+                    tipTitle: 'ПРИМЕЧАНИЕ:',
+                    tipText: 'Используйте пробел для быстрого запуска/остановки приложения.',
+                    howToUseTitle: 'Как использовать?'
                 },
+
                 'zh-CN': {
                     title: '数字阅读器',
                     theme: '深色模式',
@@ -1322,12 +1402,22 @@
                     totalNumbersLabel: '总数',
                     totalTimeLabel: '总时间(分钟)',
                     favoriteLanguageLabel: '最常用语言',
-                    themeDark: 'Açık Mod',
-                    themeLight: 'Koyu Mod',   
+                    themeDark: '深色模式',
+                    themeLight: '浅色模式',   
                     clearHistory: '历史记录清除',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
+                    step1Title: '语言选择',
+                    step1Desc: '从下拉菜单中选择您想要使用的语言。我们支持10+语言，如土耳其语、英语、德语等。',
+                    step2Title: '数字范围选择',
+                    step2Desc: '输入您想要的范围 (例如: 100-1000).',
+                    step3Title: '速度和延迟设置',
+                    step3Desc: '您可以调整阅读速度和数字之间的过渡时间。',
+                    step4Title: '开始和停止',
+                    step4Desc: '点击“START”按钮启动应用程序，点击“STOP”暂停。',
+                    tipTitle: '提示:',
+                    tipText: '使用空格键快速启动/停止应用程序。',
+                    howToUseTitle: '如何使用？'
                 },
+
                 'it-IT': {
                     title: 'Lettore di Numeri',
                     theme: 'Modalità Scura',
@@ -1346,29 +1436,39 @@
                     totalNumbersLabel: 'Numeri Totali',
                     totalTimeLabel: 'Tempo Totale (min)',
                     favoriteLanguageLabel: 'Lingua Più Utilizzata',
-                    themeDark: 'Koyu Mod',
-                    themeLight: 'Açık Mod',
+                    themeDark: 'Modo Scuro',
+                    themeLight: 'Modo Chiaro',
                     clearHistory: 'Cronologia Pulire',
-                    contentTitle: 'How to Use Number Reader?',
-                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
-                }
+                    step1Title: 'Selezione della Lingua',
+                    step1Desc: 'Seleziona la lingua che desideri utilizzare dal menu a discesa. Supportiamo 10+ lingue come turco, inglese, tedesco, ecc.',
+                    step2Title: 'Selezione dell\'Intervallo Numeri',
+                    step2Desc: 'Inserisci l\'intervallo di numeri che desideri (ad esempio: 100-1000).',
+                    step3Title: 'Impostazioni Velocità e Ritardo',
+                    step3Desc: 'Puoi regolare la velocità di lettura e il tempo di transizione tra i numeri.',
+                    step4Title: 'Inizia e Ferma',
+                    step4Desc: 'Clicca sul pulsante "INIZIA" per avviare l\'applicazione e "FERMA" per interromperla.',
+                    tipTitle: 'NOTA:',
+                    tipText: 'Usa lo spazio per avviare/interrompere rapidamente l\'applicazione.',
+                    howToUseTitle: 'Come usare?'
+                },
             };
-        
+            function getTranslation(lang, key) {
+    // Önce seçilen dilde ara, sonra İngilizce'ye dön, sonra anahtarı döndür
+    return translations[lang]?.[key] || translations['en-US']?.[key] || key;
+}
                     function updateLanguage(lang) {
-            console.log("Dil güncelleniyor:", lang); // Hata ayıklama için
+            console.log("Dil güncelleniyor:", lang); // Hata ayıklama
             
             // Tüm çeviri metinlerini güncelle
             document.querySelectorAll('[data-key]').forEach(element => {
                 const key = element.dataset.key;
-                console.log("Eleman:", element, "Anahtar:", key); // Hata ayıklama
-                
                 if (translations[lang] && translations[lang][key]) {
                     element.textContent = translations[lang][key];
                 } else if (translations['en-US'][key]) {
+                    // İngilizce fallback
                     element.textContent = translations['en-US'][key];
-                } else {
-                    console.warn("Çeviri bulunamadı:", lang, key);
                 }
+                // Çeviri yoksa orijinal metni koru
             });
 
             // Placeholder'ları güncelle
