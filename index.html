@@ -838,19 +838,31 @@
             });
         }
 
-        function setVoiceSettings(lang) {
+                function setVoiceSettings(lang) {
             const { isMac, isChrome } = getBrowserInfo();
             const langCode = lang.split('-')[0];
             
-            speech.rate = parseFloat(speedControl.value);
-            speech.pitch = 1.0;
+            // Temel hız ayarı
+            let rate = parseFloat(speedControl.value);
             
-            if (isChrome && isMac) {
-                speech.rate = Math.min(speech.rate, 1.5);
+            // Türkçe harici diller için maksimum 2x sınırı
+            if (langCode !== 'tr') {
+                rate = Math.min(rate, 2.0);
             }
             
-            if (langCode === 'tr') {
-                speech.rate = Math.min(speech.rate, 2.0);
+            // Tarayıcı ve işletim sistemi özel kısıtlamaları
+            if (isChrome && isMac) {
+                rate = Math.min(rate, 1.5);
+            }
+            
+            // Son hız ayarını uygula
+            speech.rate = rate;
+            speech.pitch = 1.0;
+            
+            // Hız kontrol input'unu güncelle (eğer sınırlandırıldıysa)
+            if (rate !== parseFloat(speedControl.value)) {
+                speedControl.value = rate;
+                speedDisplay.textContent = rate.toFixed(1) + 'x';
             }
         }
         
@@ -1295,6 +1307,32 @@
             }
         });
         
+                languageSelect.addEventListener('change', () => {
+            const selectedLang = languageSelect.value;
+            const langCode = selectedLang.split('-')[0];
+            
+            // Türkçe harici dillerde maksimum hızı 2x yap
+            if (langCode !== 'tr') {
+                speedControl.max = 2.0;
+                if (parseFloat(speedControl.value) > 2.0) {
+                    speedControl.value = 2.0;
+                    speedDisplay.textContent = '2.0x';
+                }
+            } else {
+                speedControl.max = 5.0; // Türkçe için normal maksimum
+            }
+            updateLanguage(selectedLang);
+            sesiGuncelle();
+            
+            if(isActive) {
+                window.speechSynthesis.cancel();
+                clearTimeout(timeoutID);
+                readNumber();
+            }
+        });
+
+
+
                 languageSelect.addEventListener('change', () => {
             speedControl.value = 1.0;
             speedDisplay.textContent = '1.0x';
