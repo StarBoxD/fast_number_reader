@@ -683,13 +683,13 @@
         let startTime;
         
         // 2. TARAYICI BİLGİLERİ
-        function getBrowserInfo() {
+                function getBrowserInfo() {
             const ua = navigator.userAgent;
             return {
-                isChrome: /Chrome/.test(ua),
+                isChrome: /Chrome/.test(ua) && !/Edge/.test(ua),
                 isSafari: /Safari/.test(ua) && !/Chrome/.test(ua),
                 isFirefox: /Firefox/.test(ua),
-                isMac: navigator.platform.includes('Mac')
+                isEdge: /Edge/.test(ua)
             };
         }
 
@@ -970,7 +970,7 @@
         }
     }
 
-    function stopReading() {
+        function stopReading() {
         isActive = false;
         window.speechSynthesis.cancel();
         clearTimeout(timeoutID);
@@ -978,14 +978,14 @@
         currentUtterance = null;
         
         // UI güncellemeleri
-        document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').disabled = false;
         document.getElementById('stopBtn').disabled = true;
         languageSelect.disabled = false;
         document.getElementById('minValue').disabled = false;
         document.getElementById('maxValue').disabled = false;
         
         // Süre hesaplaması
-        if (startTime) {
+            if (startTime) {
             totalTime += (Date.now() - startTime) / 1000;
             startTime = null;
             updateStats();
@@ -1070,18 +1070,20 @@
         function startReading() {
             const { isSafari } = getBrowserInfo();
             
-            if (isSafari) {
+                    if (isSafari) {
                 const initSpeech = new SpeechSynthesisUtterance(" ");
                 initSpeech.volume = 0;
                 window.speechSynthesis.speak(initSpeech);
                 initSpeech.onend = () => {
-                    setTimeout(readNumber, 200);
+                    isActive = true;
+                    readNumber().catch(console.error);
                 };
             } else {
-                setTimeout(readNumber, 300);
+                isActive = true;
+                readNumber().catch(console.error);
             }
-            
-            isActive = true;
+    
+                    // UI güncellemeleri
             document.getElementById('startBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
             languageSelect.disabled = true;
@@ -1089,7 +1091,6 @@
             document.getElementById('maxValue').disabled = true;
             
             startTime = Date.now();
-            totalNumbers = 0;
             updateStats();
             document.querySelector('.history-title').style.opacity = '0';
         }
