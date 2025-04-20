@@ -338,10 +338,10 @@
             padding: 0.5rem 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
-            opacity: 1; /* Varsayılan olarak görünür */
+            opacity: 1;
         }
 
-                .history-title.hidden {
+        .history-title.hidden {
             opacity: 0;
             height: 0;
             padding: 0;
@@ -673,6 +673,15 @@
         };
         
         // 4. TEMEL FONKSİYONLAR
+
+        function updateUIForReading(isReading) {
+            elements.startBtn.disabled = isReading;
+            elements.stopBtn.disabled = !isReading;
+            elements.languageSelect.disabled = isReading;
+            document.getElementById('minValue').disabled = isReading;
+            document.getElementById('maxValue').disabled = isReading;
+        }
+
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
@@ -745,10 +754,11 @@
         }
         
         // 6. OKUMA İŞLEMLERİ
-        async function readNumber() {
+                async function readNumber() {
             if (!isReading) return;
-        
+
             try {
+                // Eski okumaları temizle
                 window.speechSynthesis.cancel();
                 
                 const min = getNumberInputValue('minValue');
@@ -766,16 +776,24 @@
                 
                 // Okuma işlemi
                 await new Promise((resolve) => {
-                    utterance.onend = resolve;
-                    utterance.onerror = resolve;
+                    utterance.onend = () => {
+                        if (isReading) {
+                            const delay = parseFloat(elements.delayControl.value) * 1000;
+                            readingTimeout = setTimeout(readNumber, delay);
+                        }
+                        resolve();
+                    };
+                    
+                    utterance.onerror = () => {
+                        if (isReading) {
+                            readingTimeout = setTimeout(readNumber, 1000);
+                        }
+                        resolve();
+                    };
+                    
                     window.speechSynthesis.speak(utterance);
                 });
-        
-                // Sonraki okuma için zamanlama
-                if (isReading) {
-                    const delay = parseFloat(elements.delayControl.value) * 1000;
-                    readingTimeout = setTimeout(readNumber, delay);
-                }
+
             } catch (error) {
                 console.error("Okuma hatası:", error);
                 if (isReading) {
@@ -784,7 +802,7 @@
             }
         }
         
-                function addToHistory(number) {
+        function addToHistory(number) {
             const formatted = formatNumber(number);
             numberHistory.push(formatted);
             
@@ -796,7 +814,7 @@
             
             // Başlığı gizle
             const historyTitle = document.querySelector('.history-title');
-            if (historyTitle && !historyTitle.classList.contains('hidden')) {
+            if (historyTitle) {
                 historyTitle.classList.add('hidden');
             }
             
@@ -825,33 +843,39 @@
         
         // 7. KONTROL FONKSİYONLARI
                 function startReading() {
-            if (!isReading) {
-                isReading = true;
-                updateUIForReading(true);
-                
-                // Sayı aralığı inputlarını devre dışı bırak
-                document.getElementById('minValue').disabled = true;
-                document.getElementById('maxValue').disabled = true;
-                
-                initSpeechEngine();
-                readNumber();
+            if (isReading) return;
+            
+            isReading = true;
+            updateUIForReading(true);
+            
+            // Sayı aralığı inputlarını devre dışı bırak
+            document.getElementById('minValue').disabled = true;
+            document.getElementById('maxValue').disabled = true;
+            
+            // Safari için ön ısıtma
+            if (browserInfo.isSafari || browserInfo.isIOS) {
+                const warmUp = new SpeechSynthesisUtterance(" ");
+                warmUp.volume = 0;
+                window.speechSynthesis.speak(warmUp);
             }
+            
+            readNumber();
+        }
+
+        function stopReading() {
+            if (!isReading) return;
+            
+            isReading = false;
+            clearTimeout(readingTimeout);
+            window.speechSynthesis.cancel();
+            updateUIForReading(false);
+            
+            // Sayı aralığı inputlarını tekrar aktif et
+            document.getElementById('minValue').disabled = false;
+            document.getElementById('maxValue').disabled = false;
         }
         
-                function stopReading() {
-            if (isReading) {
-                isReading = false;
-                clearTimeout(readingTimeout);
-                window.speechSynthesis.cancel();
-                updateUIForReading(false);
-                
-                // Sayı aralığı inputlarını tekrar aktif et
-                document.getElementById('minValue').disabled = false;
-                document.getElementById('maxValue').disabled = false;
-            }
-        }
-        
-                function clearHistory() {
+        function clearHistory() {
             numberHistory = [];
             elements.historyList.innerHTML = '';
             
@@ -861,9 +885,8 @@
                 historyTitle.classList.remove('hidden');
             }
             
-            // İstatistikleri sıfırla (isteğe bağlı)
+            // İstatistikleri sıfırla
             stats.totalNumbers = 0;
-            stats.totalTime = 0;
             stats.languageUsage = {};
             updateStats();
         }
