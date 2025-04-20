@@ -763,37 +763,44 @@
         }
 
         // Güncellenmiş sesiGuncelle fonksiyonu
-                function sesiGuncelle() {
-            const secilenDil = languageSelect.value;
-            const voices = window.speechSynthesis.getVoices();
+            function sesiGuncelle() {
+        const secilenDil = languageSelect.value;
+        const voices = window.speechSynthesis.getVoices();
+        
+        // Önce tam eşleşen sesi ara
+        seciliSes = voices.find(v => v.lang === secilenDil);
+        
+        // Tam eşleşme yoksa:
+        if (!seciliSes) {
+            const langPrefix = secilenDil.split('-')[0];
             
-            // Önce tam eşleşen sesi ara
-            seciliSes = voices.find(v => v.lang === secilenDil);
+            // 1. Aynı dil ailesinden yerel bir ses bul
+            seciliSes = voices.find(v => v.lang.startsWith(langPrefix) && v.localService);
             
-            // Tam eşleşme yoksa dil önekine göre ara (örneğin fr-FR yerine fr-CA)
+            // 2. Herhangi bir aynı dil ailesinden ses bul
             if (!seciliSes) {
-                const langPrefix = secilenDil.split('-')[0];
                 seciliSes = voices.find(v => v.lang.startsWith(langPrefix));
             }
             
-            // Hala ses bulunamadıysa varsayılan İngilizce sesi kullan
+            // 3. Varsayılan İngilizce sesi kullan
             if (!seciliSes) {
                 seciliSes = voices.find(v => v.lang.startsWith('en')) || voices[0];
                 
                 // Kullanıcıyı bilgilendir
                 if (secilenDil !== 'tr-TR' && secilenDil !== 'en-US') {
                     const notification = createNotification(
-                        `${secilenDil} dili için uygun ses bulunamadı. İngilizce ses kullanılıyor.`,
+                        `${secilenDil} için uygun ses bulunamadı. İngilizce ses kullanılıyor.`,
                         '⚠️'
                     );
                     showNotification(notification);
                 }
             }
-            
-            speech.voice = seciliSes;
-            speech.lang = seciliSes.lang;
-            setVoiceSettings(secilenDil);
         }
+        
+        speech.voice = seciliSes;
+        speech.lang = seciliSes.lang;
+        setVoiceSettings(secilenDil);
+    }
         
         // 4. SES YÖNETİMİ
          // Ses yükleme ve kontrol fonksiyonunu güncelleyelim
@@ -860,7 +867,33 @@
         }
         
     
+            // Tarayıcı türüne göre özel ayarlar
+        function applyBrowserSpecificFixes() {
+            const { isChrome, isFirefox, isSafari } = getBrowserInfo();
+            
+            if (isFirefox) {
+                // Firefox için özel ayarlar
+                speech.volume = 1;
+                speech.pitch = 1;
+            }
+            
+            if (isChrome) {
+                // Chrome için özel ayarlar
+                speech.volume = 0.9;
+            }
+            
+            if (isSafari) {
+                // Safari için özel ayarlar
+                const initSpeech = new SpeechSynthesisUtterance(" ");
+                initSpeech.volume = 0;
+                window.speechSynthesis.speak(initSpeech);
+            }
+        }
 
+        // Sayfa yüklendiğinde çağır
+        document.addEventListener('DOMContentLoaded', () => {
+            applyBrowserSpecificFixes();
+        });
         
                         // 5. OKUMA İŞLEMLERİ
                         function addToHistory(number, lang) {
@@ -881,58 +914,81 @@
             document.querySelector('.history-title').classList.toggle('active', numberHistory.length > 0);
         }
         
-                function readNumber() {
+                let currentUtterance = null;
+        let isSpeaking = false;
+
+        async function readNumber() {
             if (!isActive) return;
+
+            // Önceki konuşmayı temizle
+            if (currentUtterance) {
+                window.speechSynthesis.cancel();
+            }
 
             const sayi = Math.floor(Math.random() * (getNumericValue('maxValue') - getNumericValue('minValue') + 1)) + getNumericValue('minValue');
             resultDisplay.textContent = formatNumberWithDots(sayi);
             addToHistory(sayi, languageSelect.value);
 
-            // Önceki tüm okumaları iptal et
-            window.speechSynthesis.cancel();
-
-            const utterance = new SpeechSynthesisUtterance(sayi.toString());
-            utterance.voice = seciliSes;
-            utterance.lang = seciliSes.lang;
-            utterance.rate = parseFloat(speedControl.value);
+            // Yeni utterance oluştur
+            currentUtterance = new SpeechSynthesisUtterance(sayi.toString());
+            currentUtterance.voice = seciliSes;
+            currentUtterance.lang = seciliSes.lang;
+            currentUtterance.rate = parseFloat(speedControl.value);
             
-            // Dil istatistiklerini güncelle
+            // İstatistikleri güncelle
             const lang = languageSelect.value;
             languageUsage[lang] = (languageUsage[lang] || 0) + 1;
+            totalNumbers++;
             updateStats();
 
-            // Okuma işlemi başarılı olursa
-            utterance.onend = () => {
-                if (isActive) {
-                    const delay = parseFloat(delayControl.value) * 1000;
-                    timeoutID = setTimeout(readNumber, delay);
-                }
-            };
-
-            // Okuma hatası olursa
-            utterance.onerror = (event) => {
-                console.error("Seslendirme hatası:", event);
-                
-                // Hata durumunda alternatif yöntem dene
-                if (isActive) {
-                    const delay = parseFloat(delayControl.value) * 1000;
-                    timeoutID = setTimeout(readNumber, delay);
-                }
-            };
-
+            // Promise tabanlı konuşma fonksiyonu
             try {
-                window.speechSynthesis.speak(utterance);
-                totalNumbers++;
-            } catch (e) {
-                console.error("Konuşma başlatma hatası:", e);
+                isSpeaking = true;
+                await speakUtterance(currentUtterance);
+                
                 if (isActive) {
                     const delay = parseFloat(delayControl.value) * 1000;
                     timeoutID = setTimeout(readNumber, delay);
                 }
+            } catch (error) {
+                console.error("Okuma hatası:", error);
+                if (isActive) {
+                    const delay = parseFloat(delayControl.value) * 1000;
+                    timeoutID = setTimeout(readNumber, delay);
+                }
+            } finally {
+                isSpeaking = false;
             }
         }
 
-                // Alternatif TTS fonksiyonu
+        function speakUtterance(utterance) {
+            return new Promise((resolve, reject) => {
+                utterance.onend = resolve;
+                utterance.onerror = reject;
+                
+                // Firefox için özel kontrol
+                if (getBrowserInfo().isFirefox) {
+                    utterance.onboundary = (event) => {
+                        if (event.name === 'word') {
+                            // Firefox'ta aktif kalmasını sağla
+                        }
+                    };
+                }
+                
+                window.speechSynthesis.speak(utterance);
+                
+                // Chrome için ek kontrol
+                if (getBrowserInfo().isChrome) {
+                    setTimeout(() => {
+                        if (isSpeaking && !window.speechSynthesis.speaking) {
+                            reject(new Error("Chrome'da okuma durdu"));
+                        }
+                    }, 500);
+                }
+            });
+        }
+
+                    // Alternatif TTS fonksiyonu
                         function useAlternativeTTS(text, lang) {
             console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
             
@@ -1007,23 +1063,23 @@
             document.querySelector('.history-title').style.opacity = '0';
         }
         
-                function stopReading() {
-            console.log('stopReading fonksiyonu çağrıldı');
-            console.log('isActive değeri (önce):', isActive);
+                async function stopReading() {
             isActive = false;
-            console.log('isActive değeri (sonra):', isActive);
             
-            // Tüm konuşmaları iptal et
+            // Tüm konuşmaları ve zamanlayıcıları temizle
             window.speechSynthesis.cancel();
+            clearTimeout(timeoutID);
+            timeoutID = null;
+            currentUtterance = null;
             
-            // Zaman aşımını temizle
-            if(timeoutID) {
-                console.log('timeoutID temizleniyor:', timeoutID);
-                clearTimeout(timeoutID);
-                timeoutID = null;
+            // Safari için ek temizlik
+            if (getBrowserInfo().isSafari) {
+                const silence = new SpeechSynthesisUtterance("");
+                silence.volume = 0;
+                window.speechSynthesis.speak(silence);
             }
             
-            // UI elemanlarını güncelle
+            // UI güncellemeleri
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             languageSelect.disabled = false;
@@ -1034,8 +1090,8 @@
             if (startTime) {
                 totalTime += (Date.now() - startTime) / 1000;
                 startTime = null;
+                updateStats();
             }
-            updateStats();
         }
                 
                 // 6. DİL ve TEMA YÖNETİMİ
@@ -1291,30 +1347,57 @@
             }
         });
         
-                languageSelect.addEventListener('change', () => {
+                languageSelect.addEventListener('change', async () => {
             const selectedLang = languageSelect.value;
-            const langCode = selectedLang.split('-')[0];
             
-            // Türkçe harici dillerde maksimum hızı 2x yap
-            if (langCode !== 'tr') {
+            // Hız limitlerini ayarla
+            if (selectedLang.split('-')[0] !== 'tr') {
                 speedControl.max = 2.0;
                 if (parseFloat(speedControl.value) > 2.0) {
                     speedControl.value = 2.0;
                     speedDisplay.textContent = '2.0x';
                 }
             } else {
-                speedControl.max = 5.0; // Türkçe için normal maksimum
+                speedControl.max = 5.0;
             }
             
+            // Diğer ayarlar
             updateLanguage(selectedLang);
+            await sesleriYukle();
             sesiGuncelle();
             
-            if(isActive) {
-                window.speechSynthesis.cancel();
-                clearTimeout(timeoutID);
-                readNumber();
+            // Eğer aktifse yeniden başlat
+            if (isActive) {
+                const wasActive = isActive;
+                await stopReading();
+                if (wasActive) {
+                    startReading();
+                }
             }
         });
+
+                function handleTTSerror(error, lang) {
+            console.error("TTS Hatası:", error);
+            
+            // Hata türüne göre işlem yap
+            if (error.error === 'interrupted' || error.error === 'canceled') {
+                return; // Kullanıcı durdurduysa görmezden gel
+            }
+            
+            // Dil desteği hatası
+            const notification = createNotification(
+                `Seslendirme hatası: ${lang} dili desteklenmiyor olabilir`,
+                '❌'
+            );
+            showNotification(notification);
+            
+            // İngilizce'ye geç
+            if (lang !== 'en-US') {
+                languageSelect.value = 'en-US';
+                updateLanguage('en-US');
+                sesiGuncelle();
+            }
+        }
 
 
 
