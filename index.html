@@ -595,22 +595,22 @@
             }
 
             // Tema değiştirme butonuna tıklama olayı ekle
-            themeToggle.addEventListener('click', () => {
-                body.classList.toggle('dark-mode'); // dark-mode sınıfını ekle/kaldır
+                    themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode'); // dark-mode sınıfını ekle/kaldır
 
-                if (body.classList.contains('dark-mode')) {
-                    // Koyu Moda Geçildi
-                    themeIcon.textContent = '☀️'; // Güneş ikonu
-                    if (themeTextSpan) themeTextSpan.textContent = 'Açık Mod';
-                    if (themeTextSpan) themeTextSpan.dataset.key = 'themeLight'; // Dil anahtarını değiştir
-                    localStorage.setItem('theme', 'dark'); // Tercihi kaydet
-                } else {
-                    // Açık Moda Geçildi
-                    themeIcon.textContent = '🌙'; // Ay ikonu
-                    if (themeTextSpan) themeTextSpan.textContent = 'Koyu Mod';
-                    if (themeTextSpan) themeTextSpan.dataset.key = 'themeDark'; // Dil anahtarını değiştir
-                    localStorage.setItem('theme', 'light'); // Tercihi kaydet
-                }
+            if (body.classList.contains('dark-mode')) {
+                // Koyu Moda Geçildi
+                themeIcon.textContent = '☀️'; // Güneş ikonu
+                if (themeTextSpan) themeTextSpan.textContent = 'Açık Mod';
+                if (themeTextSpan) themeTextSpan.dataset.key = 'themeLight'; // Dil anahtarını değiştir
+                localStorage.setItem('theme', 'dark'); // Tercihi kaydet
+            } else {
+                // Açık Moda Geçildi
+                themeIcon.textContent = '🌙'; // Ay ikonu
+                if (themeTextSpan) themeTextSpan.textContent = 'Koyu Mod';
+                if (themeTextSpan) themeTextSpan.dataset.key = 'themeDark'; // Dil anahtarını değiştir
+                localStorage.setItem('theme', 'light'); // Tercihi kaydet
+            }
             });
 
         // 1. GENEL AYARLAR ve DEĞİŞKENLER
