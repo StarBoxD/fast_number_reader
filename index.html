@@ -771,12 +771,26 @@
                 utterance.voice = currentVoice;
                 utterance.rate = parseFloat(elements.speedControl.value);
                 
+                // Dil bazlı ping ayarları
+                const lang = elements.languageSelect.value;
+                let baseDelay = parseFloat(elements.delayControl.value);
+                
+                // Dil özel gecikme çarpanları
+                const delayMultipliers = {
+                    'fr-FR': 1.3,  // Fransızca daha uzun sürer
+                    'en-GB': 1.1,  // İngilizce (UK) biraz daha uzun
+                    'en-US': 1.0,  // İngilizce (US) standart
+                    'default': 1.0 // Diğer diller
+                };
+                
+                const delayMultiplier = delayMultipliers[lang] || delayMultipliers['default'];
+                const adjustedDelay = baseDelay * delayMultiplier;
+                
                 // Tüm tarayıcılar için güvenilir çözüm
                 await new Promise((resolve) => {
                     let resolved = false;
                     let timeoutId = null;
                     
-                    // Başarılı okuma durumu
                     utterance.onend = () => {
                         if (!resolved) {
                             clearTimeout(timeoutId);
@@ -785,7 +799,6 @@
                         }
                     };
                     
-                    // Hata durumu
                     utterance.onerror = (event) => {
                         console.error('Okuma hatası:', event.error);
                         if (!resolved) {
@@ -795,20 +808,18 @@
                         }
                     };
                     
-                    // Tarayıcıların bazılarında onend çalışmayabilir, bu yüzden yedek timeout
-                    const estimatedDuration = estimateReadingTime(number, utterance.rate);
+                    const estimatedDuration = estimateReadingTime(number, utterance.rate, lang);
                     timeoutId = setTimeout(() => {
                         if (!resolved) {
                             resolved = true;
                             console.warn('Timeout: Okuma süresi aşıldı, devam ediliyor');
                             proceedToNext();
                         }
-                    }, estimatedDuration + 1000); // Tahmini süre + 1sn buffer
+                    }, estimatedDuration + 1000);
                     
                     const proceedToNext = () => {
                         if (isReading) {
-                            const delay = parseFloat(elements.delayControl.value) * 1000;
-                            readingTimeout = setTimeout(readNumber, delay);
+                            readingTimeout = setTimeout(readNumber, adjustedDelay * 1000);
                         }
                         resolve();
                     };
@@ -912,10 +923,11 @@
         }
 
                 // Sayının uzunluğuna ve okuma hızına göre tahmini süre (ms)
-                        function estimateReadingTime(number, rate) {
+                function estimateReadingTime(number, rate, lang) {
             const numStr = number.toString();
             let wordCount;
             
+            // Sayı uzunluğuna göre kelime sayısı
             if (numStr.length <= 3) { // Binler
                 wordCount = 1;
             } else if (numStr.length <= 6) { // Milyonlar
@@ -926,8 +938,16 @@
                 wordCount = 4;
             }
             
-            // Her "kelime" için 800ms temel süre, hıza göre ayarlanmış
-            return Math.max(1000, wordCount * 800 * (1 / rate));
+            // Dil bazlı temel süreler (ms)
+            const baseDurations = {
+                'fr-FR': 900,  // Fransızca daha uzun
+                'en-GB': 850,   // İngilizce (UK)
+                'en-US': 800,   // İngilizce (US)
+                'default': 800  // Diğer diller
+            };
+            
+            const baseDuration = baseDurations[lang] || baseDurations['default'];
+            return Math.max(1000, wordCount * baseDuration * (1 / rate));
         }
             
         // 8. OLAY DİNLEYİCİLERİ
