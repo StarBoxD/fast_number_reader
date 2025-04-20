@@ -1465,54 +1465,6 @@
         document.querySelector('.history-title').classList.remove('active');
     }
 
-    // startReading fonksiyonunu güncelleyin
-    function startReading() {
-        const { isSafari } = getBrowserInfo();
-        
-        if (isSafari) {
-            const initSpeech = new SpeechSynthesisUtterance(" ");
-            initSpeech.volume = 0;
-            window.speechSynthesis.speak(initSpeech);
-            initSpeech.onend = () => {
-                setTimeout(readNumber, 200);
-            };
-        } else {
-            setTimeout(readNumber, 300);
-        }
-        
-        isActive = true;
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = false;
-        languageSelect.disabled = true;
-        document.getElementById('minValue').disabled = true;
-        document.getElementById('maxValue').disabled = true;
-        
-        startTime = Date.now();
-        totalNumbers = 0;
-        updateStats();
-    }
-
-        function checkLanguageSupport() {
-    const voices = window.speechSynthesis.getVoices();
-    checkSupportedLanguages(voices);
-    }
-
-        // languageSelect event listener'ını güncelleyin
-        languageSelect.addEventListener('change', () => {
-            document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
-            speedControl.value = 1.0;
-            speedDisplay.textContent = '1.0x';
-            updateLanguage(languageSelect.value);
-            clearHistory(); // Dil değiştiğinde geçmişi temizle
-            sesiGuncelle();
-            
-            if(isActive) {
-                window.speechSynthesis.cancel();
-                clearTimeout(timeoutID);
-                readNumber();
-            }
-        });
-
             // 1. Çerez Politikası Uyarısı için Çözüm
         document.addEventListener('DOMContentLoaded', function() {
             // SameSite çerez ayarı
