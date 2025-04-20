@@ -1002,7 +1002,8 @@
                     totalTimeLabel: 'Toplam Süre (dk)',
                     favoriteLanguageLabel: 'En Çok Kullanılan Dil',
                     themeDark: 'Dark Mode',
-                    themeLight: 'Light Mode'
+                    themeLight: 'Light Mode',
+                    clearHistory: 'Geçmişi Temizle'
                 },
                 'en-US': {
                     title: 'Number Reader',
@@ -1023,7 +1024,8 @@
                     totalTimeLabel: 'Total Time (min)',
                     favoriteLanguageLabel: 'Most Used Language',
                     themeDark: 'Dark Mode',
-                    themeLight: 'Light Mode'
+                    themeLight: 'Light Mode',
+                    clearHistory: 'Clear History'
                 },
                 'en-GB': {
                     title: 'Number Reader',
@@ -1044,7 +1046,8 @@
                     totalTimeLabel: 'Total Time (min)',
                     favoriteLanguageLabel: 'Most Used Language',
                     themeDark: 'Dark Mode',
-                    themeLight: 'Light Mode'
+                    themeLight: 'Light Mode',
+                    clearHistory: 'Clear History'
                 },
                 'de-DE': {
                     title: 'Zahlenleser',
@@ -1065,7 +1068,8 @@
                     totalTimeLabel: 'Gesamtzeit (min)',
                     favoriteLanguageLabel: 'Am häufigsten verwendete Sprache',
                     themeDark: 'Dark Mode',
-                    themeLight: 'Light Mode'
+                    themeLight: 'Light Mode',
+                    clearHistory: 'Verlauf Löschen'
                 },
                 'fr-FR': {
                     title: 'Lecteur de Nombres',
@@ -1084,7 +1088,10 @@
                     closeHelp: 'OK',
                     totalNumbersLabel: 'Nombres Totaux',
                     totalTimeLabel: 'Temps Total (min)',
-                    favoriteLanguageLabel: 'Langue la Plus Utilisée'
+                    favoriteLanguageLabel: 'Langue la Plus Utilisée',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
+                    clearHistory: 'Historique Effacer'
                 },
                 'es-ES': {
                     title: 'Lector de Números',
@@ -1103,7 +1110,10 @@
                     closeHelp: 'OK',
                     totalNumbersLabel: 'Números Totales',
                     totalTimeLabel: 'Tiempo Total (min)',
-                    favoriteLanguageLabel: 'Idioma Más Usado'
+                    favoriteLanguageLabel: 'Idioma Más Usado',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
+                    clearHistory: 'Historial Limpiar'
                 },
                 'ja-JP': {
                     title: '数字リーダー',
@@ -1122,7 +1132,10 @@
                     closeHelp: 'OK',
                     totalNumbersLabel: '総数',
                     totalTimeLabel: '総時間(分)',
-                    favoriteLanguageLabel: '最も使用された言語'
+                    favoriteLanguageLabel: '最も使用された言語',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
+                    clearHistory: '履歴をクリア'
                 },
                 'ru-RU': {
                     title: 'Читатель Чисел',
@@ -1141,7 +1154,10 @@
                     closeHelp: 'OK',
                     totalNumbersLabel: 'Всего Чисел',
                     totalTimeLabel: 'Общее Время (мин)',
-                    favoriteLanguageLabel: 'Самый Используемый Язык'
+                    favoriteLanguageLabel: 'Самый Используемый Язык',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
+                    clearHistory: 'История Очистить'
                 },
                 'zh-CN': {
                     title: '数字阅读器',
@@ -1160,7 +1176,10 @@
                     closeHelp: '确定',
                     totalNumbersLabel: '总数',
                     totalTimeLabel: '总时间(分钟)',
-                    favoriteLanguageLabel: '最常用语言'
+                    favoriteLanguageLabel: '最常用语言',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
+                    clearHistory: '历史记录清除'
                 },
                 'it-IT': {
                     title: 'Lettore di Numeri',
@@ -1179,18 +1198,26 @@
                     closeHelp: 'OK',
                     totalNumbersLabel: 'Numeri Totali',
                     totalTimeLabel: 'Tempo Totale (min)',
-                    favoriteLanguageLabel: 'Lingua Più Utilizzata'
+                    favoriteLanguageLabel: 'Lingua Più Utilizzata',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode',
+                    clearHistory: 'Cronologia Pulire'
                 }
             };
         
-        function updateLanguage(lang) {
-            document.querySelectorAll('.lang-text').forEach(el => {
-                const key = el.dataset.key;
-                el.textContent = translations[lang]?.[key] || translations['en-US'][key];
-            });
-            document.getElementById('minValue').placeholder = translations[lang]?.min || 'Min';
-            document.getElementById('maxValue').placeholder = translations[lang]?.max || 'Max';
-        }
+            function updateLanguage(lang) {
+                document.querySelectorAll('.lang-text').forEach(el => {
+                    const key = el.dataset.key;
+                    el.textContent = translations[lang]?.[key] || translations['en-US'][key];
+                });
+                document.getElementById('minValue').placeholder = translations[lang]?.min || 'Min';
+                document.getElementById('maxValue').placeholder = translations[lang]?.max || 'Max';
+                
+                // Geçmişi temizle butonunun rengini ve stilini koru
+                const clearBtn = document.getElementById('clearHistoryBtn');
+                clearBtn.style.backgroundColor = 'var(--danger)';
+                clearBtn.style.color = 'white';
+            }
         
         // 10. ANALYTICS ve REKLAM YÜKLEME
         window.addEventListener('load', () => {
