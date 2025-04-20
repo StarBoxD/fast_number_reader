@@ -18,12 +18,22 @@
         document.write('<script src="path/to/speech-polyfill.js"><\/script>');
         }
     </script>
+
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366"
+        crossorigin="anonymous"></script>
+        <ins class="adsbygoogle"
+        style="display:block"
+        data-ad-client="ca-pub-3050374663523366"
+        data-ad-slot="9615294230"
+        data-ad-format="auto"
+        data-full-width-responsive="true"></ins>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
         <!-- Vercel Analytics -->
     <script src="https://unpkg.com/@vercel/analytics@1.1.1/dist/analytics.min.js"></script>
     
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366"
-    crossorigin="anonymous"></script>
+   
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="Sayı Okuyucu ile farklı dillerde sayıları sesli olarak dinleyin. Türkçe, İngilizce, Almanca, Fransızca ve daha birçok dil desteği ile sayıları kolayca öğrenin.">
@@ -501,21 +511,16 @@
 
         /* AdSense */
         .ad-container {
-            display: none; /* Mobilde gizle */
+        display: block; /* Mobilde de göster */
+        position: static; /* Sabit pozisyonu kaldır */
+        margin: 20px auto; /* Ortala */
+        width: 100%;
         }
-
         @media (min-width: 1200px) {
-            .ad-container {
-                display: block;
-                position: fixed;
-                top: 20px;
-                width: 160px;
-                background: var(--card-light);
-                border-radius: 8px;
-                padding: 10px;
-                box-shadow: 0 4px 6px var(--shadow-light);
-                z-index: 100;
-            }
+        .ad-container {
+            position: fixed; /* Büyük ekranda sabit */
+            width: 160px;
+        }
             
             .ad-left {
                 left: 20px;
@@ -529,11 +534,6 @@
                 background: var(--card-dark);
                 box-shadow: 0 4px 6px var(--shadow-dark);
             }
-        }
-
-                .ad-container {
-            display: none; /* Mobilde gizle */
-             min-height: 100px; /* Reklam boyutuna göre ayarlayın */
         }
 
                 /* Mobil cihazlar için ek stil */
@@ -681,8 +681,14 @@
             </div>
         </div>
         <div class="ad-container ad-left">
-            <ins class="adsbygoogle"...></ins>
-        </div>
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-3050374663523366"
+                 data-ad-slot="9615294230"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+          </div>
               <script>
                 function loadAds() {
                         if (typeof adsbygoogle !== 'undefined') {
