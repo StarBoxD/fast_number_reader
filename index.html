@@ -644,7 +644,22 @@
         });
 
  
-
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sesler yüklenene kadar bekleyin
+            sesleriYukle().then(() => {
+                sesiGuncelle();
+                updateLanguage(languageSelect.value);
+            });
+            
+            // Tarayıcıya özel ayarlar
+            const { isChrome, isSafari } = getBrowserInfo();
+            if (isSafari) {
+                // Safari için özel başlatma
+                const initSpeech = new SpeechSynthesisUtterance(" ");
+                initSpeech.volume = 0;
+                window.speechSynthesis.speak(initSpeech);
+            }
+        });
 
 
 
@@ -748,46 +763,33 @@
         }
 
         // Güncellenmiş sesiGuncelle fonksiyonu
-        function sesiGuncelle() {
+                function sesiGuncelle() {
             const secilenDil = languageSelect.value;
-            const langCode = secilenDil.split('-')[0];
-            const uygunSesler = sesler.filter(s => s.lang.startsWith(langCode));
-
-            if(uygunSesler.length === 0) {
-                console.warn('Uygun ses bulunamadı:', secilenDil);
-
-                let notificationMessage = `Seçilen dil (${secilenDil}) için uygun ses bulunamadı.`;
-
-                if (secilenDil === 'tr-TR' || secilenDil === 'en-US') {
-                    notificationMessage += "<br><br>Türkçe ve İngilizce dışındaki diller için:";
-                    notificationMessage += "<br>- Lütfen sisteminizin dil ayarlarını kontrol edin.";
-                    notificationMessage += "<br>- Tarayıcınızın metin okuma özelliklerini kontrol edin.";
-                } else {
-                    notificationMessage += "<br><br>Farklı bir dil seçmeyi deneyebilir veya sisteminizin dil ayarlarını kontrol edebilirsiniz.";
-                }
-
-                const notification = createNotification(notificationMessage, '⚠️');
-                showNotification(notification);
-
-                // Varsayılan olarak İngilizce'ye geç
-                if (secilenDil !== 'tr-TR' && secilenDil !== 'en-US') {
-                    languageSelect.value = 'en-US';
-                    updateLanguage('en-US');
-                    // Burada sesi tekrar güncellememiz gerekiyor ki İngilizce bir ses seçilsin
-                    setTimeout(sesiGuncelle, 100);
-                }
-
-                seciliSes = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('en')) || window.speechSynthesis.getVoices()[0];
-                speech.voice = seciliSes;
-                speech.lang = seciliSes?.lang || 'en-US';
-                setVoiceSettings(speech.lang);
-                return;
+            const voices = window.speechSynthesis.getVoices();
+            
+            // Önce tam eşleşen sesi ara
+            seciliSes = voices.find(v => v.lang === secilenDil);
+            
+            // Tam eşleşme yoksa dil önekine göre ara (örneğin fr-FR yerine fr-CA)
+            if (!seciliSes) {
+                const langPrefix = secilenDil.split('-')[0];
+                seciliSes = voices.find(v => v.lang.startsWith(langPrefix));
             }
-
-            seciliSes = uygunSesler.find(v => v.lang === secilenDil) ||
-                        uygunSesler.find(v => v.default) ||
-                        uygunSesler[0];
-
+            
+            // Hala ses bulunamadıysa varsayılan İngilizce sesi kullan
+            if (!seciliSes) {
+                seciliSes = voices.find(v => v.lang.startsWith('en')) || voices[0];
+                
+                // Kullanıcıyı bilgilendir
+                if (secilenDil !== 'tr-TR' && secilenDil !== 'en-US') {
+                    const notification = createNotification(
+                        `${secilenDil} dili için uygun ses bulunamadı. İngilizce ses kullanılıyor.`,
+                        '⚠️'
+                    );
+                    showNotification(notification);
+                }
+            }
+            
             speech.voice = seciliSes;
             speech.lang = seciliSes.lang;
             setVoiceSettings(secilenDil);
@@ -796,23 +798,14 @@
         // 4. SES YÖNETİMİ
          // Ses yükleme ve kontrol fonksiyonunu güncelleyelim
                 function sesleriYukle() {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const checkVoices = () => {
-                    const availableVoices = window.speechSynthesis.getVoices();
-                    if (availableVoices.length > 0) {
-                        sesler = availableVoices.sort((a, b) => {
-                            const aIsNative = a.voiceURI.includes('native') ? 1 : 0;
-                            const bIsNative = b.voiceURI.includes('native') ? 1 : 0;
-                            return bIsNative - aIsNative;
-                        });
-                        checkSupportedLanguages(availableVoices); // Bu satır doğru
-                        resolve(sesler);
+                    const voices = window.speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        sesler = voices;
+                        resolve(voices);
                     } else {
-                        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                            window.speechSynthesis.onvoiceschanged = checkVoices;
-                        } else {
-                            setTimeout(checkVoices, 100);
-                        }
+                        setTimeout(checkVoices, 100);
                     }
                 };
                 checkVoices();
@@ -889,83 +882,74 @@
         }
         
                 function readNumber() {
-            if(!isActive) return;
+            if (!isActive) return;
 
             const sayi = Math.floor(Math.random() * (getNumericValue('maxValue') - getNumericValue('minValue') + 1)) + getNumericValue('minValue');
             resultDisplay.textContent = formatNumberWithDots(sayi);
             addToHistory(sayi, languageSelect.value);
 
+            // Önceki tüm okumaları iptal et
             window.speechSynthesis.cancel();
 
-            // Önce sistem sesini dene
             const utterance = new SpeechSynthesisUtterance(sayi.toString());
             utterance.voice = seciliSes;
             utterance.lang = seciliSes.lang;
             utterance.rate = parseFloat(speedControl.value);
             
-            let fallbackTriggered = false;
-            const fallbackTimeout = setTimeout(() => {
-                if (!fallbackTriggered && isActive) {
-                    fallbackTriggered = true;
-                    useAlternativeTTS(sayi.toString(), languageSelect.value);
-                }
-            }, 1500); // 1.5 saniye sonra fallback devreye girsin
+            // Dil istatistiklerini güncelle
+            const lang = languageSelect.value;
+            languageUsage[lang] = (languageUsage[lang] || 0) + 1;
+            updateStats();
 
+            // Okuma işlemi başarılı olursa
             utterance.onend = () => {
-                clearTimeout(fallbackTimeout);
-                if(isActive) {
+                if (isActive) {
                     const delay = parseFloat(delayControl.value) * 1000;
                     timeoutID = setTimeout(readNumber, delay);
                 }
             };
 
+            // Okuma hatası olursa
             utterance.onerror = (event) => {
-                clearTimeout(fallbackTimeout);
-                if (!fallbackTriggered && isActive) {
-                    fallbackTriggered = true;
-                    console.error("Seslendirme hatası:", event);
-                    useAlternativeTTS(sayi.toString(), languageSelect.value);
+                console.error("Seslendirme hatası:", event);
+                
+                // Hata durumunda alternatif yöntem dene
+                if (isActive) {
+                    const delay = parseFloat(delayControl.value) * 1000;
+                    timeoutID = setTimeout(readNumber, delay);
                 }
             };
 
-            window.speechSynthesis.speak(utterance);
+            try {
+                window.speechSynthesis.speak(utterance);
+                totalNumbers++;
+            } catch (e) {
+                console.error("Konuşma başlatma hatası:", e);
+                if (isActive) {
+                    const delay = parseFloat(delayControl.value) * 1000;
+                    timeoutID = setTimeout(readNumber, delay);
+                }
+            }
         }
 
                 // Alternatif TTS fonksiyonu
-                function useAlternativeTTS(text, lang) {
+                        function useAlternativeTTS(text, lang) {
             console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
-            const notification = createNotification(
-                `Seslendirme sorunu. Alternatif yöntem deneniyor...`,
-                '🔊'
-            );
-            showNotification(notification);
-
-    // Basit bir fallback seslendirme için (örneğin, İngilizce robotik bir ses)
-    const fallbackUtterance = new SpeechSynthesisUtterance(text);
-    fallbackUtterance.lang = lang; // Basit bir İngilizce ses kullan
-    fallbackUtterance.rate = parseFloat(speedControl.value);
-
-    // Fallback seslendirme başlatılsın
-    window.speechSynthesis.speak(fallbackUtterance);
-
-    fallbackUtterance.onend = () => {
-        if(isActive) {
-            const delay = parseFloat(delayControl.value) * 1000;
-            timeoutID = setTimeout(readNumber, delay);
+            
+            // Basit bir fallback mekanizması
+            const fallbackUtterance = new SpeechSynthesisUtterance(text);
+            fallbackUtterance.lang = 'en-US'; // Garanti bir dil kullan
+            fallbackUtterance.rate = Math.min(parseFloat(speedControl.value), 1.5);
+            
+            fallbackUtterance.onend = () => {
+                if(isActive) {
+                    const delay = parseFloat(delayControl.value) * 1000;
+                    timeoutID = setTimeout(readNumber, delay);
+                }
+            };
+            
+            window.speechSynthesis.speak(fallbackUtterance);
         }
-    };
-
-    fallbackUtterance.onerror = (event) => {
-        console.error("Fallback TTS hatası:", event);
-        const notification = createNotification(
-            `Seslendirme sırasında bir hata oluştu.`,
-            '❌'
-        );
-        showNotification(notification);
-        // Hata olursa okumayı durdur
-    };
-}
-
         // Alternatif ses motoru için fallback fonksiyonunu ekleyin (readNumber'dan önce)
         function speakWithFallback(text, lang, rate) {
             return new Promise((resolve) => {
@@ -1321,6 +1305,7 @@
             } else {
                 speedControl.max = 5.0; // Türkçe için normal maksimum
             }
+            
             updateLanguage(selectedLang);
             sesiGuncelle();
             
