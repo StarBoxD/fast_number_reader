@@ -914,52 +914,83 @@
             document.querySelector('.history-title').classList.toggle('active', numberHistory.length > 0);
         }
         
-                let currentUtterance = null;
-        let isSpeaking = false;
+            let currentUtterance = null;
+    let isSpeaking = false;
 
-        async function readNumber() {
-            if (!isActive) return;
+    async function readNumber() {
+        if (!isActive) return;
 
-            // Önceki konuşmayı temizle
-            if (currentUtterance) {
-                window.speechSynthesis.cancel();
+        // Önceki konuşmayı temizle
+        window.speechSynthesis.cancel();
+        clearTimeout(timeoutID);
+
+        const min = getNumericValue('minValue');
+        const max = getNumericValue('maxValue');
+        const sayi = Math.floor(Math.random() * (max - min + 1)) + min;
+        
+        resultDisplay.textContent = formatNumberWithDots(sayi);
+        addToHistory(sayi, languageSelect.value);
+
+        // Yeni utterance oluştur
+        currentUtterance = new SpeechSynthesisUtterance(sayi.toString());
+        currentUtterance.voice = seciliSes;
+        currentUtterance.lang = seciliSes.lang;
+        currentUtterance.rate = parseFloat(speedControl.value);
+        
+        // İstatistikleri güncelle
+        const lang = languageSelect.value;
+        languageUsage[lang] = (languageUsage[lang] || 0) + 1;
+        totalNumbers++;
+        updateStats();
+
+        try {
+            isSpeaking = true;
+            await new Promise((resolve, reject) => {
+                currentUtterance.onend = () => {
+                    isSpeaking = false;
+                    resolve();
+                };
+                currentUtterance.onerror = (err) => {
+                    isSpeaking = false;
+                    reject(err);
+                };
+                window.speechSynthesis.speak(currentUtterance);
+            });
+
+            if (isActive) {
+                const delay = parseFloat(delayControl.value) * 1000;
+                timeoutID = setTimeout(readNumber, delay);
             }
-
-            const sayi = Math.floor(Math.random() * (getNumericValue('maxValue') - getNumericValue('minValue') + 1)) + getNumericValue('minValue');
-            resultDisplay.textContent = formatNumberWithDots(sayi);
-            addToHistory(sayi, languageSelect.value);
-
-            // Yeni utterance oluştur
-            currentUtterance = new SpeechSynthesisUtterance(sayi.toString());
-            currentUtterance.voice = seciliSes;
-            currentUtterance.lang = seciliSes.lang;
-            currentUtterance.rate = parseFloat(speedControl.value);
-            
-            // İstatistikleri güncelle
-            const lang = languageSelect.value;
-            languageUsage[lang] = (languageUsage[lang] || 0) + 1;
-            totalNumbers++;
-            updateStats();
-
-            // Promise tabanlı konuşma fonksiyonu
-            try {
-                isSpeaking = true;
-                await speakUtterance(currentUtterance);
-                
-                if (isActive) {
-                    const delay = parseFloat(delayControl.value) * 1000;
-                    timeoutID = setTimeout(readNumber, delay);
-                }
-            } catch (error) {
-                console.error("Okuma hatası:", error);
-                if (isActive) {
-                    const delay = parseFloat(delayControl.value) * 1000;
-                    timeoutID = setTimeout(readNumber, delay);
-                }
-            } finally {
-                isSpeaking = false;
+        } catch (error) {
+            console.error("Okuma hatası:", error);
+            if (isActive) {
+                const delay = parseFloat(delayControl.value) * 1000;
+                timeoutID = setTimeout(readNumber, delay);
             }
         }
+    }
+
+    function stopReading() {
+        isActive = false;
+        window.speechSynthesis.cancel();
+        clearTimeout(timeoutID);
+        isSpeaking = false;
+        currentUtterance = null;
+        
+        // UI güncellemeleri
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+        languageSelect.disabled = false;
+        document.getElementById('minValue').disabled = false;
+        document.getElementById('maxValue').disabled = false;
+        
+        // Süre hesaplaması
+        if (startTime) {
+            totalTime += (Date.now() - startTime) / 1000;
+            startTime = null;
+            updateStats();
+        }
+    }
 
         function speakUtterance(utterance) {
             return new Promise((resolve, reject) => {
