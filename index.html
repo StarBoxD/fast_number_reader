@@ -784,31 +784,29 @@
         
         // 4. SES YÖNETİMİ
          // Ses yükleme ve kontrol fonksiyonunu güncelleyelim
-        function sesleriYukle() {
-            return new Promise((resolve, reject) => {
-                const checkVoices = () => {
-                    const availableVoices = window.speechSynthesis.getVoices();
-                    if (availableVoices.length > 0) {
-                        sesler = availableVoices.sort((a, b) => {
-                            const aIsNative = a.voiceURI.includes('native') ? 1 : 0;
-                            const bIsNative = b.voiceURI.includes('native') ? 1 : 0;
-                            return bIsNative - aIsNative;
-                        });
-                        
-                        // Desteklenen dilleri kontrol et
-                        checkSupportedLanguages(availableVoices);
-                        resolve(sesler);
-                    } else {
-                        if (window.speechSynthesis.onvoiceschanged !== undefined) {
-                            window.speechSynthesis.onvoiceschanged = checkVoices;
-                        } else {
-                            setTimeout(checkVoices, 100);
-                        }
-                    }
-                };
-                checkVoices();
-            });
-        }
+         function sesleriYukle() {
+            return new Promise((resolve, reject) => {
+                const checkVoices = () => {
+                    const availableVoices = window.speechSynthesis.getVoices();
+                    if (availableVoices.length > 0) {
+                        sesler = availableVoices.sort((a, b) => {
+                            const aIsNative = a.voiceURI.includes('native') ? 1 : 0;
+                            const bIsNative = b.voiceURI.includes('native') ? 1 : 0;
+                            return bIsNative - aIsNative;
+                        });
+                        checkSupportedLanguages(availableVoices); // BU SATIRI EKLEYİN
+                        resolve(sesler);
+                    } else {
+                        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                            window.speechSynthesis.onvoiceschanged = checkVoices;
+                        } else {
+                            setTimeout(checkVoices, 100);
+                        }
+                    }
+                };
+                checkVoices();
+            });
+        }
 
         // Desteklenen dilleri kontrol eden fonksiyon
         function checkSupportedLanguages(voices) {
@@ -845,44 +843,8 @@
             }
         }
         
-                function sesiGuncelle() {
-            const secilenDil = languageSelect.value;
-            const langCode = secilenDil.split('-')[0];
-            const uygunSesler = sesler.filter(s => s.lang.startsWith(langCode));
-            
-            if(uygunSesler.length === 0) {
-                console.warn('Uygun ses bulunamadı:', secilenDil);
-                
-                // Kullanıcı dostu uyarı mesajı
-                let notificationMessage = `Seçilen dil (${secilenDil}) için ses paketi yüklü değil`;
-                
-                if (secilenDil === 'tr-TR' || secilenDil === 'en-US') {
-                    notificationMessage += "<br><br>Türkçe ve İngilizce dışındaki diller için:";
-                    notificationMessage += "<br>- Windows: Dil paketlerini yükleyin";
-                    notificationMessage += "<br>- Mac: Sistem Tercihleri > Klavye > Metinden Konuşma";
-                    notificationMessage += "<br>- Chrome: Ayarlar > Gelişmiş > Erişilebilirlik > Metin okuma";
-                }
-                
-                const notification = createNotification(notificationMessage, '⚠️');
-                showNotification(notification);
-                
-                // Varsayılan olarak İngilizce'ye geç
-                if (secilenDil !== 'tr-TR' && secilenDil !== 'en-US') {
-                    languageSelect.value = 'en-US';
-                    updateLanguage('en-US');
-                }
-                
-                return;
-            }
+    
 
-            seciliSes = uygunSesler.find(v => v.lang === secilenDil) || 
-                    uygunSesler.find(v => v.default) || 
-                    uygunSesler[0];
-            
-            speech.voice = seciliSes;
-            speech.lang = secilenDil;
-            setVoiceSettings(secilenDil);
-        }
         
                         // 5. OKUMA İŞLEMLERİ
                         function addToHistory(number, lang) {
@@ -933,9 +895,14 @@
             };
         }
 
-        // Alternatif TTS fonksiyonu
-       function useAlternativeTTS(text, lang) {
-    console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
+                // Alternatif TTS fonksiyonu
+                function useAlternativeTTS(text, lang) {
+            console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
+            const notification = createNotification(
+                `Seslendirme sorunu. Alternatif yöntem deneniyor...`,
+                '🔊'
+            );
+            showNotification(notification);
 
     // Basit bir fallback seslendirme için (örneğin, İngilizce robotik bir ses)
     const fallbackUtterance = new SpeechSynthesisUtterance(text);
@@ -1057,7 +1024,9 @@
                 closeHelp: 'Tamam',
                 totalNumbersLabel: 'Toplam Sayı',
                 totalTimeLabel: 'Toplam Süre (dk)',
-                favoriteLanguageLabel: 'En Çok Kullanılan Dil'
+                favoriteLanguageLabel: 'En Çok Kullanılan Dil',
+                themeDark: 'Dark Mode',
+                themeLight: 'Light Mode'
             },
             'en-US': {
                 title: 'Number Reader',
@@ -1077,8 +1046,8 @@
                 totalNumbersLabel: 'Total Numbers',
                 totalTimeLabel: 'Total Time (min)',
                 favoriteLanguageLabel: 'Most Used Language',
-                themeDark: 'Koyu Mod',
-                themeLight: 'Açık Mod'
+                themeDark: 'Dark Mode',
+                themeLight: 'Light Mode'
             },
             'en-GB': {
                 title: 'Number Reader',
@@ -1314,18 +1283,6 @@
             delayDisplay.textContent = delayControl.value + 's';
         });
         
-                document.addEventListener('DOMContentLoaded', () => {
-            // Diğer başlangıç kodları...
-            window.speechSynthesis.onvoiceschanged = function() {
-                sesleriYukle().then(() => {
-                    sesiGuncelle();
-                    updateLanguage(languageSelect.value);
-                    checkLanguageSupport();
-                });
-            };
-                window.speechSynthesis.getVoices();
-            });
-
             // Geçmişi temizleme fonksiyonu
     function clearHistory() {
         numberHistory = [];
@@ -1335,7 +1292,6 @@
 
     // startReading fonksiyonunu güncelleyin
     function startReading() {
-        clearHistory(); // Yeni okuma başladığında geçmişi temizle
         const { isSafari } = getBrowserInfo();
         
         if (isSafari) {
@@ -1361,36 +1317,21 @@
         updateStats();
     }
 
-            // languageSelect event listener'ını güncelleyin
-            languageSelect.addEventListener('change', () => {
-                document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
-                speedControl.value = 1.0;
-                speedDisplay.textContent = '1.0x';
-                updateLanguage(languageSelect.value);
-                clearHistory(); // Dil değiştiğinde geçmişi temizle
-                sesiGuncelle();
-                
-                if(isActive) {
-                    window.speechSynthesis.cancel();
-                    clearTimeout(timeoutID);
-                    readNumber();
-                }
-            });
-
-                    function useAlternativeTTS(text, lang) {
-            console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
-            const notification = createNotification(
-                `Seslendirme sorunu. Alternatif yöntem deneniyor...`,
-                '🔊'
-            );
-            showNotification(notification);
-        }
+        // languageSelect event listener'ını güncelleyin
+        languageSelect.addEventListener('change', () => {
+            document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+            speedControl.value = 1.0;
+            speedDisplay.textContent = '1.0x';
+            updateLanguage(languageSelect.value);
+            clearHistory(); // Dil değiştiğinde geçmişi temizle
+            sesiGuncelle();
             
-           
-
-     
-    
-        
+            if(isActive) {
+                window.speechSynthesis.cancel();
+                clearTimeout(timeoutID);
+                readNumber();
+            }
+        });
             // 1. Çerez Politikası Uyarısı için Çözüm
         document.addEventListener('DOMContentLoaded', function() {
             // SameSite çerez ayarı
