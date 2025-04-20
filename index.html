@@ -328,8 +328,8 @@
             padding: 0;
         }
 
-        .history-title {
-            position: absolute; /* Başlığı normal akıştan çıkarıyoruz */
+                .history-title {
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
@@ -337,7 +337,15 @@
             margin: 0;
             padding: 0.5rem 0;
             transition: opacity 0.3s ease;
-            pointer-events: none; /* Tıklamalara engel olmaması için */
+            pointer-events: none;
+            opacity: 1; /* Varsayılan olarak görünür */
+        }
+
+                .history-title.hidden {
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            overflow: hidden;
         }
 
         .history-title.active {
@@ -598,841 +606,213 @@
     </div>
 
     <script>
-
-                // Tarayıcı tespit fonksiyonu
+        // 1. TARAYICI TESPİT ve TEMEL AYARLAR
         function getBrowserInfo() {
-        const ua = navigator.userAgent;
-        return {
-            isOldChrome: /Chrome\/([0-9]+)/.test(ua) && parseInt(ua.match(/Chrome\/([0-9]+)/)[1]) < 70,
-            isSafari: /Safari\//.test(ua) && !/Chrome|Chromium|Edg|Edge|Firefox|OPR/.test(ua),
-            isIOS: /iPhone|iPad|iPod/.test(ua),
-            isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)
-        };
-        }
-
-        const browserInfo = getBrowserInfo();
-
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const body = document.body;
-        const themeTextSpan = themeToggle ? themeToggle.querySelector('.lang-text') : null; // Element var mı kontrol et
-
-        function setTheme(theme) {
-            if (theme === 'dark') {
-                body.classList.add('dark-mode');
-                themeIcon.textContent = '☀️';
-                if (themeTextSpan) {
-                    themeTextSpan.textContent = 'Açık Mod';
-                    themeTextSpan.dataset.key = 'themeLight';
-                }
-                localStorage.setItem('theme', 'dark');
-            } else {
-                body.classList.remove('dark-mode');
-                themeIcon.textContent = '🌙';
-                if (themeTextSpan) {
-                    themeTextSpan.textContent = 'Koyu Mod';
-                    themeTextSpan.dataset.key = 'themeDark';
-                }
-                localStorage.setItem('theme', 'light');
-            }
-        }
-
-        function toggleTheme() {
-            body.classList.toggle('dark-mode');
-            const isDarkMode = body.classList.contains('dark-mode');
-            setTheme(isDarkMode ? 'dark' : 'light');
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sayfa yüklendiğinde localStorage veya sistem tercihine göre temayı ayarla
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                setTheme(savedTheme);
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                setTheme('dark');
-            } else {
-                setTheme('light'); // Varsayılan tema
-            }
-
-            // Tema değiştirme butonuna tıklama olayı ekle (sadece bir kez tanımla)
-            if (themeToggle) {
-                themeToggle.addEventListener('click', toggleTheme);
-            }
-
-            // Diğer başlangıç kodları...
-            window.speechSynthesis.onvoiceschanged = function() {
-                sesleriYukle().then(() => {
-                    sesiGuncelle();
-                    updateLanguage(languageSelect.value);
-                });
-            };
-            window.speechSynthesis.getVoices();
-        });
-
- 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sesler yüklenene kadar bekleyin
-            sesleriYukle().then(() => {
-                sesiGuncelle();
-                updateLanguage(languageSelect.value);
-            });
-            
-            // Tarayıcıya özel ayarlar
-            const { isChrome, isSafari } = getBrowserInfo();
-            if (isSafari) {
-                // Safari için özel başlatma
-                const initSpeech = new SpeechSynthesisUtterance(" ");
-                initSpeech.volume = 0;
-                window.speechSynthesis.speak(initSpeech);
-            }
-        });
-
-
-
-        // 1. GENEL AYARLAR ve DEĞİŞKENLER
-        const speech = new SpeechSynthesisUtterance();
-        const languageSelect = document.getElementById('languageSelect');
-        const speedControl = document.getElementById('speedControl');
-        const speedDisplay = document.getElementById('speedDisplay');
-        const delayControl = document.getElementById('delayControl');
-        const delayDisplay = document.getElementById('delayDisplay');
-        const resultDisplay = document.getElementById('resultDisplay');
-        
-        let sesler = [];
-        let seciliSes = null;
-        let timeoutID = null;
-        let isActive = false;
-        let numberHistory = [];
-        let totalNumbers = 0;
-        let totalTime = 0;
-        let languageUsage = {};
-        let startTime;
-        
-        // 2. TARAYICI BİLGİLERİ
-                function getBrowserInfo() {
             const ua = navigator.userAgent;
+            const chromeVersion = parseInt(ua.match(/Chrome\/(\d+)/)?.[1]) || 0;
+            const safariVersion = parseInt(ua.match(/Version\/(\d+).*Safari/)?.[1]) || 0;
+            
             return {
-                isChrome: /Chrome/.test(ua) && !/Edge/.test(ua),
-                isSafari: /Safari/.test(ua) && !/Chrome/.test(ua),
-                isFirefox: /Firefox/.test(ua),
-                isEdge: /Edge/.test(ua)
+                isOldChrome: chromeVersion > 0 && chromeVersion < 70,
+                isSafari: /Safari/.test(ua) && !/Chrome|Chromium|Edg|Edge|Firefox|OPR/.test(ua),
+                isIOS: /iPhone|iPad|iPod/.test(ua),
+                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua),
+                chromeVersion,
+                safariVersion
             };
         }
-
-                // Gelişmiş tarayıcı ve OS tespiti
-        function getSystemInfo() {
-            const ua = navigator.userAgent;
-            let os, browser;
+        
+        const browserInfo = getBrowserInfo();
+        
+        // 2. TEMA YÖNETİMİ
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+        
+        function setTheme(theme) {
+            const isDark = theme === 'dark';
+            body.classList.toggle('dark-mode', isDark);
+            themeIcon.textContent = isDark ? '☀️' : '🌙';
             
-            // İşletim Sistemi
-            if (ua.match(/Android/i)) os = 'Android';
-            else if (ua.match(/iPhone|iPad|iPod/i)) os = 'iOS';
-            else if (ua.match(/Windows/i)) os = 'Windows';
-            else if (ua.match(/Macintosh|Mac OS X/i)) os = 'MacOS';
-            else if (ua.match(/Linux/i)) os = 'Linux';
-            else os = 'Unknown OS';
-            
-            // Tarayıcı
-            if (ua.match(/Chrome/i) && !ua.match(/Edg/i)) browser = 'Chrome';
-            else if (ua.match(/Firefox/i)) browser = 'Firefox';
-            else if (ua.match(/Safari/i) && !ua.match(/Chrome/i)) browser = 'Safari';
-            else if (ua.match(/Edg/i)) browser = 'Edge';
-            else if (ua.match(/Opera|OPR/i)) browser = 'Opera';
-            else browser = 'Unknown Browser';
-            
-            return { os, browser };
+            const themeTextSpan = themeToggle.querySelector('.lang-text');
+            if (themeTextSpan) {
+                themeTextSpan.textContent = isDark ? 'Açık Mod' : 'Koyu Mod';
+                themeTextSpan.dataset.key = isDark ? 'themeLight' : 'themeDark';
+            }
+            localStorage.setItem('theme', theme);
         }
         
-        // 3. TEMEL FONKSİYONLAR
-        function formatNumberWithDots(number) {
-            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        function toggleTheme() {
+            setTheme(body.classList.contains('dark-mode') ? 'light' : 'dark');
         }
         
-        function getNumericValue(inputId) {
-            const value = document.getElementById(inputId).value.replace(/\./g, '');
+        // 3. SES YÖNETİMİ
+        const speech = new SpeechSynthesisUtterance();
+        let voices = [];
+        let currentVoice = null;
+        let isReading = false;
+        let readingTimeout = null;
+        let numberHistory = [];
+        let stats = {
+            totalNumbers: 0,
+            totalTime: 0,
+            languageUsage: {}
+        };
+        
+        // DOM ELEMENTLERİ
+        const elements = {
+            languageSelect: document.getElementById('languageSelect'),
+            speedControl: document.getElementById('speedControl'),
+            speedDisplay: document.getElementById('speedDisplay'),
+            delayControl: document.getElementById('delayControl'),
+            delayDisplay: document.getElementById('delayDisplay'),
+            resultDisplay: document.getElementById('resultDisplay'),
+            historyList: document.getElementById('historyList'),
+            startBtn: document.getElementById('startBtn'),
+            stopBtn: document.getElementById('stopBtn')
+        };
+        
+        // 4. TEMEL FONKSİYONLAR
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        function getNumberInputValue(id) {
+            const value = document.getElementById(id).value.replace(/\./g, '');
             return parseInt(value) || 0;
         }
         
-        function createNotification(text, icon) {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.innerHTML = `
-                <div class="notification-content">
-                    <span class="notification-icon">${icon}</span>
-                    <span class="notification-text">${text}</span>
-                </div>
-            `;
-            return notification;
+        function updateUIForReading(isReading) {
+            elements.startBtn.disabled = isReading;
+            elements.stopBtn.disabled = !isReading;
+            elements.languageSelect.disabled = isReading;
         }
         
-        function showNotification(notification) {
-            document.body.appendChild(notification);
-            setTimeout(() => {
-                notification.classList.add('fade-out');
-                setTimeout(() => notification.remove(), 500);
-            }, 3000);
-        }
-
-                // Web Speech API fallback fonksiyonu
-        function getBestAvailableVoice(lang) {
-            const voices = window.speechSynthesis.getVoices();
-            const exactMatch = voices.find(v => v.lang === lang);
-            if (exactMatch) return exactMatch;
-
-            const langPrefix = lang.split('-')[0];
-            const langMatch = voices.find(v => v.lang.startsWith(langPrefix));
-            if (langMatch) return langMatch;
-
-            // Eğer hiçbir ses bulunamazsa, varsayılan İngilizce sesi kullan
-            const defaultVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-            return defaultVoice;
-        }
-
-        // Güncellenmiş sesiGuncelle fonksiyonu
-            function sesiGuncelle() {
-        const secilenDil = languageSelect.value;
-        const voices = window.speechSynthesis.getVoices();
-        
-        // Önce tam eşleşen sesi ara
-        seciliSes = voices.find(v => v.lang === secilenDil);
-        
-        // Tam eşleşme yoksa:
-        if (!seciliSes) {
-            const langPrefix = secilenDil.split('-')[0];
-            
-            // 1. Aynı dil ailesinden yerel bir ses bul
-            seciliSes = voices.find(v => v.lang.startsWith(langPrefix) && v.localService);
-            
-            // 2. Herhangi bir aynı dil ailesinden ses bul
-            if (!seciliSes) {
-                seciliSes = voices.find(v => v.lang.startsWith(langPrefix));
-            }
-            
-            // 3. Varsayılan İngilizce sesi kullan
-            if (!seciliSes) {
-                seciliSes = voices.find(v => v.lang.startsWith('en')) || voices[0];
+        // 5. SES FONKSİYONLARI
+        function initSpeechEngine() {
+            if (browserInfo.isOldChrome || browserInfo.isSafari) {
+                const warmUp = new SpeechSynthesisUtterance(" ");
+                warmUp.volume = 0;
+                window.speechSynthesis.speak(warmUp);
                 
-                // Kullanıcıyı bilgilendir
-                if (secilenDil !== 'tr-TR' && secilenDil !== 'en-US') {
-                    const notification = createNotification(
-                        `${secilenDil} için uygun ses bulunamadı. İngilizce ses kullanılıyor.`,
-                        '⚠️'
-                    );
-                    showNotification(notification);
-                }
+                // Eski tarayıcılar için sınırlamalar
+                elements.speedControl.max = 1.5;
+                elements.delayControl.max = browserInfo.isIOS ? 2 : 3;
             }
         }
         
-        speech.voice = seciliSes;
-        speech.lang = seciliSes.lang;
-        setVoiceSettings(secilenDil);
-    }
+        function loadVoices() {
+            return new Promise(resolve => {
+                const checkVoices = () => {
+                    const availableVoices = window.speechSynthesis.getVoices();
+                    if (availableVoices.length > 0) {
+                        voices = availableVoices;
+                        resolve(voices);
+                    } else {
+                        setTimeout(checkVoices, 100);
+                    }
+                };
+                checkVoices();
+            });
+        }
         
-        // 4. SES YÖNETİMİ
-         // Ses yükleme ve kontrol fonksiyonunu güncelleyelim
-                function sesleriYukle() {
-        return new Promise((resolve) => {
-            const voices = window.speechSynthesis.getVoices();
-            if (voices.length > 0) {
-            resolve(voices);
-            return;
-            }
-
-            // Safari ve eski Chrome için özel çözüm
-            const initSpeech = new SpeechSynthesisUtterance(' ');
-            initSpeech.volume = 0;
-            window.speechSynthesis.speak(initSpeech);
-
-            let retries = 3;
-            const checkVoices = () => {
-            const voices = window.speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                resolve(voices);
-            } else if (retries-- > 0) {
-                setTimeout(checkVoices, 500);
+        function updateVoice() {
+            const lang = elements.languageSelect.value;
+            const langPrefix = lang.split('-')[0];
+            
+            // Ses seçimi öncelik sırası
+            currentVoice = voices.find(v => v.lang === lang) ||
+                          voices.find(v => v.lang.startsWith(langPrefix) && v.localService) ||
+                          voices.find(v => v.lang.startsWith(langPrefix)) ||
+                          voices.find(v => v.lang.startsWith('en')) ||
+                          voices[0];
+            
+            speech.voice = currentVoice;
+            speech.lang = currentVoice.lang;
+            
+            // Türkçe harici diller için hız sınırı
+            if (langPrefix !== 'tr') {
+                elements.speedControl.max = 2.0;
+                if (parseFloat(elements.speedControl.value) > 2.0) {
+                    elements.speedControl.value = 2.0;
+                    elements.speedDisplay.textContent = '2.0x';
+                }
             } else {
-                console.error('Sesler yüklenemedi');
-                resolve([]);
+                elements.speedControl.max = 5.0;
             }
-            };
-            
-            setTimeout(checkVoices, 300);
-        });
         }
-        // Desteklenen dilleri kontrol eden fonksiyon
-        function checkSupportedLanguages(voices) {
-            const supportedLanguages = {};
-            voices.forEach(voice => {
-                const langCode = voice.lang.split('-')[0];
-                supportedLanguages[langCode] = true;
-            });
-
-            // Seçenekleri filtrele
-            const languageSelect = document.getElementById('languageSelect');
-            Array.from(languageSelect.options).forEach(option => {
-                const langCode = option.value.split('-')[0];
-                if (!supportedLanguages[langCode] && option.value !== 'tr-TR' && option.value !== 'en-US') {
-                    option.disabled = true;
-                    option.title = "Bu dil tarayıcınızda desteklenmiyor";
+        
+        // 6. OKUMA İŞLEMLERİ
+        async function readNumber() {
+            if (!isReading) return;
+        
+            try {
+                window.speechSynthesis.cancel();
+                
+                const min = getNumberInputValue('minValue');
+                const max = getNumberInputValue('maxValue');
+                const number = Math.floor(Math.random() * (max - min + 1)) + min;
+                
+                // Görüntüleme ve geçmiş
+                elements.resultDisplay.textContent = formatNumber(number);
+                addToHistory(number);
+                
+                // Okuma ayarları
+                const utterance = new SpeechSynthesisUtterance(number.toString());
+                utterance.voice = currentVoice;
+                utterance.rate = parseFloat(elements.speedControl.value);
+                
+                // Okuma işlemi
+                await new Promise((resolve) => {
+                    utterance.onend = resolve;
+                    utterance.onerror = resolve;
+                    window.speechSynthesis.speak(utterance);
+                });
+        
+                // Sonraki okuma için zamanlama
+                if (isReading) {
+                    const delay = parseFloat(elements.delayControl.value) * 1000;
+                    readingTimeout = setTimeout(readNumber, delay);
                 }
-            });
-        }
-
-                function setVoiceSettings(lang) {
-            const { isMac, isChrome } = getBrowserInfo();
-            const langCode = lang.split('-')[0];
-            
-            // Temel hız ayarı
-            let rate = parseFloat(speedControl.value);
-            
-            // Türkçe harici diller için maksimum 2x sınırı
-            if (langCode !== 'tr') {
-                rate = Math.min(rate, 2.0);
-            }
-            
-            // Tarayıcı ve işletim sistemi özel kısıtlamaları
-            if (isChrome && isMac) {
-                rate = Math.min(rate, 1.5);
-            }
-            
-            // Son hız ayarını uygula
-            speech.rate = rate;
-            speech.pitch = 1.0;
-            
-            // Hız kontrol input'unu güncelle (eğer sınırlandırıldıysa)
-            if (rate !== parseFloat(speedControl.value)) {
-                speedControl.value = rate;
-                speedDisplay.textContent = rate.toFixed(1) + 'x';
+            } catch (error) {
+                console.error("Okuma hatası:", error);
+                if (isReading) {
+                    readingTimeout = setTimeout(readNumber, 1000);
+                }
             }
         }
         
-    
-            // Tarayıcı türüne göre özel ayarlar
-        function applyBrowserSpecificFixes() {
-            const { isChrome, isFirefox, isSafari } = getBrowserInfo();
+                function addToHistory(number) {
+            const formatted = formatNumber(number);
+            numberHistory.push(formatted);
             
-            if (isFirefox) {
-                // Firefox için özel ayarlar
-                speech.volume = 1;
-                speech.pitch = 1;
-            }
-            
-            if (isChrome) {
-                // Chrome için özel ayarlar
-                speech.volume = 0.9;
-            }
-            
-            if (isSafari) {
-                // Safari için özel ayarlar
-                const initSpeech = new SpeechSynthesisUtterance(" ");
-                initSpeech.volume = 0;
-                window.speechSynthesis.speak(initSpeech);
-            }
-        }
-
-        // Sayfa yüklendiğinde çağır
-        document.addEventListener('DOMContentLoaded', () => {
-            applyBrowserSpecificFixes();
-        });
-
-                // Global hata yakalayıcı
-        window.addEventListener('error', function(e) {
-        console.error('Global hata:', e.error);
-        
-        if (e.message.includes('speechSynthesis') || 
-            e.message.includes('utterance')) {
-            showNotification("Ses sistemi hatası. Sayfayı yenilemeyi deneyin.");
-            stopReading();
-        }
-        });
-
-        // Konuşma hatası fallback'i
-        function handleSpeechError(error) {
-        console.error('Konuşma hatası:', error);
-        
-        if (browserInfo.isOldChrome) {
-            // Eski Chrome için alternatif yaklaşım
-            const msg = new SpeechSynthesisUtterance("Lütfen sayfayı yenileyin");
-            msg.lang = 'en-US';
-            window.speechSynthesis.speak(msg);
-        }
-        
-        stopReading();
-        }
-        
-                        // 5. OKUMA İŞLEMLERİ
-                        function addToHistory(number, lang) {
-            const formattedNumber = formatNumberWithDots(number);
-            numberHistory.push({ number: formattedNumber, lang: lang }); // En yeni en sona
-            
-            const historyList = document.getElementById('historyList');
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            div.textContent = formattedNumber;
-            historyList.appendChild(div); // Sağa ekle
-
-            // Scroll'u en alta kaydır
-            historyList.scrollTop = historyList.scrollHeight;
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.textContent = formatted;
+            elements.historyList.appendChild(item);
+            elements.historyList.scrollTop = elements.historyList.scrollHeight;
             
             // Başlığı gizle
-            document.querySelector('.history-title').classList.toggle('active', numberHistory.length > 0);
-        }
-
-                document.addEventListener('DOMContentLoaded', () => {
-            // Tarayıcıya özel ayarlar
-            if (browserInfo.isOldChrome) {
-                console.log('Eski Chrome sürümü için optimizasyonlar aktif');
-                document.getElementById('speedControl').max = 2.0;
+            const historyTitle = document.querySelector('.history-title');
+            if (historyTitle && !historyTitle.classList.contains('hidden')) {
+                historyTitle.classList.add('hidden');
             }
             
-            if (browserInfo.isSafari) {
-                console.log('Safari için optimizasyonlar aktif');
-                document.getElementById('speedControl').max = 1.5;
-            }
-            
-            if (browserInfo.isIOS) {
-                console.log('iOS cihaz için optimizasyonlar aktif');
-                document.getElementById('delayControl').max = 3;
-            }
-
-            // Sesleri yükle
-            sesleriYukle().then(voices => {
-                sesler = voices;
-                sesiGuncelle();
-                checkSupportedLanguages(voices);
-            });
-        });
-        
-            let currentUtterance = null;
-    let isSpeaking = false;
-
-            async function readNumber() {
-        if (!isActive) return;
-
-        // Eski tarayıcılar için temizlik
-        if (browserInfo.isOldChrome) {
-            window.speechSynthesis.cancel();
-        }
-
-        const sayi = Math.floor(Math.random() * (getNumericValue('maxValue') - getNumericValue('minValue') + 1)) + getNumericValue('minValue');
-        resultDisplay.textContent = formatNumberWithDots(sayi);
-        addToHistory(sayi, languageSelect.value);
-
-        const utterance = new SpeechSynthesisUtterance(sayi.toString());
-        utterance.voice = seciliSes;
-        utterance.lang = seciliSes.lang;
-        
-        // Tarayıcıya göre hız ayarı
-        let rate = parseFloat(speedControl.value);
-        if (browserInfo.isSafari || browserInfo.isOldChrome) {
-            rate = Math.min(rate, 1.5);
-        }
-        utterance.rate = rate;
-
-        try {
-            await new Promise((resolve) => {
-            utterance.onend = utterance.onerror = resolve;
-            
-            // Safari için ek önlem
-            if (browserInfo.isSafari) {
-                utterance.onpause = () => window.speechSynthesis.resume();
-            }
-            
-            window.speechSynthesis.speak(utterance);
-
-            // Eski tarayıcılar için timeout fallback
-            setTimeout(resolve, 3000);
-            });
-
-            if (isActive) {
-            const delay = browserInfo.isIOS ? 
-                Math.min(parseFloat(delayControl.value), 3) * 1000 : // iOS için max 3sn
-                parseFloat(delayControl.value) * 1000;
-            
-            timeoutID = setTimeout(readNumber, delay);
-            }
-        } catch (error) {
-            console.error("Okuma hatası:", error);
-            if (isActive) {
-            timeoutID = setTimeout(readNumber, 1000);
-            }
-        }
-        }
-
-        function stopReading() {
-        isActive = false;
-        window.speechSynthesis.cancel();
-        clearTimeout(timeoutID);
-        isSpeaking = false;
-        currentUtterance = null;
-        
-        // UI güncellemeleri
-            document.getElementById('startBtn').disabled = false;
-        document.getElementById('stopBtn').disabled = true;
-        languageSelect.disabled = false;
-        document.getElementById('minValue').disabled = false;
-        document.getElementById('maxValue').disabled = false;
-        
-        // Süre hesaplaması
-            if (startTime) {
-            totalTime += (Date.now() - startTime) / 1000;
-            startTime = null;
+            // İstatistik güncelleme
+            stats.totalNumbers++;
+            const lang = elements.languageSelect.value;
+            stats.languageUsage[lang] = (stats.languageUsage[lang] || 0) + 1;
             updateStats();
-        }
-    }
-
-        function speakUtterance(utterance) {
-            return new Promise((resolve, reject) => {
-                utterance.onend = resolve;
-                utterance.onerror = reject;
-                
-                // Firefox için özel kontrol
-                if (getBrowserInfo().isFirefox) {
-                    utterance.onboundary = (event) => {
-                        if (event.name === 'word') {
-                            // Firefox'ta aktif kalmasını sağla
-                        }
-                    };
-                }
-                
-                window.speechSynthesis.speak(utterance);
-                
-                // Chrome için ek kontrol
-                if (getBrowserInfo().isChrome) {
-                    setTimeout(() => {
-                        if (isSpeaking && !window.speechSynthesis.speaking) {
-                            reject(new Error("Chrome'da okuma durdu"));
-                        }
-                    }, 500);
-                }
-            });
-        }
-
-                    // Alternatif TTS fonksiyonu
-                        function useAlternativeTTS(text, lang) {
-            console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
-            
-            // Basit bir fallback mekanizması
-            const fallbackUtterance = new SpeechSynthesisUtterance(text);
-            fallbackUtterance.lang = 'en-US'; // Garanti bir dil kullan
-            fallbackUtterance.rate = Math.min(parseFloat(speedControl.value), 1.5);
-            
-            fallbackUtterance.onend = () => {
-                if(isActive) {
-                    const delay = parseFloat(delayControl.value) * 1000;
-                    timeoutID = setTimeout(readNumber, delay);
-                }
-            };
-            
-            window.speechSynthesis.speak(fallbackUtterance);
-        }
-        // Alternatif ses motoru için fallback fonksiyonunu ekleyin (readNumber'dan önce)
-        function speakWithFallback(text, lang, rate) {
-            return new Promise((resolve) => {
-                // Önce tarayıcının yerel ses motorunu dene
-                try {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = lang;
-                    utterance.rate = rate;
-                    utterance.onend = resolve;
-                    utterance.onerror = () => {
-                        console.log('Yerel ses motoru hatası, fallback deneniyor');
-                        fallbackTTS(text, lang).then(resolve);
-                    };
-                    window.speechSynthesis.speak(utterance);
-                } catch (e) {
-                    console.log('Yerel ses motoru hatası:', e);
-                    fallbackTTS(text, lang).then(resolve);
-                }
-            });
-        }
-
-        // Basit bir fallback mekanizması
-        function fallbackTTS(text, lang) {
-            return new Promise((resolve) => {
-                console.log(`Fallback TTS: ${text} in ${lang}`);
-                // Burada bir TTS API'si kullanabilirsiniz
-                setTimeout(resolve, text.length * 100); // Basit bir simülasyon
-            });
-        }
-                
-        function startReading() {
-    // iOS için ek izin kontrolü
-    if (browserInfo.isIOS) {
-        const silentUtterance = new SpeechSynthesisUtterance(' ');
-        silentUtterance.volume = 0;
-        window.speechSynthesis.speak(silentUtterance);
-    }
-
-    isActive = true;
-    document.getElementById('startBtn').disabled = true;
-    document.getElementById('stopBtn').disabled = false;
-
-    // Eski Chrome için farklı başlatma
-    if (browserInfo.isOldChrome) {
-        setTimeout(() => readNumber().catch(console.error), 500);
-    } else {
-        readNumber().catch(console.error);
-    }
-
-    startTime = Date.now();
-    }
-        
-                async function stopReading() {
-            isActive = false;
-            
-            // Tüm konuşmaları ve zamanlayıcıları temizle
-            window.speechSynthesis.cancel();
-            clearTimeout(timeoutID);
-            timeoutID = null;
-            currentUtterance = null;
-            
-            // Safari için ek temizlik
-            if (getBrowserInfo().isSafari) {
-                const silence = new SpeechSynthesisUtterance("");
-                silence.volume = 0;
-                window.speechSynthesis.speak(silence);
-            }
-            
-            // UI güncellemeleri
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('stopBtn').disabled = true;
-            languageSelect.disabled = false;
-            document.getElementById('minValue').disabled = false;
-            document.getElementById('maxValue').disabled = false;
-            
-            // Süre hesaplaması
-            if (startTime) {
-                totalTime += (Date.now() - startTime) / 1000;
-                startTime = null;
-                updateStats();
-            }
-        }
-                
-                // 6. DİL ve TEMA YÖNETİMİ
-                const translations = {
-            'tr-TR': {
-                title: 'Sayı Okuyucu',
-                theme: 'Koyu Mod',
-                range: 'Sayı Aralığı:',
-                speed: 'Okuma Hızı:',
-                delay: 'Geçiş Süresi:',
-                start: 'BAŞLAT',
-                stop: 'DURDUR',
-                min: 'Min',
-                max: 'Max',
-                history: 'Okunan Sayılar',
-                help: 'Yardım',
-                helpTitle: 'Dil Desteği Yardım',
-                helpText1: 'Uygulamamız tüm dilleri desteklemektedir, ancak tarayıcınızın ve işletim sisteminizin ilgili dil paketlerini yüklemiş olması gerekmektedir.',
-                closeHelp: 'Tamam',
-                totalNumbersLabel: 'Toplam Sayı',
-                totalTimeLabel: 'Toplam Süre (dk)',
-                favoriteLanguageLabel: 'En Çok Kullanılan Dil',
-                themeDark: 'Dark Mode',
-                themeLight: 'Light Mode'
-            },
-            'en-US': {
-                title: 'Number Reader',
-                theme: 'Dark Mode',
-                range: 'Number Range:',
-                speed: 'Reading Speed:',
-                delay: 'Delay:',
-                start: 'START',
-                stop: 'STOP',
-                min: 'Min',
-                max: 'Max',
-                history: 'History',
-                help: 'Help',
-                helpTitle: 'Language Support Help',
-                helpText1: 'Our application supports all languages, but your browser and operating system must have the relevant language packages installed.',
-                closeHelp: 'OK',
-                totalNumbersLabel: 'Total Numbers',
-                totalTimeLabel: 'Total Time (min)',
-                favoriteLanguageLabel: 'Most Used Language',
-                themeDark: 'Dark Mode',
-                themeLight: 'Light Mode'
-            },
-            'en-GB': {
-                title: 'Number Reader',
-                theme: 'Dark Mode',
-                range: 'Number Range:',
-                speed: 'Reading Speed:',
-                delay: 'Delay:',
-                start: 'START',
-                stop: 'STOP',
-                min: 'Min',
-                max: 'Max',
-                history: 'History',
-                help: 'Help',
-                helpTitle: 'Language Support Help',
-                helpText1: 'Our application supports all languages, but your browser and operating system must have the relevant language packages installed.',
-                closeHelp: 'OK',
-                totalNumbersLabel: 'Total Numbers',
-                totalTimeLabel: 'Total Time (min)',
-                favoriteLanguageLabel: 'Most Used Language',
-                themeDark: 'Dark Mode',
-                themeLight: 'Light Mode'
-            },
-            'de-DE': {
-                title: 'Zahlenleser',
-                theme: 'Dunkelmodus',
-                range: 'Zahlenbereich:',
-                speed: 'Lesegeschwindigkeit:',
-                delay: 'Verzögerung:',
-                start: 'START',
-                stop: 'STOPP',
-                min: 'Min',
-                max: 'Max',
-                history: 'Verlauf',
-                help: 'Hilfe',
-                helpTitle: 'Sprachunterstützung Hilfe',
-                helpText1: 'Unsere Anwendung unterstützt alle Sprachen, aber Ihr Browser und Betriebssystem müssen die entsprechenden Sprachpakete installiert haben.',
-                closeHelp: 'OK',
-                totalNumbersLabel: 'Gesamtzahlen',
-                totalTimeLabel: 'Gesamtzeit (min)',
-                favoriteLanguageLabel: 'Am häufigsten verwendete Sprache',
-                themeDark: 'Dark Mode',
-                themeLight: 'Light Mode'
-            },
-            'fr-FR': {
-                title: 'Lecteur de Nombres',
-                theme: 'Mode Sombre',
-                range: 'Plage de Nombres:',
-                speed: 'Vitesse de Lecture:',
-                delay: 'Délai:',
-                start: 'DÉMARRER',
-                stop: 'ARRÊTER',
-                min: 'Min',
-                max: 'Max',
-                history: 'Historique',
-                help: 'Aide',
-                helpTitle: 'Aide pour le Support Linguistique',
-                helpText1: 'Notre application prend en charge toutes les langues, mais votre navigateur et système d\'exploitation doivent avoir les packages linguistiques correspondants installés.',
-                closeHelp: 'OK',
-                totalNumbersLabel: 'Nombres Totaux',
-                totalTimeLabel: 'Temps Total (min)',
-                favoriteLanguageLabel: 'Langue la Plus Utilisée'
-            },
-            'es-ES': {
-                title: 'Lector de Números',
-                theme: 'Modo Oscuro',
-                range: 'Rango de Números:',
-                speed: 'Velocidad de Lectura:',
-                delay: 'Retraso:',
-                start: 'COMENZAR',
-                stop: 'DETENER',
-                min: 'Mín',
-                max: 'Máx',
-                history: 'Historial',
-                help: 'Ayuda',
-                helpTitle: 'Ayuda de Soporte de Idioma',
-                helpText1: 'Nuestra aplicación soporta todos los idiomas, pero su navegador y sistema operativo deben tener los paquetes de idioma relevantes instalados.',
-                closeHelp: 'OK',
-                totalNumbersLabel: 'Números Totales',
-                totalTimeLabel: 'Tiempo Total (min)',
-                favoriteLanguageLabel: 'Idioma Más Usado'
-            },
-            'ja-JP': {
-                title: '数字リーダー',
-                theme: 'ダークモード',
-                range: '数字の範囲:',
-                speed: '読み上げ速度:',
-                delay: '遅延:',
-                start: '開始',
-                stop: '停止',
-                min: '最小',
-                max: '最大',
-                history: '履歴',
-                help: 'ヘルプ',
-                helpTitle: '言語サポートヘルプ',
-                helpText1: '当アプリケーションはすべての言語をサポートしていますが、お使いのブラウザとオペレーティングシステムに該当する言語パッケージがインストールされている必要があります。',
-                closeHelp: 'OK',
-                totalNumbersLabel: '総数',
-                totalTimeLabel: '総時間(分)',
-                favoriteLanguageLabel: '最も使用された言語'
-            },
-            'ru-RU': {
-                title: 'Читатель Чисел',
-                theme: 'Темный Режим',
-                range: 'Диапазон Чисел:',
-                speed: 'Скорость Чтения:',
-                delay: 'Задержка:',
-                start: 'СТАРТ',
-                stop: 'СТОП',
-                min: 'Мин',
-                max: 'Макс',
-                history: 'История',
-                help: 'Помощь',
-                helpTitle: 'Помощь по Поддержке Языков',
-                helpText1: 'Наше приложение поддерживает все языки, но ваш браузер и операционная система должны иметь установленные соответствующие языковые пакеты.',
-                closeHelp: 'OK',
-                totalNumbersLabel: 'Всего Чисел',
-                totalTimeLabel: 'Общее Время (мин)',
-                favoriteLanguageLabel: 'Самый Используемый Язык'
-            },
-            'zh-CN': {
-                title: '数字阅读器',
-                theme: '深色模式',
-                range: '数字范围:',
-                speed: '阅读速度:',
-                delay: '延迟:',
-                start: '开始',
-                stop: '停止',
-                min: '最小',
-                max: '最大',
-                history: '历史记录',
-                help: '帮助',
-                helpTitle: '语言支持帮助',
-                helpText1: '我们的应用程序支持所有语言，但您的浏览器和操作系统必须安装相关的语言包。',
-                closeHelp: '确定',
-                totalNumbersLabel: '总数',
-                totalTimeLabel: '总时间(分钟)',
-                favoriteLanguageLabel: '最常用语言'
-            },
-            'it-IT': {
-                title: 'Lettore di Numeri',
-                theme: 'Modalità Scura',
-                range: 'Intervallo Numeri:',
-                speed: 'Velocità Lettura:',
-                delay: 'Ritardo:',
-                start: 'INIZIA',
-                stop: 'FERMA',
-                min: 'Min',
-                max: 'Max',
-                history: 'Cronologia',
-                help: 'Aiuto',
-                helpTitle: 'Guida al Supporto Linguistico',
-                helpText1: 'La nostra applicazione supporta tutte le lingue, ma il tuo browser e sistema operativo devono avere i pacchetti linguistici pertinenti installati.',
-                closeHelp: 'OK',
-                totalNumbersLabel: 'Numeri Totali',
-                totalTimeLabel: 'Tempo Totale (min)',
-                favoriteLanguageLabel: 'Lingua Più Utilizzata'
-            }
-        };
-        
-                function updateLanguage(lang) {
-            const elements = document.querySelectorAll('.lang-text');
-            elements.forEach(element => {
-                const key = element.getAttribute('data-key');
-                if (translations[lang] && translations[lang][key]) {
-                    element.textContent = translations[lang][key];
-                } else if (translations['en-US'] && translations['en-US'][key]) {
-                    // Eğer seçilen dilde çeviri yoksa İngilizce'ye dön
-                    element.textContent = translations['en-US'][key];
-                }
-            });
-            document.getElementById('minValue').placeholder = translations[lang]?.min || 'Min';
-            document.getElementById('maxValue').placeholder = translations[lang]?.max || 'Max';
         }
         
         function updateStats() {
-            document.getElementById('totalNumbers').textContent = totalNumbers;
-            document.getElementById('totalTime').textContent = Math.floor(totalTime / 60);
+            document.getElementById('totalNumbers').textContent = stats.totalNumbers;
+            document.getElementById('totalTime').textContent = Math.floor(stats.totalTime / 60);
             
+            // En çok kullanılan dil
             let maxLang = '-';
             let maxCount = 0;
-            for (const [lang, count] of Object.entries(languageUsage)) {
+            for (const [lang, count] of Object.entries(stats.languageUsage)) {
                 if (count > maxCount) {
                     maxCount = count;
                     maxLang = lang;
@@ -1441,192 +821,314 @@
             document.getElementById('favoriteLanguage').textContent = maxLang;
         }
         
-        // 7. OLAY DİNLEYİCİLERİ
-
-                // Yardım sistemi
-        document.getElementById('helpBtn').addEventListener('click', function() {
-            document.getElementById('helpModal').style.display = 'flex';
-        });
-
-        document.getElementById('closeHelp').addEventListener('click', function() {
-            document.getElementById('helpModal').style.display = 'none';
-        });
-
-        document.getElementById('startBtn').addEventListener('click', startReading);
-        document.getElementById('stopBtn').addEventListener('click', stopReading);
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                isActive ? stopReading() : startReading();
-            }
-        });
-        
-                languageSelect.addEventListener('change', async () => {
-            const selectedLang = languageSelect.value;
-            
-            // Hız limitlerini ayarla
-            if (selectedLang.split('-')[0] !== 'tr') {
-                speedControl.max = 2.0;
-                if (parseFloat(speedControl.value) > 2.0) {
-                    speedControl.value = 2.0;
-                    speedDisplay.textContent = '2.0x';
-                }
-            } else {
-                speedControl.max = 5.0;
-            }
-            
-            // Diğer ayarlar
-            updateLanguage(selectedLang);
-            await sesleriYukle();
-            sesiGuncelle();
-            
-            // Eğer aktifse yeniden başlat
-            if (isActive) {
-                const wasActive = isActive;
-                await stopReading();
-                if (wasActive) {
-                    startReading();
-                }
-            }
-        });
-
-                function handleTTSerror(error, lang) {
-            console.error("TTS Hatası:", error);
-            
-            // Hata türüne göre işlem yap
-            if (error.error === 'interrupted' || error.error === 'canceled') {
-                return; // Kullanıcı durdurduysa görmezden gel
-            }
-            
-            // Dil desteği hatası
-            const notification = createNotification(
-                `Seslendirme hatası: ${lang} dili desteklenmiyor olabilir`,
-                '❌'
-            );
-            showNotification(notification);
-            
-            // İngilizce'ye geç
-            if (lang !== 'en-US') {
-                languageSelect.value = 'en-US';
-                updateLanguage('en-US');
-                sesiGuncelle();
-            }
-        }
-
-
-
-                languageSelect.addEventListener('change', () => {
-            speedControl.value = 1.0;
-            speedDisplay.textContent = '1.0x';
-            updateLanguage(languageSelect.value);
-            
-            // Yeni ses kontrol fonksiyonu
-            sesiGuncelle();
-            
-            if(isActive) {
-                window.speechSynthesis.cancel();
-                clearTimeout(timeoutID);
+        // 7. KONTROL FONKSİYONLARI
+        function startReading() {
+            if (!isReading) {
+                isReading = true;
+                updateUIForReading(true);
+                initSpeechEngine();
                 readNumber();
             }
-        });
+        }
         
-        speedControl.addEventListener('input', () => {
-            const speed = parseFloat(speedControl.value);
-            speedDisplay.textContent = speed.toFixed(1) + 'x';
-            speech.rate = speed;
-        });
-        
-        delayControl.addEventListener('input', () => {
-            delayDisplay.textContent = delayControl.value + 's';
-        });
-        
-            // Geçmişi temizleme fonksiyonu
-    function clearHistory() {
-        numberHistory = [];
-        document.getElementById('historyList').innerHTML = '';
-        document.querySelector('.history-title').classList.remove('active');
-    }
-
-            // 1. Çerez Politikası Uyarısı için Çözüm
-        document.addEventListener('DOMContentLoaded', function() {
-            // SameSite çerez ayarı
-            document.cookie = "sameSite=None; Secure";
-            
-            // Chrome'un çerez uyarısını yönetme
-            if (navigator.userAgent.includes('Chrome')) {
-                console.log('Chrome çerez politikası uyarısı yönetiliyor');
+        function stopReading() {
+            if (isReading) {
+                isReading = false;
+                clearTimeout(readingTimeout);
+                window.speechSynthesis.cancel();
+                updateUIForReading(false);
             }
+        }
+        
+                function clearHistory() {
+            numberHistory = [];
+            elements.historyList.innerHTML = '';
+            
+            // Başlığı tekrar göster
+            const historyTitle = document.querySelector('.history-title');
+            if (historyTitle) {
+                historyTitle.classList.remove('hidden');
+            }
+            
+            stats.totalNumbers = 0;
+            stats.languageUsage = {};
+            updateStats();
+        }
+        
+        // 8. OLAY DİNLEYİCİLERİ
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Tema ayarı
+            const savedTheme = localStorage.getItem('theme') || 
+                              (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            setTheme(savedTheme);
+            themeToggle.addEventListener('click', toggleTheme);
+        
+            // Ses yükleme
+            await loadVoices();
+            updateVoice();
+            
+            // Kontroller
+            elements.speedControl.addEventListener('input', () => {
+                const speed = parseFloat(elements.speedControl.value);
+                elements.speedDisplay.textContent = speed.toFixed(1) + 'x';
+            });
+            
+            elements.delayControl.addEventListener('input', () => {
+                elements.delayDisplay.textContent = elements.delayControl.value + 's';
+            });
+            
+            elements.languageSelect.addEventListener('change', () => {
+                updateVoice();
+                updateLanguage(elements.languageSelect.value);
+            });
+            
+            // Butonlar
+            elements.startBtn.addEventListener('click', startReading);
+            elements.stopBtn.addEventListener('click', stopReading);
+            document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+            document.getElementById('helpBtn').addEventListener('click', () => {
+                document.getElementById('helpModal').style.display = 'flex';
+            });
+            document.getElementById('closeHelp').addEventListener('click', () => {
+                document.getElementById('helpModal').style.display = 'none';
+            });
+            
+            // Klavye kısayolu
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    isReading ? stopReading() : startReading();
+                }
+            });
         });
-
-        // 2. Analytics Fallback Mekanizması
-        let analyticsLoaded = false;
-
-        function initializeAnalytics() {
+        
+        // 9. DİL ÇEVİRİLERİ (Önceki translations objesini aynen koruyun)
+            const translations = {
+                'tr-TR': {
+                    title: 'Sayı Okuyucu',
+                    theme: 'Koyu Mod',
+                    range: 'Sayı Aralığı:',
+                    speed: 'Okuma Hızı:',
+                    delay: 'Geçiş Süresi:',
+                    start: 'BAŞLAT',
+                    stop: 'DURDUR',
+                    min: 'Min',
+                    max: 'Max',
+                    history: 'Okunan Sayılar',
+                    help: 'Yardım',
+                    helpTitle: 'Dil Desteği Yardım',
+                    helpText1: 'Uygulamamız tüm dilleri desteklemektedir, ancak tarayıcınızın ve işletim sisteminizin ilgili dil paketlerini yüklemiş olması gerekmektedir.',
+                    closeHelp: 'Tamam',
+                    totalNumbersLabel: 'Toplam Sayı',
+                    totalTimeLabel: 'Toplam Süre (dk)',
+                    favoriteLanguageLabel: 'En Çok Kullanılan Dil',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode'
+                },
+                'en-US': {
+                    title: 'Number Reader',
+                    theme: 'Dark Mode',
+                    range: 'Number Range:',
+                    speed: 'Reading Speed:',
+                    delay: 'Delay:',
+                    start: 'START',
+                    stop: 'STOP',
+                    min: 'Min',
+                    max: 'Max',
+                    history: 'History',
+                    help: 'Help',
+                    helpTitle: 'Language Support Help',
+                    helpText1: 'Our application supports all languages, but your browser and operating system must have the relevant language packages installed.',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: 'Total Numbers',
+                    totalTimeLabel: 'Total Time (min)',
+                    favoriteLanguageLabel: 'Most Used Language',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode'
+                },
+                'en-GB': {
+                    title: 'Number Reader',
+                    theme: 'Dark Mode',
+                    range: 'Number Range:',
+                    speed: 'Reading Speed:',
+                    delay: 'Delay:',
+                    start: 'START',
+                    stop: 'STOP',
+                    min: 'Min',
+                    max: 'Max',
+                    history: 'History',
+                    help: 'Help',
+                    helpTitle: 'Language Support Help',
+                    helpText1: 'Our application supports all languages, but your browser and operating system must have the relevant language packages installed.',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: 'Total Numbers',
+                    totalTimeLabel: 'Total Time (min)',
+                    favoriteLanguageLabel: 'Most Used Language',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode'
+                },
+                'de-DE': {
+                    title: 'Zahlenleser',
+                    theme: 'Dunkelmodus',
+                    range: 'Zahlenbereich:',
+                    speed: 'Lesegeschwindigkeit:',
+                    delay: 'Verzögerung:',
+                    start: 'START',
+                    stop: 'STOPP',
+                    min: 'Min',
+                    max: 'Max',
+                    history: 'Verlauf',
+                    help: 'Hilfe',
+                    helpTitle: 'Sprachunterstützung Hilfe',
+                    helpText1: 'Unsere Anwendung unterstützt alle Sprachen, aber Ihr Browser und Betriebssystem müssen die entsprechenden Sprachpakete installiert haben.',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: 'Gesamtzahlen',
+                    totalTimeLabel: 'Gesamtzeit (min)',
+                    favoriteLanguageLabel: 'Am häufigsten verwendete Sprache',
+                    themeDark: 'Dark Mode',
+                    themeLight: 'Light Mode'
+                },
+                'fr-FR': {
+                    title: 'Lecteur de Nombres',
+                    theme: 'Mode Sombre',
+                    range: 'Plage de Nombres:',
+                    speed: 'Vitesse de Lecture:',
+                    delay: 'Délai:',
+                    start: 'DÉMARRER',
+                    stop: 'ARRÊTER',
+                    min: 'Min',
+                    max: 'Max',
+                    history: 'Historique',
+                    help: 'Aide',
+                    helpTitle: 'Aide pour le Support Linguistique',
+                    helpText1: 'Notre application prend en charge toutes les langues, mais votre navigateur et système d\'exploitation doivent avoir les packages linguistiques correspondants installés.',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: 'Nombres Totaux',
+                    totalTimeLabel: 'Temps Total (min)',
+                    favoriteLanguageLabel: 'Langue la Plus Utilisée'
+                },
+                'es-ES': {
+                    title: 'Lector de Números',
+                    theme: 'Modo Oscuro',
+                    range: 'Rango de Números:',
+                    speed: 'Velocidad de Lectura:',
+                    delay: 'Retraso:',
+                    start: 'COMENZAR',
+                    stop: 'DETENER',
+                    min: 'Mín',
+                    max: 'Máx',
+                    history: 'Historial',
+                    help: 'Ayuda',
+                    helpTitle: 'Ayuda de Soporte de Idioma',
+                    helpText1: 'Nuestra aplicación soporta todos los idiomas, pero su navegador y sistema operativo deben tener los paquetes de idioma relevantes instalados.',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: 'Números Totales',
+                    totalTimeLabel: 'Tiempo Total (min)',
+                    favoriteLanguageLabel: 'Idioma Más Usado'
+                },
+                'ja-JP': {
+                    title: '数字リーダー',
+                    theme: 'ダークモード',
+                    range: '数字の範囲:',
+                    speed: '読み上げ速度:',
+                    delay: '遅延:',
+                    start: '開始',
+                    stop: '停止',
+                    min: '最小',
+                    max: '最大',
+                    history: '履歴',
+                    help: 'ヘルプ',
+                    helpTitle: '言語サポートヘルプ',
+                    helpText1: '当アプリケーションはすべての言語をサポートしていますが、お使いのブラウザとオペレーティングシステムに該当する言語パッケージがインストールされている必要があります。',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: '総数',
+                    totalTimeLabel: '総時間(分)',
+                    favoriteLanguageLabel: '最も使用された言語'
+                },
+                'ru-RU': {
+                    title: 'Читатель Чисел',
+                    theme: 'Темный Режим',
+                    range: 'Диапазон Чисел:',
+                    speed: 'Скорость Чтения:',
+                    delay: 'Задержка:',
+                    start: 'СТАРТ',
+                    stop: 'СТОП',
+                    min: 'Мин',
+                    max: 'Макс',
+                    history: 'История',
+                    help: 'Помощь',
+                    helpTitle: 'Помощь по Поддержке Языков',
+                    helpText1: 'Наше приложение поддерживает все языки, но ваш браузер и операционная система должны иметь установленные соответствующие языковые пакеты.',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: 'Всего Чисел',
+                    totalTimeLabel: 'Общее Время (мин)',
+                    favoriteLanguageLabel: 'Самый Используемый Язык'
+                },
+                'zh-CN': {
+                    title: '数字阅读器',
+                    theme: '深色模式',
+                    range: '数字范围:',
+                    speed: '阅读速度:',
+                    delay: '延迟:',
+                    start: '开始',
+                    stop: '停止',
+                    min: '最小',
+                    max: '最大',
+                    history: '历史记录',
+                    help: '帮助',
+                    helpTitle: '语言支持帮助',
+                    helpText1: '我们的应用程序支持所有语言，但您的浏览器和操作系统必须安装相关的语言包。',
+                    closeHelp: '确定',
+                    totalNumbersLabel: '总数',
+                    totalTimeLabel: '总时间(分钟)',
+                    favoriteLanguageLabel: '最常用语言'
+                },
+                'it-IT': {
+                    title: 'Lettore di Numeri',
+                    theme: 'Modalità Scura',
+                    range: 'Intervallo Numeri:',
+                    speed: 'Velocità Lettura:',
+                    delay: 'Ritardo:',
+                    start: 'INIZIA',
+                    stop: 'FERMA',
+                    min: 'Min',
+                    max: 'Max',
+                    history: 'Cronologia',
+                    help: 'Aiuto',
+                    helpTitle: 'Guida al Supporto Linguistico',
+                    helpText1: 'La nostra applicazione supporta tutte le lingue, ma il tuo browser e sistema operativo devono avere i pacchetti linguistici pertinenti installati.',
+                    closeHelp: 'OK',
+                    totalNumbersLabel: 'Numeri Totali',
+                    totalTimeLabel: 'Tempo Totale (min)',
+                    favoriteLanguageLabel: 'Lingua Più Utilizzata'
+                }
+            };
+        
+        function updateLanguage(lang) {
+            document.querySelectorAll('.lang-text').forEach(el => {
+                const key = el.dataset.key;
+                el.textContent = translations[lang]?.[key] || translations['en-US'][key];
+            });
+            document.getElementById('minValue').placeholder = translations[lang]?.min || 'Min';
+            document.getElementById('maxValue').placeholder = translations[lang]?.max || 'Max';
+        }
+        
+        // 10. ANALYTICS ve REKLAM YÜKLEME
+        window.addEventListener('load', () => {
+            // Analytics
             if (typeof va === 'function') {
                 va('send', 'pageview');
-                analyticsLoaded = true;
-            } else {
-                console.log('Vercel Analytics yüklenmedi, alternatif izleme...');
-                // Alternatif izleme kodu (isteğe bağlı)
-                if (window.location.hostname !== 'localhost') {
-                    console.log('Pageview tracked (fallback)');
-                }
             }
-        }
-
-        // 3. AdSense Fallback Mekanizması
-        function loadAdsenseWithFallback() {
-            try {
-                if (typeof adsbygoogle === 'undefined') {
-                    const adScript = document.createElement('script');
-                    adScript.async = true;
-                    adScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366";
-                    adScript.crossOrigin = "anonymous";
-                    adScript.onerror = function() {
-                        console.log('AdSense engellendi, reklam alanları kaldırılıyor');
-                        document.querySelectorAll('.ad-container').forEach(el => el.style.display = 'none');
-                    };
-                    document.head.appendChild(adScript);
-                }
-            } catch (e) {
-                console.error('AdSense yükleme hatası:', e);
-            }
-        }
-
-        // Tüm sayfa yüklendikten sonra çalıştır
-        window.addEventListener('load', function() {
-            // Analytics'i başlat
-            setTimeout(initializeAnalytics, 500);
             
-            // AdSense'i yükle (1 saniye gecikmeyle)
-            setTimeout(loadAdsenseWithFallback, 1000);
+            // AdSense
+            if (typeof adsbygoogle === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366';
+                script.crossOrigin = 'anonymous';
+                script.async = true;
+                document.head.appendChild(script);
+            }
         });
-
-                // Safari için sayfa görünürlük kontrolü
-        document.addEventListener('visibilitychange', () => {
-        if (document.hidden && isActive) {
-            stopReading();
-            if (browserInfo.isSafari) {
-            showNotification("Safari'de arka planda okuma devam edemez");
-            }
-        }
-        });
-
-        // Eski tarayıcılarda performans iyileştirme
-        if (browserInfo.isOldChrome || browserInfo.isMobile) {
-        const style = document.createElement('style');
-        style.textContent = `
-            .card, #resultDisplay {
-            transition: none !important;
-            }
-            .history-item {
-            font-size: 0.9em;
-            padding: 0.3rem 0.5rem !important;
-            }
-        `;
-        document.head.appendChild(style);
-        }
         </script>
 </body>
 </html>
