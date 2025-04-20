@@ -970,34 +970,38 @@
             div.className = 'history-item';
             div.textContent = formattedNumber;
             historyList.appendChild(div); // Sağa ekle
-            
-                    if (browserInfo.isOldChrome) {
-            console.log('Eski Chrome sürümü için optimizasyonlar aktif');
-            document.getElementById('speedControl').max = 2.0;
-        }
-        
-        if (browserInfo.isSafari) {
-            console.log('Safari için optimizasyonlar aktif');
-            document.getElementById('speedControl').max = 1.5;
-        }
-        
-        if (browserInfo.isIOS) {
-            console.log('iOS cihaz için optimizasyonlar aktif');
-            document.getElementById('delayControl').max = 3;
-        }
 
-        // Sesleri yükle
-        sesleriYukle().then(voices => {
-            sesler = voices;
-            sesiGuncelle();
-            checkSupportedLanguages(voices);
-        });
             // Scroll'u en alta kaydır
             historyList.scrollTop = historyList.scrollHeight;
             
             // Başlığı gizle
             document.querySelector('.history-title').classList.toggle('active', numberHistory.length > 0);
         }
+
+                document.addEventListener('DOMContentLoaded', () => {
+            // Tarayıcıya özel ayarlar
+            if (browserInfo.isOldChrome) {
+                console.log('Eski Chrome sürümü için optimizasyonlar aktif');
+                document.getElementById('speedControl').max = 2.0;
+            }
+            
+            if (browserInfo.isSafari) {
+                console.log('Safari için optimizasyonlar aktif');
+                document.getElementById('speedControl').max = 1.5;
+            }
+            
+            if (browserInfo.isIOS) {
+                console.log('iOS cihaz için optimizasyonlar aktif');
+                document.getElementById('delayControl').max = 3;
+            }
+
+            // Sesleri yükle
+            sesleriYukle().then(voices => {
+                sesler = voices;
+                sesiGuncelle();
+                checkSupportedLanguages(voices);
+            });
+        });
         
             let currentUtterance = null;
     let isSpeaking = false;
