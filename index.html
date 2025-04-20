@@ -846,7 +846,26 @@
             stats.languageUsage[lang] = (stats.languageUsage[lang] || 0) + 1;
             updateStats();
         }
-        
+
+                function clearHistory() {
+            numberHistory = [];
+            elements.historyList.innerHTML = '';
+            
+            // Başlığı tekrar göster
+            const historyTitle = document.querySelector('.history-title');
+            if (historyTitle) {
+                historyTitle.classList.remove('hidden');
+            }
+            
+            // İstatistikleri sıfırla
+            stats.totalNumbers = 0;
+            stats.languageUsage = {};
+            updateStats();
+            
+            // Sonuç ekranını sıfırla
+            elements.resultDisplay.textContent = '---';
+        }
+                
         function updateStats() {
             document.getElementById('totalNumbers').textContent = stats.totalNumbers;
             document.getElementById('totalTime').textContent = Math.floor(stats.totalTime / 60);
@@ -934,12 +953,13 @@
             });
             
             elements.languageSelect.addEventListener('change', () => {
-                updateVoice();
-                updateLanguage(elements.languageSelect.value);
-                
-                // Dil değiştiğinde geçmişi temizle
-                clearHistory();
-            });
+            updateVoice();
+            updateLanguage(elements.languageSelect.value);
+            
+            // Dil değiştiğinde geçmişi temizle
+            clearHistory();
+             });
+
                 
             // Butonlar
             elements.startBtn.addEventListener('click', startReading);
