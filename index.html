@@ -536,6 +536,17 @@
              min-height: 100px; /* Reklam boyutuna göre ayarlayın */
         }
 
+                /* Mobil cihazlar için ek stil */
+        @media (max-width: 480px) {
+            #resultDisplay {
+                font-size: 2rem;
+                padding: 1rem;
+            }
+            .step p {
+                font-size: 0.9rem;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -1453,28 +1464,27 @@
                 },
             };
             function getTranslation(lang, key) {
-    // Önce seçilen dilde ara, sonra İngilizce'ye dön, sonra anahtarı döndür
-    return translations[lang]?.[key] || translations['en-US']?.[key] || key;
-}
-                    function updateLanguage(lang) {
-            console.log("Dil güncelleniyor:", lang); // Hata ayıklama
+            // Önce seçilen dilde ara, sonra İngilizce'ye dön, sonra anahtarı döndür
+            return translations[lang]?.[key] || translations['en-US']?.[key] || key;
+        }
+
+            function updateLanguage(lang) {
+            console.log("Dil güncelleniyor:", lang);
+            
+            const fallbackLang = 'en-US';
             
             // Tüm çeviri metinlerini güncelle
             document.querySelectorAll('[data-key]').forEach(element => {
                 const key = element.dataset.key;
-                if (translations[lang] && translations[lang][key]) {
-                    element.textContent = translations[lang][key];
-                } else if (translations['en-US'][key]) {
-                    // İngilizce fallback
-                    element.textContent = translations['en-US'][key];
-                }
-                // Çeviri yoksa orijinal metni koru
+                element.textContent = translations[lang]?.[key] || 
+                                    translations[fallbackLang]?.[key] || 
+                                    element.textContent;
             });
 
             // Placeholder'ları güncelle
-            const currentLang = translations[lang] || translations['en-US'];
-            document.getElementById('minValue').placeholder = currentLang.min || 'Min';
-            document.getElementById('maxValue').placeholder = currentLang.max || 'Max';
+            const currentLang = translations[lang] || translations[fallbackLang];
+            document.getElementById('minValue').placeholder = currentLang?.min || 'Min';
+            document.getElementById('maxValue').placeholder = currentLang?.max || 'Max';
         }
         
         // 10. ANALYTICS ve REKLAM YÜKLEME
@@ -1493,6 +1503,19 @@
                 document.head.appendChild(script);
             }
         });
+
+                // Hata yakalama ekleyin
+        window.addEventListener('error', function(e) {
+            console.error('Global Error:', e.message, e.filename, e.lineno);
+            if (typeof va === 'function') {
+                va('event', 'JS Error', {
+                    message: e.message,
+                    file: e.filename,
+                    line: e.lineno
+                });
+            }
+        });
+
         </script>
 </body>
 </html>
