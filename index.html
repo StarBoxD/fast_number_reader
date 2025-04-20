@@ -392,6 +392,60 @@
             }
         }
 
+
+                /* Nasıl Kullanılır Bölümü */
+        .usage-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        margin: 1.5rem 0;
+        }
+
+        .step {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        }
+
+        .step-icon {
+        background: var(--primary);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+        }
+
+        .step h3 {
+        margin: 0 0 0.3rem 0;
+        color: var(--primary);
+        }
+
+        .step p {
+        margin: 0;
+        color: var(--text-light);
+        line-height: 1.5;
+        }
+
+        body.dark-mode .step p {
+        color: var(--text-dark);
+        }
+
+        .usage-tip {
+        background: rgba(59, 130, 246, 0.1);
+        padding: 0.8rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+        }
+
+        body.dark-mode .usage-tip {
+        background: rgba(59, 130, 246, 0.2);
+        }
     
         /* İstatistikler */
         .stats-container {
@@ -476,6 +530,12 @@
                 box-shadow: 0 4px 6px var(--shadow-dark);
             }
         }
+
+                .ad-container {
+            display: none; /* Mobilde gizle */
+             min-height: 100px; /* Reklam boyutuna göre ayarlayın */
+        }
+
     </style>
 </head>
 <body>
@@ -487,6 +547,52 @@
             </button>
         </div>
         
+        <div class="card">
+            <h2 style="margin-bottom: 1rem; color: var(--primary);">
+              <span style="font-size: 1.2em;">📖</span> 
+              <span class="lang-text" data-key="howToUseTitle">Sayı Okuyucu Nasıl Kullanılır?</span>
+            </h2>
+            
+            <div class="usage-steps">
+              <div class="step">
+                <span class="step-icon">1</span>
+                <div>
+                  <h3 class="lang-text" data-key="step1Title">Dil Seçimi</h3>
+                  <p class="lang-text" data-key="step1Desc">Açılır menüden istediğiniz dili seçin. Türkçe, İngilizce, Almanca gibi 10+ dil desteği mevcuttur.</p>
+                </div>
+              </div>
+              
+              <div class="step">
+                <span class="step-icon">2</span>
+                <div>
+                  <h3 class="lang-text" data-key="step2Title">Sayı Aralığı Belirleme</h3>
+                  <p class="lang-text" data-key="step2Desc">Min ve Max alanlarına istediğiniz sayı aralığını girin (ör: 100-1000).</p>
+                </div>
+              </div>
+              
+              <div class="step">
+                <span class="step-icon">3</span>
+                <div>
+                  <h3 class="lang-text" data-key="step3Title">Hız ve Gecikme Ayarları</h3>
+                  <p class="lang-text" data-key="step3Desc">Okuma hızını ve sayılar arası geçiş süresini ayarlayabilirsiniz.</p>
+                </div>
+              </div>
+              
+              <div class="step">
+                <span class="step-icon">4</span>
+                <div>
+                  <h3 class="lang-text" data-key="step4Title">Başlat ve Durdur</h3>
+                  <p class="lang-text" data-key="step4Desc">"BAŞLAT" butonuyla uygulamayı çalıştırın, "DURDUR" ile duraklatın.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="usage-tip">
+              <span class="lang-text" data-key="tipTitle">İPUCU:</span>
+              <span class="lang-text" data-key="tipText">Boşluk tuşuyla hızlıca başlat/durdur yapabilirsiniz.</span>
+            </div>
+          </div>
+
         <div class="card">
 
             <div style="text-align: right; margin-bottom: 1rem;">
@@ -563,26 +669,23 @@
                 <div class="stat-label lang-text" data-key="favoriteLanguageLabel">En Çok Kullanılan Dil</div>
             </div>
         </div>
-        
         <div class="ad-container ad-left">
-            <div class="ad-container ad-left">
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-3050374663523366"
-                     data-ad-slot="1234567890"  <!-- Bu kısmı gerçek slot ID ile değiştir -->
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-              </div>
+            <ins class="adsbygoogle"...></ins>
+        </div>
               <script>
-                try {
-                  const ad = document.querySelector('ins.adsbygoogle');
-                  if (ad && !ad.dataset.loaded) {
-                    ad.dataset.loaded = 'true';
-                    (adsbygoogle = window.adsbygoogle || []).push({});
-                  }
-                } catch(e) {
-                  console.log("AdSense yüklenemedi", e);
+                function loadAds() {
+                        if (typeof adsbygoogle !== 'undefined') {
+                            document.querySelectorAll('ins.adsbygoogle').forEach(ad => {
+                            if (!ad.dataset.loaded) {
+                                ad.dataset.loaded = 'true';
+                                (adsbygoogle = window.adsbygoogle || []).push({});
+                            }
+                            });
+                        } else {
+                            setTimeout(loadAds, 300); // AdSense henüz yüklenmediyse tekrar dene
+                        }
                 }
+                window.addEventListener('load', loadAds);
               </script>
         </div>
 
@@ -972,15 +1075,21 @@
                 elements.delayDisplay.textContent = elements.delayControl.value + 's';
             });
             
-            elements.languageSelect.addEventListener('change', () => {
-            updateVoice();
-            updateLanguage(elements.languageSelect.value);
-            
-            // Dil değiştiğinde geçmişi temizle
-            clearHistory();
-             });
-
+                    elements.languageSelect.addEventListener('change', function() {
+                const selectedLang = this.value;
+                console.log("Seçilen dil:", selectedLang); // Hata ayıklama
                 
+                updateVoice();
+                updateLanguage(selectedLang);
+                
+                // Dil değiştiğinde geçmişi temizle (isteğe bağlı)
+                clearHistory();
+            });   
+
+             // Sayfa yüklendiğinde mevcut dili ayarla
+             updateLanguage(elements.languageSelect.value);
+       
+
             // Butonlar
             elements.startBtn.addEventListener('click', startReading);
             elements.stopBtn.addEventListener('click', stopReading);
@@ -1023,7 +1132,9 @@
                     favoriteLanguageLabel: 'En Çok Kullanılan Dil',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: 'Geçmişi Temizle'
+                    clearHistory: 'Geçmişi Temizle',
+                    contentTitle: 'Sayı Okuyucu Nasıl Kullanılır?',
+                    contentDesc: 'Bu uygulama, rastgele sayıları seçtiğiniz dilde sesli olarak okur. Öğrenciler, dil öğrenenler veya pratik yapmak isteyenler için idealdir. Başlamak için dil seçin, aralık belirleyin ve "BAŞLAT" butonuna basın.'
                 },
                 'en-US': {
                     title: 'Number Reader',
@@ -1045,7 +1156,9 @@
                     favoriteLanguageLabel: 'Most Used Language',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: 'Clear History'
+                    clearHistory: 'Clear History',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'en-GB': {
                     title: 'Number Reader',
@@ -1067,7 +1180,9 @@
                     favoriteLanguageLabel: 'Most Used Language',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: 'Clear History'
+                    clearHistory: 'Clear History',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'de-DE': {
                     title: 'Zahlenleser',
@@ -1089,7 +1204,9 @@
                     favoriteLanguageLabel: 'Am häufigsten verwendete Sprache',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: 'Verlauf Löschen'
+                    clearHistory: 'Verlauf Löschen',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'fr-FR': {
                     title: 'Lecteur de Nombres',
@@ -1111,7 +1228,9 @@
                     favoriteLanguageLabel: 'Langue la Plus Utilisée',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: 'Historique Effacer'
+                    clearHistory: 'Historique Effacer',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'es-ES': {
                     title: 'Lector de Números',
@@ -1133,7 +1252,9 @@
                     favoriteLanguageLabel: 'Idioma Más Usado',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: 'Historial Limpiar'
+                    clearHistory: 'Historial Limpiar',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'ja-JP': {
                     title: '数字リーダー',
@@ -1155,7 +1276,9 @@
                     favoriteLanguageLabel: '最も使用された言語',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: '履歴をクリア'
+                    clearHistory: '履歴をクリア',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'ru-RU': {
                     title: 'Читатель Чисел',
@@ -1177,7 +1300,9 @@
                     favoriteLanguageLabel: 'Самый Используемый Язык',
                     themeLight: 'Açık Mod',
                     themeDark: 'Koyu Mod',    
-                    clearHistory: 'История Очистить'
+                    clearHistory: 'История Очистить',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'zh-CN': {
                     title: '数字阅读器',
@@ -1199,7 +1324,9 @@
                     favoriteLanguageLabel: '最常用语言',
                     themeDark: 'Açık Mod',
                     themeLight: 'Koyu Mod',   
-                    clearHistory: '历史记录清除'
+                    clearHistory: '历史记录清除',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 },
                 'it-IT': {
                     title: 'Lettore di Numeri',
@@ -1221,23 +1348,34 @@
                     favoriteLanguageLabel: 'Lingua Più Utilizzata',
                     themeDark: 'Koyu Mod',
                     themeLight: 'Açık Mod',
-                    clearHistory: 'Cronologia Pulire'
+                    clearHistory: 'Cronologia Pulire',
+                    contentTitle: 'How to Use Number Reader?',
+                    contentDesc: 'This application reads numbers in the language you choose, randomly. It is ideal for students, language learners, or those who want to practice. To start, select the language, set the range, and click the "START" button.'
                 }
             };
         
-            function updateLanguage(lang) {
-                document.querySelectorAll('.lang-text').forEach(el => {
-                    const key = el.dataset.key;
-                    el.textContent = translations[lang]?.[key] || translations['en-US'][key];
-                });
-                document.getElementById('minValue').placeholder = translations[lang]?.min || 'Min';
-                document.getElementById('maxValue').placeholder = translations[lang]?.max || 'Max';
+                    function updateLanguage(lang) {
+            console.log("Dil güncelleniyor:", lang); // Hata ayıklama için
+            
+            // Tüm çeviri metinlerini güncelle
+            document.querySelectorAll('[data-key]').forEach(element => {
+                const key = element.dataset.key;
+                console.log("Eleman:", element, "Anahtar:", key); // Hata ayıklama
                 
-                // Geçmişi temizle butonunun rengini ve stilini koru
-                const clearBtn = document.getElementById('clearHistoryBtn');
-                clearBtn.style.backgroundColor = 'var(--danger)';
-                clearBtn.style.color = 'white';
-            }
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                } else if (translations['en-US'][key]) {
+                    element.textContent = translations['en-US'][key];
+                } else {
+                    console.warn("Çeviri bulunamadı:", lang, key);
+                }
+            });
+
+            // Placeholder'ları güncelle
+            const currentLang = translations[lang] || translations['en-US'];
+            document.getElementById('minValue').placeholder = currentLang.min || 'Min';
+            document.getElementById('maxValue').placeholder = currentLang.max || 'Max';
+        }
         
         // 10. ANALYTICS ve REKLAM YÜKLEME
         window.addEventListener('load', () => {
