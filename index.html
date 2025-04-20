@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sayı Okuyucu - Çoklu Dil Desteği ile Sayıları Sesli Okuyun</title>
     
-    <!-- React ve ReactDOM CDN -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
     <!-- Vercel Analytics -->
     <script src="https://unpkg.com/@vercel/analytics@1.1.1/dist/analytics.min.js"></script>
     
@@ -346,11 +342,6 @@
             align-content: flex-start; /* Üstten hizala */
             scroll-behavior: smooth;
         }
-
-                .history-item {
-            flex: 0 0 auto; /* Kutuların boyutu içerik kadar olsun */
-            white-space: nowrap; /* Sayıların tek satırda kalması */
-        }
             
                .history-item {
             padding: 0.5rem 0.8rem;
@@ -361,6 +352,8 @@
             color: var(--primary);
             flex: 0 0 auto; /* Esneme yapma */
             margin-bottom: 0.3rem; /* Satırlar arası boşluk */
+            flex: 0 0 auto; /* Kutuların boyutu içerik kadar olsun */
+            white-space: nowrap; /* Sayıların tek satırda kalması */
         }
 
                 body.dark-mode .history-item {
@@ -569,6 +562,12 @@
                     <button id="closeHelp" class="btn btn-primary lang-text" data-key="closeHelp">Tamam</button>
                 </div>
             </div>
+        </div>
+
+        <div style="text-align: right; margin-top: 0.5rem;">
+            <button id="clearHistoryBtn" class="btn" style="background: var(--danger); color: white;">
+                <span class="lang-text" data-key="clearHistory">Geçmişi Temizle</span>
+            </button>
         </div>
         
     </div>
@@ -935,35 +934,91 @@
         }
 
         // Alternatif TTS fonksiyonu
-                function useAlternativeTTS(text, lang) {
-            console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
+       function useAlternativeTTS(text, lang) {
+    console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
 
-            // Basit bir fallback seslendirme için (örneğin, İngilizce robotik bir ses)
-            const fallbackUtterance = new SpeechSynthesisUtterance(text);
-            fallbackUtterance.lang = 'en-US'; // Basit bir İngilizce ses kullan
-            fallbackUtterance.rate = parseFloat(speedControl.value);
+    // Basit bir fallback seslendirme için (örneğin, İngilizce robotik bir ses)
+    const fallbackUtterance = new SpeechSynthesisUtterance(text);
+    fallbackUtterance.lang = 'en-US'; // Basit bir İngilizce ses kullan
+    fallbackUtterance.rate = parseFloat(speedControl.value);
 
-            // Fallback seslendirme başlatılsın
-            window.speechSynthesis.speak(fallbackUtterance);
+    // Fallback seslendirme başlatılsın
+    window.speechSynthesis.speak(fallbackUtterance);
 
-            fallbackUtterance.onend = () => {
-                if(isActive) {
-                    const delay = parseFloat(delayControl.value) * 1000;
-                    timeoutID = setTimeout(readNumber, delay);
+    fallbackUtterance.onend = () => {
+        if(isActive) {
+            const delay = parseFloat(delayControl.value) * 1000;
+            timeoutID = setTimeout(readNumber, delay);
+        }
+    };
+
+    fallbackUtterance.onerror = (event) => {
+        console.error("Fallback TTS hatası:", event);
+        const notification = createNotification(
+            `Seslendirme sırasında bir hata oluştu.`,
+            '❌'
+        );
+        showNotification(notification);
+        stopReading(); // Hata olursa okumayı durdur
+    };
+}
+
+        // Alternatif ses motoru için fallback fonksiyonunu ekleyin (readNumber'dan önce)
+        function speakWithFallback(text, lang, rate) {
+            return new Promise((resolve) => {
+                // Önce tarayıcının yerel ses motorunu dene
+                try {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = lang;
+                    utterance.rate = rate;
+                    utterance.onend = resolve;
+                    utterance.onerror = () => {
+                        console.log('Yerel ses motoru hatası, fallback deneniyor');
+                        fallbackTTS(text, lang).then(resolve);
+                    };
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                    console.log('Yerel ses motoru hatası:', e);
+                    fallbackTTS(text, lang).then(resolve);
                 }
-            };
-
-            fallbackUtterance.onerror = (event) => {
-                console.error("Fallback TTS hatası:", event);
-                const notification = createNotification(
-                    `Seslendirme sırasında bir hata oluştu.`,
-                    '❌'
-                );
-                showNotification(notification);
-                stopReading(); // Hata olursa okumayı durdur
-            };
+            });
         }
 
+        // Basit bir fallback mekanizması
+        function fallbackTTS(text, lang) {
+            return new Promise((resolve) => {
+                console.log(`Fallback TTS: ${text} in ${lang}`);
+                // Burada bir TTS API'si kullanabilirsiniz
+                setTimeout(resolve, text.length * 100); // Basit bir simülasyon
+            });
+        }
+                
+        function startReading() {
+            const { isSafari } = getBrowserInfo();
+            
+            if (isSafari) {
+                const initSpeech = new SpeechSynthesisUtterance(" ");
+                initSpeech.volume = 0;
+                window.speechSynthesis.speak(initSpeech);
+                initSpeech.onend = () => {
+                    setTimeout(readNumber, 200);
+                };
+            } else {
+                setTimeout(readNumber, 300);
+            }
+            
+            isActive = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            languageSelect.disabled = true;
+            document.getElementById('minValue').disabled = true;
+            document.getElementById('maxValue').disabled = true;
+            
+            startTime = Date.now();
+            totalNumbers = 0;
+            updateStats();
+            document.querySelector('.history-title').style.opacity = '0';
+        }
         
         function stopReading() {
             isActive = false;
@@ -1021,7 +1076,9 @@
                 closeHelp: 'OK',
                 totalNumbersLabel: 'Total Numbers',
                 totalTimeLabel: 'Total Time (min)',
-                favoriteLanguageLabel: 'Most Used Language'
+                favoriteLanguageLabel: 'Most Used Language',
+                themeDark: 'Koyu Mod',
+                themeLight: 'Açık Mod'
             },
             'en-GB': {
                 title: 'Number Reader',
@@ -1040,7 +1097,9 @@
                 closeHelp: 'OK',
                 totalNumbersLabel: 'Total Numbers',
                 totalTimeLabel: 'Total Time (min)',
-                favoriteLanguageLabel: 'Most Used Language'
+                favoriteLanguageLabel: 'Most Used Language',
+                themeDark: 'Dark Mode',
+                themeLight: 'Light Mode'
             },
             'de-DE': {
                 title: 'Zahlenleser',
@@ -1059,7 +1118,9 @@
                 closeHelp: 'OK',
                 totalNumbersLabel: 'Gesamtzahlen',
                 totalTimeLabel: 'Gesamtzeit (min)',
-                favoriteLanguageLabel: 'Am häufigsten verwendete Sprache'
+                favoriteLanguageLabel: 'Am häufigsten verwendete Sprache',
+                themeDark: 'Dark Mode',
+                themeLight: 'Light Mode'
             },
             'fr-FR': {
                 title: 'Lecteur de Nombres',
@@ -1254,12 +1315,6 @@
         });
         
                 document.addEventListener('DOMContentLoaded', () => {
-          
-        
-           
-            
-         
-            
             // Diğer başlangıç kodları...
             window.speechSynthesis.onvoiceschanged = function() {
                 sesleriYukle().then(() => {
@@ -1306,19 +1361,29 @@
         updateStats();
     }
 
-        function checkLanguageSupport() {
-            const voices = window.speechSynthesis.getVoices();
-            const options = languageSelect.options;
-            
-            for (let i = 0; i < options.length; i++) {
-                const lang = options[i].value;
-                const isSupported = voices.some(v => v.lang.startsWith(lang.split('-')[0]));
+            // languageSelect event listener'ını güncelleyin
+            languageSelect.addEventListener('change', () => {
+                document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+                speedControl.value = 1.0;
+                speedDisplay.textContent = '1.0x';
+                updateLanguage(languageSelect.value);
+                clearHistory(); // Dil değiştiğinde geçmişi temizle
+                sesiGuncelle();
                 
-                if (!isSupported && lang !== 'tr-TR' && lang !== 'en-US') {
-                    options[i].disabled = true;
-                    options[i].title = "Bu dil için sisteminizde ses paketi yüklü değil";
+                if(isActive) {
+                    window.speechSynthesis.cancel();
+                    clearTimeout(timeoutID);
+                    readNumber();
                 }
-            }
+            });
+
+                    function useAlternativeTTS(text, lang) {
+            console.log(`Fallback TTS deneniyor: ${text} (${lang})`);
+            const notification = createNotification(
+                `Seslendirme sorunu. Alternatif yöntem deneniyor...`,
+                '🔊'
+            );
+            showNotification(notification);
         }
             
            
