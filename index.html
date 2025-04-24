@@ -903,11 +903,14 @@
     <script>
 
         let remainingCount = 0;
+                const SPEED_LIMITS = {
+            TURKISH: 10.0,    // Türkçe için maks hız
+            DEFAULT: 2.0     // Diğer diller için maks hız
+        };
 
-
-        function getMaxSpeedForLanguage() {
+                function getMaxSpeedForLanguage() {
             const lang = document.getElementById('languageSelect').value;
-            return lang === 'tr-TR' ? SPEED_LIMITS.TURKISH : SPEED_LIMITS.DEFAULT;
+            return lang === 'tr-TR' ? 10.0 : 2.0; // Türkçe: 5x, Diğerleri: 2x
         }
 
         function setupClickableValues() {
