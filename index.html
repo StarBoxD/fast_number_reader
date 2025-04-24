@@ -856,6 +856,8 @@
 
     <script>
 
+        let remainingCount = 0;
+
         function getMaxSpeedForLanguage() {
             const lang = document.getElementById('languageSelect').value;
             return lang === 'tr-TR' ? 5.0 : 2.0;
@@ -988,6 +990,31 @@
         };
         
         // 4. TEMEL FONKSİYONLAR
+
+                function loadVoices() {
+            return new Promise(resolve => {
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length) {
+                    resolve(voices);
+                } else {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        const voices = window.speechSynthesis.getVoices();
+                        resolve(voices);
+                    };
+                }
+            });
+        }
+
+        // Sayı değerini almak için fonksiyon
+        function getNumberInputValue(id) {
+            const value = document.getElementById(id).value.replace(/\./g, '');
+            return parseInt(value) || 0;
+        }
+
+        // Sayıyı formatlamak için fonksiyon
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
         
                 function updateUIForReading(isReading) {
             elements.startBtn.disabled = isReading;
@@ -1056,7 +1083,7 @@
         
        // 6. OKUMA İŞLEMLERİ
 
-        async function readNumber() {
+            async function readNumber() {
             if (!isReading || remainingCount <= 0) {
                 stopReading();
                 return;
@@ -1071,11 +1098,21 @@
                 
                 elements.resultDisplay.textContent = formatNumber(number);
                 addToHistory(number);
-                remainingCount--; // Sayacı azalt
+                remainingCount--;
                 
                 const utterance = new SpeechSynthesisUtterance(number.toString());
                 utterance.voice = currentVoice;
                 utterance.rate = parseFloat(elements.speedControl.value);
+                
+                // Hata yönetimi için event listener'lar
+                utterance.onerror = (event) => {
+                    console.error('Okuma hatası:', event.error);
+                    proceedToNext();
+                };
+                
+                utterance.onend = () => {
+                    proceedToNext();
+                };
                 
                 const lang = elements.languageSelect.value;
                 let baseDelay = parseFloat(elements.delayControl.value);
@@ -1088,46 +1125,17 @@
                 };
                 
                 const delayMultiplier = delayMultipliers[lang] || delayMultipliers['default'];
-                const adjustedDelay = baseDelay * delayMultiplier;
+                const adjustedDelay = baseDelay * delayMultiplier * 1000; // ms cinsinden
                 
-                await new Promise((resolve) => {
-                    let resolved = false;
-                    let timeoutId = null;
-                    
-                    utterance.onend = () => {
-                        if (!resolved) {
-                            clearTimeout(timeoutId);
-                            resolved = true;
-                            proceedToNext();
-                        }
-                    };
-                    
-                    utterance.onerror = (event) => {
-                        console.error('Okuma hatası:', event.error);
-                        if (!resolved) {
-                            clearTimeout(timeoutId);
-                            resolved = true;
-                            proceedToNext();
-                        }
-                    };
-                    
-                    const estimatedDuration = estimateReadingTime(number, utterance.rate, lang);
-                    timeoutId = setTimeout(() => {
-                        if (!resolved) {
-                            resolved = true;
-                            proceedToNext();
-                        }
-                    }, estimatedDuration + 1000);
-                    
-                    const proceedToNext = () => {
-                        if (isReading) {
-                            readingTimeout = setTimeout(readNumber, adjustedDelay * 1000);
-                        }
-                        resolve();
-                    };
-                    
-                    window.speechSynthesis.speak(utterance);
-                });
+                const proceedToNext = () => {
+                    if (isReading && remainingCount > 0) {
+                        readingTimeout = setTimeout(readNumber, adjustedDelay);
+                    } else {
+                        stopReading();
+                    }
+                };
+                
+                window.speechSynthesis.speak(utterance);
 
             } catch (error) {
                 console.error("Okuma hatası:", error);
@@ -1212,15 +1220,19 @@
             remainingCount = parseInt(document.getElementById('countControl').value);
             updateUIForReading(true);
             
-            const warmUp = new SpeechSynthesisUtterance(" ");
-            warmUp.volume = 0;
-            window.speechSynthesis.speak(warmUp);
-            
             // Android Chrome için özel kontrol
             if (/Android.*Chrome/.test(navigator.userAgent)) {
-                setTimeout(readNumber, 300);
+                setTimeout(() => {
+                    readNumber().catch(error => {
+                        console.error('Okuma başlatılamadı:', error);
+                        stopReading();
+                    });
+                }, 300);
             } else {
-                readNumber();
+                readNumber().catch(error => {
+                    console.error('Okuma başlatılamadı:', error);
+                    stopReading();
+                });
             }
         }
 
@@ -1228,12 +1240,11 @@
             if (!isReading) return;
             
             isReading = false;
-            remainingCount = 0;
+            remainingCount = 0; // Bu satır önemli
             clearTimeout(readingTimeout);
             window.speechSynthesis.cancel();
             updateUIForReading(false);
             
-            // Tüm tıklanabilir değerlerden disabled class kaldır
             document.querySelectorAll('.clickable-value').forEach(el => {
                 el.classList.remove('disabled');
             });
@@ -1272,7 +1283,15 @@
         // 8. OLAY DİNLEYİCİLERİ
             document.addEventListener('DOMContentLoaded', async () => {
 
-                
+                  // Sesleri yükle
+            try {
+                voices = await loadVoices();
+                updateVoice();
+            } catch (error) {
+                console.error("Sesler yüklenirken hata:", error);
+                alert("Ses sentezleme özelliği yüklenemedi. Lütfen tarayıcınızı kontrol edin.");
+            }
+
                 document.getElementById('countControl').addEventListener('input', function() {
                 document.getElementById('countDisplay').textContent = this.value;
             });
@@ -1334,14 +1353,12 @@
             });
             
             // Klavye kısayolu
-                    document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                // Sadece okuma durumunda değilken veya durdurma durumunda çalışsın
-                if (!isReading || e.target.id === 'stopBtn') {
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
                     isReading ? stopReading() : startReading();
                 }
-            }
+            });
         });
 
         // 9. DİL ÇEVİRİLERİ (Önceki translations objesini aynen koruyun)
