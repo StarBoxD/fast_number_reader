@@ -1262,6 +1262,11 @@
                     }
                 };
 
+            // Safari'de hızı biraz kısıtla (isteğe bağlı)
+            const browserInfo = getBrowserInfo();
+                if (browserInfo.isSafari) {
+                    utterance.rate = Math.min(utterance.rate, 4.0); // Safari'de 4x üst sınır
+                }
 
                 window.speechSynthesis.speak(utterance);
 
