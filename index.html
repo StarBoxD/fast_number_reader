@@ -596,9 +596,63 @@
         outline-offset: 2px;
         }
 
+                #browserWarning {
+            background: #ffeb3b;
+            color: #000;
+            padding: 12px;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #browserWarning button {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            margin-left: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #browserWarning button:hover {
+            background: #555;
+        }
+
+                #browserWarning {
+            /* Diğer stiller */
+            font-size: 14px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 480px) {
+            #browserWarning {
+                font-size: 12px;
+                padding: 8px;
+            }
+            #browserWarning button {
+                padding: 3px 10px;
+            }
+        }
+
     </style>
 </head>
 <body>
+
+    <div id="browserWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#ffcc00; color:#000; padding:10px; text-align:center; z-index:10000;">
+        <span class="lang-text" data-key="browserWarning"></span>
+        <button onclick="document.getElementById('browserWarning').style.display='none'" style="margin-left:10px; background:#333; color:#fff; border:none; padding:2px 8px; border-radius:3px;">
+            <span class="lang-text" data-key="closeWarning"></span>
+        </button>
+    </div>
+
+    <div id="browserWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#ffcc00; color:#000; padding:10px; text-align:center; z-index:10000;">
+        Safari tarayıcısında bazı sorunlar yaşanabilir. Daha iyi bir deneyim için Google Chrome kullanmanızı öneririz.
+        <button onclick="document.getElementById('browserWarning').style.display='none'" style="margin-left:10px; background:#333; color:#fff; border:none; padding:2px 8px; border-radius:3px;">Kapat</button>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1><span style="font-size: 1.2em;">🌐</span> <span class="lang-text" data-key="title">Sayı Okuyucu</span></h1>
@@ -835,15 +889,35 @@
         // 1. TARAYICI TESPİT ve TEMEL AYARLAR
                 function getBrowserInfo() {
             const ua = navigator.userAgent;
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.platform);
+            
             return {
-                isChrome: /Chrome/.test(ua) && !/Edge|Edg|OPR/.test(ua),
-                isFirefox: /Firefox/.test(ua),
-                isSafari: /Safari/.test(ua) && !/Chrome|Chromium|Edg|Edge|Firefox|OPR/.test(ua),
-                isIOS: /iPhone|iPad|iPod/.test(ua),
-                isAndroid: /Android/.test(ua),
-                isMobile: /Mobi|Android|iPhone|iPad|iPod/.test(ua)
+                isChrome: /Chrome|CriOS/i.test(ua) && !/Edge|Edg|OPR/i.test(ua),
+                isFirefox: /Firefox|FxiOS/i.test(ua),
+                isSafari: /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS/i.test(ua) || isIOS,
+                isIOS: isIOS,
+                isAndroid: /Android/i.test(ua),
+                isMobile: /Mobi|Android|iPhone|iPad|iPod/i.test(ua)
             };
         }
+
+                // Tarayıcı uyarısını göster
+                        function checkBrowser() {
+            const browser = getBrowserInfo();
+            if (browser.isSafari || browser.isIOS) {
+                document.getElementById('browserWarning').style.display = 'block';
+                
+                // Hata ayıklama için konsola bilgi yazdır
+                console.log('Safari veya iOS tespit edildi. Uyarı gösteriliyor.');
+                console.log('User Agent:', navigator.userAgent);
+            }
+        }
+
+        // DOM yüklendiğinde çalıştır
+        document.addEventListener('DOMContentLoaded', function() {
+            checkBrowser();
+            
+        });
         
         const browserInfo = getBrowserInfo();
         
@@ -1197,6 +1271,12 @@
         // 8. OLAY DİNLEYİCİLERİ
             document.addEventListener('DOMContentLoaded', async () => {
 
+                            const browser = getBrowserInfo();
+                const debugInfo = `Tarayıcı: ${browser.isSafari ? 'Safari' : browser.isChrome ? 'Chrome' : 'Diğer'}, 
+                                iOS: ${browser.isIOS}, 
+                                Mobile: ${browser.isMobile}`;
+                document.getElementById('debugInfo').textContent = debugInfo;
+            });
                 document.getElementById('countControl').addEventListener('input', function() {
                 document.getElementById('countDisplay').textContent = this.value;
             });
@@ -1302,6 +1382,8 @@
                     howToUseTitle: 'Nasıl Kullanılır?',
                     language: 'Dil Seçimi',
                     count: 'Sayı Adedi',
+                    browserWarning: 'Safari tarayıcısında bazı sorunlar yaşanabilir. Daha iyi bir deneyim için Google Chrome kullanmanızı öneririz.',
+                    closeWarning: 'Kapat'
                 },
 
                 'en-US': {
@@ -1338,6 +1420,8 @@
                     howToUseTitle: 'How to Use?',
                     language: 'Language Selection',
                     count: 'Number Count',
+                    browserWarning: 'Some issues may occur in Safari browsers. We recommend using Google Chrome for a better experience.',
+                    closeWarning: 'Close'
                 },
 
                 'en-GB': {
@@ -1374,6 +1458,8 @@
                     howToUseTitle: 'How to Use?',
                     language: 'Language Selection',
                     count: 'Number Count',
+                    browserWarning: 'Some issues may occur in Safari browsers. We recommend using Google Chrome for a better experience.',
+                    closeWarning: 'Close'
                 },
 
                 'de-DE': {
@@ -1410,6 +1496,8 @@
                     howToUseTitle: 'Wie benutzt man?',
                     language: 'Sprache auswählen',
                     count: 'Zahlenanzahl',
+                    browserWarning: 'Es können Probleme auftreten, wenn Sie Safari verwenden. Wir empfehlen Google Chrome für eine bessere Erfahrung.',
+                    closeWarning: 'Schließen'
                 },
 
                 'fr-FR': {
@@ -1446,6 +1534,8 @@
                     howToUseTitle: 'Comment utiliser?',
                     language: 'Sélection de la Langue',
                     count: 'Nombre de Nombres',
+                    browserWarning: 'Des problèmes peuvent survenir dans les navigateurs Safari. Nous recommandons d\'utiliser Google Chrome pour une meilleure expérience.',
+                    closeWarning: 'Fermer'
                 },
 
                 'es-ES': {
@@ -1482,6 +1572,8 @@
                     howToUseTitle: 'Cómo usar?',
                     language: 'Selección de la Lengua',
                     count: 'Número de Nombres',
+                    browserWarning: 'Es posible que surjan problemas en los navegadores Safari. Recomendamos utilizar Google Chrome para una mejor experiencia.',
+                    closeWarning: 'Cerrar'
                 },
 
                 'ja-JP': {
@@ -1518,6 +1610,8 @@
                     howToUseTitle: 'どうやって使う？',
                     language: '言語選択',
                     count: '数字の数',
+                    browserWarning: 'Safariブラウザーではいくつかの問題が発生する可能性があります。より良いエクスペリエンスのためにGoogle Chromeを使用することをお勧めします。',
+                    closeWarning: '閉じる'
                 },
 
                 'ru-RU': {
@@ -1554,6 +1648,8 @@
                     howToUseTitle: 'Как использовать?',
                     language: 'Выбор Языка',
                     count: 'Число',
+                    browserWarning: 'Некоторые проблемы могут возникнуть в Safari браузерах. Мы рекомендуем использовать Google Chrome для лучшего опыта.',
+                    closeWarning: 'Закрыть'
                 },
 
                 'zh-CN': {
@@ -1590,6 +1686,8 @@
                     howToUseTitle: '如何使用？',
                     language: '语言选择',
                     count: '数字的数',
+                    browserWarning: 'Safari浏览器中可能会出现一些问题。我们建议使用Google Chrome以获得更好的体验。',
+                    closeWarning: '关闭'
                 },
 
                 'it-IT': {
@@ -1626,6 +1724,8 @@
                     howToUseTitle: 'Come usare?',
                     language: 'Selezione della Lingua',
                     count: 'Numero di Numeri',
+                    browserWarning: 'Alcuni problemi possono verificarsi nei browser Safari. Ti consigliamo di utilizzare Google Chrome per una migliore esperienza.',
+                    closeWarning: 'Chiudi'
                 },
             };
             function getTranslation(lang, key) {
