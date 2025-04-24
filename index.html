@@ -5,31 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sayı Okuyucu - Çoklu Dil Desteği ile Sayıları Sesli Okuyun</title>
     
-        <!-- Promise polyfill for old browsers -->
-    <script>
-        if (typeof Promise === 'undefined') {
-        document.write('<script src="https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js"><\/script>');
-        }
-    </script>
     
-    <!-- Voice detection polyfill -->
-    <script>
-        if (!window.speechSynthesis) {
-        document.write('<script src="path/to/speech-polyfill.js"><\/script>');
-        }
-    </script>
-
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366"
-        crossorigin="anonymous"></script>
-        <ins class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-3050374663523366"
-        data-ad-slot="9615294230"
-        data-ad-format="auto"
-        data-full-width-responsive="true"></ins>
-        <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
         <!-- Vercel Analytics -->
     <script src="https://unpkg.com/@vercel/analytics@1.1.1/dist/analytics.min.js"></script>
     
@@ -337,10 +313,13 @@
 
         /* Geçmiş Listesi */
                 .history-section {
-            position: relative; /* Başlık için referans oluşturuyoruz */
+            position: relative;
             margin-top: 1rem;
             padding: 0;
+            border-radius: 0.75rem;
+            overflow: hidden; /* Yeni ekledik */
         }
+
 
                 .history-title {
             position: absolute;
@@ -368,14 +347,16 @@
 
                 .history-list {
             display: flex;
-            flex-wrap: wrap; /* Satır dolunca alt satıra geç */
+            flex-wrap: wrap;
             gap: 0.6rem;
             padding: 0.6rem;
-            max-height: 150px; /* Sabit yükseklik */
-            overflow-y: auto; /* Sadece dikey scroll */
-            overflow-x: hidden; /* Yatay scroll'u gizle */
-            align-content: flex-start; /* Üstten hizala */
+            max-height: 150px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            align-content: flex-start;
             scroll-behavior: smooth;
+            scrollbar-width: thin; /* Firefox için */
+            scrollbar-color: var(--primary) var(--border-light); /* Firefox için */
         }
             
                .history-item {
@@ -391,6 +372,10 @@
             white-space: nowrap; /* Sayıların tek satırda kalması */
         }
 
+                body.dark-mode .history-list {
+            scrollbar-color: var(--primary-dark) var(--border-dark); /* Firefox için */
+        }
+
                 body.dark-mode .history-item {
             background: #0000001a;
         }
@@ -403,6 +388,13 @@
             .history-item {
                 font-size: 0.9rem;
                 padding: 0.4rem 0.6rem;
+            }
+        }
+
+                @media (max-width: 768px) {
+            .history-list::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
             }
         }
 
@@ -655,16 +647,62 @@
             pointer-events: none;
         }
 
+                /* Light Theme Scrollbar */
+        .history-list::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: var(--border-light);
+            border-radius: 4px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Dark Theme Scrollbar */
+        body.dark-mode .history-list::-webkit-scrollbar-track {
+            background: var(--border-dark);
+        }
+
+        body.dark-mode .history-list::-webkit-scrollbar-thumb {
+            background: var(--primary-dark);
+        }
+
+        body.dark-mode .history-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+                .history-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        body.dark-mode .history-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, var(--primary-dark), var(--primary));
+        }
+
+        /* Safari özel stilleri */
+        _::-webkit-full-page-media, _:future, :root .safari-only {
+            /* Örnek: Safari'de tarihçe scrollbar'ı için */
+            .history-list {
+                scrollbar-width: none; /* Firefox için */
+            }
+            .history-list::-webkit-scrollbar {
+                width: 5px; /* Safari/Chrome için */
+            }
+        }
+
     </style>
 </head>
 <body>
-
-    <div id="browserWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#ffcc00; color:#000; padding:10px; text-align:center; z-index:10000;">
-        <span class="lang-text" data-key="browserWarning"></span>
-        <button onclick="document.getElementById('browserWarning').style.display='none'" style="margin-left:10px; background:#333; color:#fff; border:none; padding:2px 8px; border-radius:3px;">
-            <span class="lang-text" data-key="closeWarning"></span>
-        </button>
-    </div>
 
     <div id="browserWarning" style="display:none; position:fixed; top:0; left:0; right:0; background:#ffcc00; color:#000; padding:10px; text-align:center; z-index:10000;">
         Safari tarayıcısında bazı sorunlar yaşanabilir. Daha iyi bir deneyim için Google Chrome kullanmanızı öneririz.
@@ -819,19 +857,17 @@
             <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
           </div>
               <script>
-                function loadAds() {
-                        if (typeof adsbygoogle !== 'undefined') {
-                            document.querySelectorAll('ins.adsbygoogle').forEach(ad => {
-                            if (!ad.dataset.loaded) {
-                                ad.dataset.loaded = 'true';
-                                (adsbygoogle = window.adsbygoogle || []).push({});
-                            }
-                            });
-                        } else {
-                            setTimeout(loadAds, 300); // AdSense henüz yüklenmediyse tekrar dene
-                        }
-                }
-                window.addEventListener('load', loadAds);
+                    function loadAds() {
+            if (typeof adsbygoogle === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3050374663523366';
+                script.crossOrigin = 'anonymous';
+                script.async = true;
+                document.head.appendChild(script);
+            } else {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            }
+        }
               </script>
         </div>
 
@@ -858,9 +894,10 @@
 
         let remainingCount = 0;
 
+
         function getMaxSpeedForLanguage() {
             const lang = document.getElementById('languageSelect').value;
-            return lang === 'tr-TR' ? 5.0 : 2.0;
+            return lang === 'tr-TR' ? SPEED_LIMITS.TURKISH : SPEED_LIMITS.DEFAULT;
         }
 
         function setupClickableValues() {
@@ -917,7 +954,9 @@
                 isSafari: /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS/i.test(ua) || isIOS,
                 isIOS: isIOS,
                 isAndroid: /Android/i.test(ua),
-                isMobile: /Mobi|Android|iPhone|iPad|iPod/i.test(ua)
+                isMobile: /Mobi|Android|iPhone|iPad|iPod/i.test(ua),
+                isEdge: /Edg/i.test(ua),
+                isOpera: /OPR/i.test(ua)
             };
         }
 
@@ -932,36 +971,38 @@
                 console.log('User Agent:', navigator.userAgent);
             }
         }
-
-        // DOM yüklendiğinde çalıştır
-        document.addEventListener('DOMContentLoaded', function() {
-            checkBrowser();
-            
-        });
         
         const browserInfo = getBrowserInfo();
         
-        // 2. TEMA YÖNETİMİ
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        const body = document.body;
-        
+                // TEMA YÖNETİMİ
         function setTheme(theme) {
             const isDark = theme === 'dark';
-            body.classList.toggle('dark-mode', isDark);
-            themeIcon.textContent = isDark ? '☀️' : '🌙';
+            document.body.classList.toggle('dark-mode', isDark);
+            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
             
-            const themeTextSpan = themeToggle.querySelector('.lang-text');
-            if (themeTextSpan) {
-                themeTextSpan.textContent = isDark ? 'Koyu Mod' : 'Açık Mod';
-                themeTextSpan.dataset.key = isDark ? 'themeDark' : 'themeLight';
+            const themeText = document.querySelector('.theme-toggle .lang-text');
+            if (themeText) {
+                themeText.textContent = isDark ? 'Açık Mod' : 'Koyu Mod';
+                themeText.dataset.key = isDark ? 'themeLight' : 'themeDark';
             }
             localStorage.setItem('theme', theme);
         }
-        
+
         function toggleTheme() {
-            setTheme(body.classList.contains('dark-mode') ? 'light' : 'dark');
+            const currentTheme = localStorage.getItem('theme') || 
+                                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
         }
+
+        // Sayfa yüklendiğinde tema ayarı
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 
+                            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            setTheme(savedTheme);
+            
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        });
         
         // 3. SES YÖNETİMİ
         const speech = new SpeechSynthesisUtterance();
@@ -1014,14 +1055,6 @@
         // Sayıyı formatlamak için fonksiyon
         function formatNumber(num) {
             return new Intl.NumberFormat().format(num);
-        }
-        
-                function updateUIForReading(isReading) {
-            elements.startBtn.disabled = isReading;
-            elements.stopBtn.disabled = !isReading;
-            elements.languageSelect.disabled = isReading;
-            document.getElementById('minValue').disabled = isReading;
-            document.getElementById('maxValue').disabled = isReading;
         }
         
         // 5. SES FONKSİYONLARI
@@ -1082,68 +1115,6 @@
         }
         
        // 6. OKUMA İŞLEMLERİ
-
-            async function readNumber() {
-            if (!isReading || remainingCount <= 0) {
-                stopReading();
-                return;
-            }
-
-            try {
-                window.speechSynthesis.cancel();
-                
-                const min = getNumberInputValue('minValue');
-                const max = getNumberInputValue('maxValue');
-                const number = Math.floor(Math.random() * (max - min + 1)) + min;
-                
-                elements.resultDisplay.textContent = formatNumber(number);
-                addToHistory(number);
-                remainingCount--;
-                
-                const utterance = new SpeechSynthesisUtterance(number.toString());
-                utterance.voice = currentVoice;
-                utterance.rate = parseFloat(elements.speedControl.value);
-                
-                // Hata yönetimi için event listener'lar
-                utterance.onerror = (event) => {
-                    console.error('Okuma hatası:', event.error);
-                    proceedToNext();
-                };
-                
-                utterance.onend = () => {
-                    proceedToNext();
-                };
-                
-                const lang = elements.languageSelect.value;
-                let baseDelay = parseFloat(elements.delayControl.value);
-                
-                const delayMultipliers = {
-                    'fr-FR': 1.3,
-                    'en-GB': 1.1,
-                    'en-US': 1.0,
-                    'default': 1.0
-                };
-                
-                const delayMultiplier = delayMultipliers[lang] || delayMultipliers['default'];
-                const adjustedDelay = baseDelay * delayMultiplier * 1000; // ms cinsinden
-                
-                const proceedToNext = () => {
-                    if (isReading && remainingCount > 0) {
-                        readingTimeout = setTimeout(readNumber, adjustedDelay);
-                    } else {
-                        stopReading();
-                    }
-                };
-                
-                window.speechSynthesis.speak(utterance);
-
-            } catch (error) {
-                console.error("Okuma hatası:", error);
-                if (isReading) {
-                    readingTimeout = setTimeout(readNumber, 1000);
-                }
-            }
-        }
         
         function addToHistory(number) {
             const formatted = formatNumber(number);
@@ -1171,7 +1142,7 @@
                 function clearHistory() {
             numberHistory = [];
             elements.historyList.innerHTML = '';
-            remainingCount = 0; // Bu satırı ekleyin
+            remainingCount = 0; // Sayacı sıfırla
             
             // Başlığı tekrar göster
             const historyTitle = document.querySelector('.history-title');
@@ -1213,34 +1184,25 @@
         window.addEventListener('resize', resizeHandler);
         
                 // 7. KONTROL FONKSİYONLARI
-                function startReading() {
+
+                        function startReading() {
             if (isReading) return;
             
             isReading = true;
-            remainingCount = parseInt(document.getElementById('countControl').value);
+            remainingCount = parseInt(document.getElementById('countControl').value) || 10;
             updateUIForReading(true);
             
-            // Android Chrome için özel kontrol
-            if (/Android.*Chrome/.test(navigator.userAgent)) {
-                setTimeout(() => {
-                    readNumber().catch(error => {
-                        console.error('Okuma başlatılamadı:', error);
-                        stopReading();
-                    });
-                }, 300);
-            } else {
-                readNumber().catch(error => {
-                    console.error('Okuma başlatılamadı:', error);
-                    stopReading();
-                });
-            }
+            // ⭐ Başlangıçta tarihçeyi temizle (opsiyonel)
+            elements.historyList.innerHTML = '';
+            document.querySelector('.history-title').classList.remove('hidden');
+            
+            readNumber();
         }
-
                 function stopReading() {
             if (!isReading) return;
             
             isReading = false;
-            remainingCount = 0; // Bu satır önemli
+            remainingCount = 0;
             clearTimeout(readingTimeout);
             window.speechSynthesis.cancel();
             updateUIForReading(false);
@@ -1249,39 +1211,72 @@
                 el.classList.remove('disabled');
             });
             
-            elements.resultDisplay.textContent = "---";
+            document.getElementById('resultDisplay').textContent = "---";
         }
 
-                // Sayının uzunluğuna ve okuma hızına göre tahmini süre (ms)
-                function estimateReadingTime(number, rate, lang) {
-            const numStr = number.toString();
-            let wordCount;
-            
-            // Sayı uzunluğuna göre kelime sayısı
-            if (numStr.length <= 3) { // Binler
-                wordCount = 1;
-            } else if (numStr.length <= 6) { // Milyonlar
-                wordCount = 2;
-            } else if (numStr.length <= 9) { // Milyarlar
-                wordCount = 3;
-            } else { // Trilyonlar+
-                wordCount = 4;
+
+        
+                async function readNumber() {
+            // 1. Önce durdurma kontrolü
+            if (!isReading || remainingCount <= 0) {
+                stopReading();
+                return;
             }
-            
-            // Dil bazlı temel süreler (ms)
-            const baseDurations = {
-                'fr-FR': 900,  // Fransızca daha uzun
-                'en-GB': 850,   // İngilizce (UK)
-                'en-US': 800,   // İngilizce (US)
-                'default': 800  // Diğer diller
-            };
-            
-            const baseDuration = baseDurations[lang] || baseDurations['default'];
-            return Math.max(1000, wordCount * baseDuration * (1 / rate));
+
+            // 2. Sayacı HEMEN AZALT (önemli!)
+            remainingCount--;
+
+            try {
+                // 3. Sayıyı üret ve göster
+                const min = getNumberInputValue('minValue');
+                const max = getNumberInputValue('maxValue');
+                const number = Math.floor(Math.random() * (max - min + 1)) + min;
+                
+                // 4. Önce EKRANA yaz, sonra OKU
+                elements.resultDisplay.textContent = formatNumber(number);
+                
+                // 5. Okuma işlemi
+                const utterance = new SpeechSynthesisUtterance(number.toString());
+                utterance.voice = currentVoice;
+                utterance.rate = parseFloat(elements.speedControl.value);
+
+
+                            // Safari kontrolünü buraya ekleyin (üst kısma)
+                const browserInfo = getBrowserInfo();
+                if (browserInfo.isSafari) {
+                    utterance.rate = Math.min(utterance.rate, 1.5); // Safari'de maks 1.5x hız
+                }
+
+                // 6. Okuma bittiğinde tarihçeye ekle ve sonraki adıma geç
+                utterance.onend = utterance.onerror = () => {
+                    addToHistory(number); // ⭐ Okunduktan SONRA tarihçeye ekle
+                    
+                    if (isReading && remainingCount > 0) {
+                        const delay = parseFloat(elements.delayControl.value) * 1000;
+                        readingTimeout = setTimeout(readNumber, delay);
+                    } else {
+                        stopReading();
+                    }
+                };
+
+                window.speechSynthesis.speak(utterance);
+
+            } catch (error) {
+                console.error("Okuma hatası:", error);
+                if (isReading) {
+                    readingTimeout = setTimeout(readNumber, 1000);
+                }
+            }
         }
-            
+                    
         // 8. OLAY DİNLEYİCİLERİ
             document.addEventListener('DOMContentLoaded', async () => {
+
+                        // Tarayıcı desteği kontrolü (en başa ekleyin)
+            if (!('speechSynthesis' in window)) {
+                alert(getTranslation(document.getElementById('languageSelect').value, 'noSpeechSupport'));
+                return;
+            }
 
                   // Sesleri yükle
             try {
@@ -1296,15 +1291,23 @@
                 document.getElementById('countDisplay').textContent = this.value;
             });
 
-                // Tema ayarı
+                    // Tema ayarı
             const savedTheme = localStorage.getItem('theme') || 
-                            (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             setTheme(savedTheme);
-            themeToggle.addEventListener('click', toggleTheme);
 
             // Ses yükleme
-            await loadVoices();
-            updateVoice();
+                    try {
+                voices = await loadVoices();
+                updateVoice();
+            } catch (error) {
+                console.error("Sesler yüklenirken hata:", error);
+            }
+
+                    // Buton event listener'ları
+            document.getElementById('startBtn').addEventListener('click', startReading);
+            document.getElementById('stopBtn').addEventListener('click', stopReading);
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             
             // Tıklanabilir değerleri ayarla
             setupClickableValues();
