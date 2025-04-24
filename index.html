@@ -578,6 +578,24 @@
         color: inherit;
         }
 
+                /* Sayı inputu spinner'larını gizleme */
+        .clickable-value input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+        }
+
+        .clickable-value input[type="number"]::-webkit-inner-spin-button,
+        .clickable-value input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+        }
+
+        /* Input focus stilini iyileştirme */
+        .clickable-value input:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+        }
+
     </style>
 </head>
 <body>
@@ -757,6 +775,55 @@
     </div>
 
     <script>
+
+        function getMaxSpeedForLanguage() {
+            const lang = document.getElementById('languageSelect').value;
+            return lang === 'tr-TR' ? 5.0 : 2.0;
+        }
+
+        function setupClickableValues() {
+            document.querySelectorAll('.clickable-value').forEach(display => {
+                display.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetInput = document.getElementById(targetId);
+                    const currentValue = targetInput.value;
+                    const isSpeed = targetId === 'speedControl';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.value = currentValue;
+                    input.classList.add('value-input');
+                    input.min = targetInput.min;
+                    input.max = isSpeed ? getMaxSpeedForLanguage() : targetInput.max;
+                    input.step = targetInput.step;
+                    input.inputMode = 'decimal';
+
+                    input.addEventListener('change', function() {
+                        let newValue = parseFloat(this.value) || 0;
+                        newValue = Math.max(newValue, targetInput.min);
+                        newValue = Math.min(newValue, isSpeed ? getMaxSpeedForLanguage() : targetInput.max);
+                        
+                        targetInput.value = newValue;
+                        targetInput.dispatchEvent(new Event('input'));
+                        display.textContent = isSpeed ? `${newValue}x` : `${newValue}s`;
+                    });
+
+                    input.addEventListener('blur', function() {
+                        this.dispatchEvent(new Event('change'));
+                    });
+
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') this.blur();
+                    });
+
+                    this.innerHTML = '';
+                    this.appendChild(input);
+                    input.focus();
+                    input.select();
+                });
+            });
+        }
+
         // 1. TARAYICI TESPİT ve TEMEL AYARLAR
                 function getBrowserInfo() {
             const ua = navigator.userAgent;
@@ -1102,37 +1169,47 @@
         }
             
         // 8. OLAY DİNLEYİCİLERİ
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Tema ayarı
+            document.addEventListener('DOMContentLoaded', async () => {
+                // Tema ayarı
             const savedTheme = localStorage.getItem('theme') || 
-                              (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                            (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             setTheme(savedTheme);
             themeToggle.addEventListener('click', toggleTheme);
-        
+
             // Ses yükleme
             await loadVoices();
             updateVoice();
             
-            // Kontroller
-            elements.speedControl.addEventListener('input', () => {
-                const speed = parseFloat(elements.speedControl.value);
-                elements.speedDisplay.textContent = speed.toFixed(1) + 'x';
+            // Tıklanabilir değerleri ayarla
+            setupClickableValues();
+            
+            // Range input event listener'ları
+            document.getElementById('speedControl').addEventListener('input', function() {
+                document.getElementById('speedDisplay').textContent = this.value + 'x';
             });
             
-            elements.delayControl.addEventListener('input', () => {
-                elements.delayDisplay.textContent = elements.delayControl.value + 's';
+            document.getElementById('delayControl').addEventListener('input', function() {
+                document.getElementById('delayDisplay').textContent = this.value + 's';
             });
             
-                        elements.languageSelect.addEventListener('change', function() {
+            // Dil değişikliği event listener'ı
+            elements.languageSelect.addEventListener('change', function() {
                 const selectedLang = this.value;
-                console.log("Seçilen dil:", selectedLang); // Hata ayıklama
-                
                 updateVoice();
                 updateLanguage(selectedLang);
                 
-                // Dil değiştiğinde geçmişi temizle (isteğe bağlı)
+                // Hız sınırını güncelle
+                const speedControl = document.getElementById('speedControl');
+                if (speedControl) {
+                    speedControl.max = getMaxSpeedForLanguage();
+                    if (speedControl.value > speedControl.max) {
+                        speedControl.value = speedControl.max;
+                        document.getElementById('speedDisplay').textContent = speedControl.max + 'x';
+                    }
+                }
+                
                 clearHistory();
-            }); 
+            });
 
                     // Sayfa yüklendiğinde varsayılan dili ayarla
             const defaultLang = elements.languageSelect.value;
@@ -1158,76 +1235,23 @@
             });
         });
 
-                // 1. Yardımcı Fonksiyonlar
-        function revertToDisplay(display, targetInput, isSpeed) {
-        display.innerHTML = isSpeed ? `${targetInput.value}x` : `${targetInput.value}s`;
-        }
-
-        function getMaxSpeedForLanguage() {
-        const lang = document.getElementById('languageSelect').value;
-        return lang === 'tr-TR' ? 5.0 : 2.0;
-        }
-
-        // 2. Tıklanabilir Alan İşlevselliği
-        function setupClickableValues() {
-        document.querySelectorAll('.clickable-value').forEach(display => {
-            display.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const targetInput = document.getElementById(targetId);
-            const currentValue = targetInput.value;
-            const isSpeed = targetId === 'speedControl';
-            
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = currentValue;
-            input.classList.add('value-input');
-            input.min = targetInput.min;
-            input.max = isSpeed ? getMaxSpeedForLanguage() : targetInput.max;
-            input.step = targetInput.step;
-
-            input.addEventListener('change', function() {
-                let newValue = parseFloat(this.value);
-                newValue = Math.max(newValue, targetInput.min);
-                newValue = Math.min(newValue, input.max);
-                
-                targetInput.value = newValue;
-                targetInput.dispatchEvent(new Event('input'));
-                revertToDisplay(display, targetInput, isSpeed);
-            });
-
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') this.dispatchEvent(new Event('change'));
-            });
-
-            input.addEventListener('blur', function() {
-                this.dispatchEvent(new Event('change'));
-            });
-
-            this.innerHTML = '';
-            this.appendChild(input);
-            input.focus();
-            });
-        });
-        }
-
         // 3. Mevcut Event Listener'larını Güncelle
         document.addEventListener('DOMContentLoaded', async () => {
-        // ... diğer mevcut kodlar ...
         
         // Yeni fonksiyonu çağır
-        setupClickableValues();
+            setupClickableValues();
         
-        // Range inputlarını güncelle (varsa)
-        document.getElementById('speedControl')?.addEventListener('input', function() {
-            document.getElementById('speedDisplay').textContent = `${this.value}x`;
+        // Range input event listener'ları
+        document.getElementById('speedControl').addEventListener('input', function() {
+            document.getElementById('speedDisplay').textContent = this.value + 'x';
         });
         
-        document.getElementById('delayControl')?.addEventListener('input', function() {
-            document.getElementById('delayDisplay').textContent = `${this.value}s`;
+        document.getElementById('delayControl').addEventListener('input', function() {
+            document.getElementById('delayDisplay').textContent = this.value + 's';
         });
 
         // Dil değişikliğinde hız sınırını güncelle
-        document.getElementById('languageSelect')?.addEventListener('change', () => {
+        document.getElementById('languageSelect').addEventListener('change', function() {
             const speedControl = document.getElementById('speedControl');
             if (speedControl) {
             speedControl.max = getMaxSpeedForLanguage();
@@ -1235,7 +1259,7 @@
             }
         });
         });
-        
+
         // 9. DİL ÇEVİRİLERİ (Önceki translations objesini aynen koruyun)
             const translations = {
                 'tr-TR': {
