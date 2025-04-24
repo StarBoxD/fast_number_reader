@@ -1262,6 +1262,10 @@
                     }
                 };
 
+                        const utterance = new SpeechSynthesisUtterance(number.toString());
+            utterance.voice = currentVoice;
+            utterance.rate = parseFloat(elements.speedControl.value); // Kullanıcının seçtiği hız (5x'e kadar)
+
             // Safari'de hızı biraz kısıtla (isteğe bağlı)
             const browserInfo = getBrowserInfo();
                 if (browserInfo.isSafari) {
