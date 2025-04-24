@@ -547,6 +547,37 @@
             }
         }
 
+                .clickable-value {
+        padding: 0.5rem;
+        min-width: 50px;
+        text-align: center;
+        border: 1px solid var(--border-light);
+        border-radius: 0.5rem;
+        cursor: pointer;
+        background: var(--input-bg-light);
+        color: var(--text-light);
+        transition: all 0.2s ease;
+        }
+
+        body.dark-mode .clickable-value {
+        border-color: var(--border-dark);
+        background: var(--input-bg-dark);
+        color: var(--text-dark);
+        }
+
+        .clickable-value:hover {
+        background: rgba(59, 130, 246, 0.1);
+        }
+
+        .value-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        text-align: center;
+        font-size: inherit;
+        color: inherit;
+        }
+
     </style>
 </head>
 <body>
@@ -641,7 +672,7 @@
                 <span class="form-label lang-text" data-key="speed">Okuma Hızı:</span>
                 <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:200px;">
                     <input type="range" id="speedControl" min="0.5" max="5.0" step="0.1" value="1.0" class="form-control">
-                    <span id="speedDisplay" style="min-width:40px;">1.0x</span>
+                    <div class="clickable-value" id="speedDisplay" data-target="speedControl">1.0x</div>
                 </div>
             </div>
             
@@ -649,7 +680,7 @@
                 <span class="form-label lang-text" data-key="delay">Geçiş Süresi:</span>
                 <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:200px;">
                     <input type="range" id="delayControl" min="0" max="5" step="0.5" value="0" class="form-control">
-                    <span id="delayDisplay" style="min-width:30px;">0s</span>
+                    <div class="clickable-value" id="delayDisplay" data-target="delayControl">0s</div>
                 </div>
             </div>
 
@@ -1125,6 +1156,84 @@
                     isReading ? stopReading() : startReading();
                 }
             });
+        });
+
+                // 1. Yardımcı Fonksiyonlar
+        function revertToDisplay(display, targetInput, isSpeed) {
+        display.innerHTML = isSpeed ? `${targetInput.value}x` : `${targetInput.value}s`;
+        }
+
+        function getMaxSpeedForLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+        return lang === 'tr-TR' ? 5.0 : 2.0;
+        }
+
+        // 2. Tıklanabilir Alan İşlevselliği
+        function setupClickableValues() {
+        document.querySelectorAll('.clickable-value').forEach(display => {
+            display.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            const currentValue = targetInput.value;
+            const isSpeed = targetId === 'speedControl';
+            
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = currentValue;
+            input.classList.add('value-input');
+            input.min = targetInput.min;
+            input.max = isSpeed ? getMaxSpeedForLanguage() : targetInput.max;
+            input.step = targetInput.step;
+
+            input.addEventListener('change', function() {
+                let newValue = parseFloat(this.value);
+                newValue = Math.max(newValue, targetInput.min);
+                newValue = Math.min(newValue, input.max);
+                
+                targetInput.value = newValue;
+                targetInput.dispatchEvent(new Event('input'));
+                revertToDisplay(display, targetInput, isSpeed);
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') this.dispatchEvent(new Event('change'));
+            });
+
+            input.addEventListener('blur', function() {
+                this.dispatchEvent(new Event('change'));
+            });
+
+            this.innerHTML = '';
+            this.appendChild(input);
+            input.focus();
+            });
+        });
+        }
+
+        // 3. Mevcut Event Listener'larını Güncelle
+        document.addEventListener('DOMContentLoaded', async () => {
+        // ... diğer mevcut kodlar ...
+        
+        // Yeni fonksiyonu çağır
+        setupClickableValues();
+        
+        // Range inputlarını güncelle (varsa)
+        document.getElementById('speedControl')?.addEventListener('input', function() {
+            document.getElementById('speedDisplay').textContent = `${this.value}x`;
+        });
+        
+        document.getElementById('delayControl')?.addEventListener('input', function() {
+            document.getElementById('delayDisplay').textContent = `${this.value}s`;
+        });
+
+        // Dil değişikliğinde hız sınırını güncelle
+        document.getElementById('languageSelect')?.addEventListener('change', () => {
+            const speedControl = document.getElementById('speedControl');
+            if (speedControl) {
+            speedControl.max = getMaxSpeedForLanguage();
+            document.getElementById('speedDisplay').textContent = `${speedControl.value}x`;
+            }
+        });
         });
         
         // 9. DİL ÇEVİRİLERİ (Önceki translations objesini aynen koruyun)
