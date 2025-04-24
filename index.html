@@ -700,6 +700,16 @@
             }
         }
 
+                /* Mobil Safari için özel stil */
+        @supports (-webkit-touch-callout: none) {
+        input[type="text"], input[type="number"] {
+            font-size: 16px; /* iOS zoom sorununu önler */
+        }
+        #resultDisplay {
+            font-size: 2.5rem !important;
+        }
+        }
+
     </style>
 </head>
 <body>
@@ -1240,13 +1250,6 @@
                 utterance.voice = currentVoice;
                 utterance.rate = parseFloat(elements.speedControl.value);
 
-
-                            // Safari kontrolünü buraya ekleyin (üst kısma)
-                const browserInfo = getBrowserInfo();
-                if (browserInfo.isSafari) {
-                    utterance.rate = Math.min(utterance.rate, 1.5); // Safari'de maks 1.5x hız
-                }
-
                 // 6. Okuma bittiğinde tarihçeye ekle ve sonraki adıma geç
                 utterance.onend = utterance.onerror = () => {
                     addToHistory(number); // ⭐ Okunduktan SONRA tarihçeye ekle
@@ -1258,6 +1261,18 @@
                         stopReading();
                     }
                 };
+
+                           // Safari kontrolünü buraya ekleyin (üst kısma)
+                           const browserInfo = getBrowserInfo();
+                if (browserInfo.isSafari) {
+                    utterance.rate = Math.min(utterance.rate, 1.5); // Safari'de maks 1.5x hız
+                }
+
+                                if (browserInfo.isIOS) {
+                utterance.rate = Math.min(utterance.rate, 1.2); // iOS'ta daha da düşük hız
+                utterance.volume = 0.9; // Ses seviyesini biraz düşür
+                }
+
 
                 window.speechSynthesis.speak(utterance);
 
