@@ -641,6 +641,20 @@
             }
         }
 
+                /* Devre dışı kontroller için stil */
+        button:disabled, 
+        input:disabled, 
+        select:disabled, 
+        .clickable-value.disabled {
+            opacity: 0.7 !important;
+            cursor: not-allowed !important;
+        }
+
+        /* Tıklanabilir değerler için ek stil */
+        .clickable-value.disabled {
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body>
@@ -974,24 +988,6 @@
         };
         
         // 4. TEMEL FONKSİYONLAR
-
-                function updateUIForReading(isReading) {
-            elements.startBtn.disabled = isReading;
-            elements.stopBtn.disabled = !isReading;
-            elements.languageSelect.disabled = isReading;
-            document.getElementById('minValue').disabled = isReading;
-            document.getElementById('maxValue').disabled = isReading;
-            document.getElementById('countControl').disabled = isReading; // Yeni eklenen satır
-        }
-
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
-        
-        function getNumberInputValue(id) {
-            const value = document.getElementById(id).value.replace(/\./g, '');
-            return parseInt(value) || 0;
-        }
         
                 function updateUIForReading(isReading) {
             elements.startBtn.disabled = isReading;
@@ -1002,33 +998,36 @@
         }
         
         // 5. SES FONKSİYONLARI
-        function initSpeechEngine() {
-            if (browserInfo.isOldChrome || browserInfo.isSafari) {
-                const warmUp = new SpeechSynthesisUtterance(" ");
-                warmUp.volume = 0;
-                window.speechSynthesis.speak(warmUp);
-                
-                // Eski tarayıcılar için sınırlamalar
-                elements.speedControl.max = 1.5;
-                elements.delayControl.max = browserInfo.isIOS ? 2 : 3;
-            }
-        }
-        
-        function loadVoices() {
-            return new Promise(resolve => {
-                const checkVoices = () => {
-                    const availableVoices = window.speechSynthesis.getVoices();
-                    if (availableVoices.length > 0) {
-                        voices = availableVoices;
-                        resolve(voices);
-                    } else {
-                        setTimeout(checkVoices, 100);
-                    }
-                };
-                checkVoices();
+                function updateUIForReading(isReading) {
+            // Tüm kontrolleri seç
+            const allControls = document.querySelectorAll(
+                '#languageSelect, #minValue, #maxValue, ' +
+                '#speedControl, #delayControl, #countControl, ' +
+                '.clickable-value, #startBtn, #helpBtn, #clearHistoryBtn'
+            );
+            
+            // Durdur butonu hariç tüm kontrolleri devre dışı bırak/etkinleştir
+            allControls.forEach(control => {
+                if (control.id !== 'stopBtn') {
+                    control.disabled = isReading;
+                    control.style.pointerEvents = isReading ? 'none' : 'auto';
+                    control.style.opacity = isReading ? '0.7' : '1';
+                }
+            });
+            
+            // Durdur butonunu tersine ayarla
+            elements.stopBtn.disabled = !isReading;
+            
+            // Tıklanabilir değerler için özel işlem
+            document.querySelectorAll('.clickable-value').forEach(el => {
+                if (isReading) {
+                    el.classList.add('disabled');
+                } else {
+                    el.classList.remove('disabled');
+                }
             });
         }
-        
+                
         function updateVoice() {
             const lang = elements.languageSelect.value;
             const langPrefix = lang.split('-')[0];
@@ -1056,21 +1055,6 @@
         }
         
        // 6. OKUMA İŞLEMLERİ
-       let remainingCount = 0; // Global değişken olarak ekleyin
-
-        function startReading() {
-            if (isReading) return;
-            
-            isReading = true;
-            remainingCount = parseInt(document.getElementById('countControl').value);
-            updateUIForReading(true);
-            
-            const warmUp = new SpeechSynthesisUtterance(" ");
-            warmUp.volume = 0;
-            window.speechSynthesis.speak(warmUp);
-            
-            readNumber();
-        }
 
         async function readNumber() {
             if (!isReading || remainingCount <= 0) {
@@ -1221,7 +1205,7 @@
         window.addEventListener('resize', resizeHandler);
         
                 // 7. KONTROL FONKSİYONLARI
-                        function startReading() {
+                function startReading() {
             if (isReading) return;
             
             isReading = true;
@@ -1232,6 +1216,7 @@
             warmUp.volume = 0;
             window.speechSynthesis.speak(warmUp);
             
+            // Android Chrome için özel kontrol
             if (/Android.*Chrome/.test(navigator.userAgent)) {
                 setTimeout(readNumber, 300);
             } else {
@@ -1243,12 +1228,16 @@
             if (!isReading) return;
             
             isReading = false;
-            remainingCount = 0; // Sayacı sıfırla
+            remainingCount = 0;
             clearTimeout(readingTimeout);
             window.speechSynthesis.cancel();
             updateUIForReading(false);
             
-            // Kullanıcıya bilgi ver
+            // Tüm tıklanabilir değerlerden disabled class kaldır
+            document.querySelectorAll('.clickable-value').forEach(el => {
+                el.classList.remove('disabled');
+            });
+            
             elements.resultDisplay.textContent = "---";
         }
 
@@ -1345,12 +1334,14 @@
             });
             
             // Klavye kısayolu
-            document.addEventListener('keydown', (e) => {
-                if (e.code === 'Space') {
-                    e.preventDefault();
+                    document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                // Sadece okuma durumunda değilken veya durdurma durumunda çalışsın
+                if (!isReading || e.target.id === 'stopBtn') {
                     isReading ? stopReading() : startReading();
                 }
-            });
+            }
         });
 
         // 9. DİL ÇEVİRİLERİ (Önceki translations objesini aynen koruyun)
