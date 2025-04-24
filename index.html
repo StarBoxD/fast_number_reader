@@ -1262,17 +1262,6 @@
                     }
                 };
 
-                           // Safari kontrolünü buraya ekleyin (üst kısma)
-                           const browserInfo = getBrowserInfo();
-                if (browserInfo.isSafari) {
-                    utterance.rate = Math.min(utterance.rate, 1.5); // Safari'de maks 1.5x hız
-                }
-
-                                if (browserInfo.isIOS) {
-                utterance.rate = Math.min(utterance.rate, 1.2); // iOS'ta daha da düşük hız
-                utterance.volume = 0.9; // Ses seviyesini biraz düşür
-                }
-
 
                 window.speechSynthesis.speak(utterance);
 
