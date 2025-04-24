@@ -700,6 +700,14 @@
                     <input type="range" id="delayControl" min="0" max="5" step="0.5" value="0" class="form-control">
                     <div class="clickable-value" id="delayDisplay" data-target="delayControl">0s</div>
                 </div>
+            </div> 
+
+            <div class="form-group">
+                <span class="form-label lang-text" data-key="count">Sayı Adedi:</span>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:200px;">
+                    <input type="range" id="countControl" min="1" max="50" step="1" value="10" class="form-control">
+                    <div class="clickable-value" id="countDisplay" data-target="countControl">10</div>
+                </div>
             </div>
 
             <div style="text-align:center; margin-top:1.5rem;">
@@ -889,12 +897,13 @@
         
         // 4. TEMEL FONKSİYONLAR
 
-        function updateUIForReading(isReading) {
+                function updateUIForReading(isReading) {
             elements.startBtn.disabled = isReading;
             elements.stopBtn.disabled = !isReading;
             elements.languageSelect.disabled = isReading;
             document.getElementById('minValue').disabled = isReading;
             document.getElementById('maxValue').disabled = isReading;
+            document.getElementById('countControl').disabled = isReading; // Yeni eklenen satır
         }
 
         function formatNumber(num) {
@@ -969,42 +978,56 @@
         }
         
        // 6. OKUMA İŞLEMLERİ
+       let remainingCount = 0; // Global değişken olarak ekleyin
+
+        function startReading() {
+            if (isReading) return;
+            
+            isReading = true;
+            remainingCount = parseInt(document.getElementById('countControl').value);
+            updateUIForReading(true);
+            
+            const warmUp = new SpeechSynthesisUtterance(" ");
+            warmUp.volume = 0;
+            window.speechSynthesis.speak(warmUp);
+            
+            readNumber();
+        }
+
         async function readNumber() {
-            if (!isReading) return;
+            if (!isReading || remainingCount <= 0) {
+                stopReading();
+                return;
+            }
 
             try {
-                // Eski okumaları temizle
                 window.speechSynthesis.cancel();
                 
                 const min = getNumberInputValue('minValue');
                 const max = getNumberInputValue('maxValue');
                 const number = Math.floor(Math.random() * (max - min + 1)) + min;
                 
-                // Görüntüleme ve geçmiş
                 elements.resultDisplay.textContent = formatNumber(number);
                 addToHistory(number);
+                remainingCount--; // Sayacı azalt
                 
-                // Okuma ayarları
                 const utterance = new SpeechSynthesisUtterance(number.toString());
                 utterance.voice = currentVoice;
                 utterance.rate = parseFloat(elements.speedControl.value);
                 
-                // Dil bazlı ping ayarları
                 const lang = elements.languageSelect.value;
                 let baseDelay = parseFloat(elements.delayControl.value);
                 
-                // Dil özel gecikme çarpanları
                 const delayMultipliers = {
-                    'fr-FR': 1.3,  // Fransızca daha uzun sürer
-                    'en-GB': 1.1,  // İngilizce (UK) biraz daha uzun
-                    'en-US': 1.0,  // İngilizce (US) standart
-                    'default': 1.0 // Diğer diller
+                    'fr-FR': 1.3,
+                    'en-GB': 1.1,
+                    'en-US': 1.0,
+                    'default': 1.0
                 };
                 
                 const delayMultiplier = delayMultipliers[lang] || delayMultipliers['default'];
                 const adjustedDelay = baseDelay * delayMultiplier;
                 
-                // Tüm tarayıcılar için güvenilir çözüm
                 await new Promise((resolve) => {
                     let resolved = false;
                     let timeoutId = null;
@@ -1030,7 +1053,6 @@
                     timeoutId = setTimeout(() => {
                         if (!resolved) {
                             resolved = true;
-                            console.warn('Timeout: Okuma süresi aşıldı, devam ediliyor');
                             proceedToNext();
                         }
                     }, estimatedDuration + 1000);
@@ -1079,6 +1101,7 @@
                 function clearHistory() {
             numberHistory = [];
             elements.historyList.innerHTML = '';
+            remainingCount = 0; // Bu satırı ekleyin
             
             // Başlığı tekrar göster
             const historyTitle = document.querySelector('.history-title');
@@ -1112,18 +1135,17 @@
         }
         
                 // 7. KONTROL FONKSİYONLARI
-                function startReading() {
+                        function startReading() {
             if (isReading) return;
             
             isReading = true;
+            remainingCount = parseInt(document.getElementById('countControl').value);
             updateUIForReading(true);
             
-            // Tüm tarayıcılar için ön ısıtma
             const warmUp = new SpeechSynthesisUtterance(" ");
             warmUp.volume = 0;
             window.speechSynthesis.speak(warmUp);
             
-            // Android Chrome için küçük gecikme
             if (/Android.*Chrome/.test(navigator.userAgent)) {
                 setTimeout(readNumber, 300);
             } else {
@@ -1131,13 +1153,17 @@
             }
         }
 
-        function stopReading() {
+                function stopReading() {
             if (!isReading) return;
             
             isReading = false;
+            remainingCount = 0; // Sayacı sıfırla
             clearTimeout(readingTimeout);
             window.speechSynthesis.cancel();
             updateUIForReading(false);
+            
+            // Kullanıcıya bilgi ver
+            elements.resultDisplay.textContent = "---";
         }
 
                 // Sayının uzunluğuna ve okuma hızına göre tahmini süre (ms)
@@ -1170,6 +1196,11 @@
             
         // 8. OLAY DİNLEYİCİLERİ
             document.addEventListener('DOMContentLoaded', async () => {
+
+                document.getElementById('countControl').addEventListener('input', function() {
+                document.getElementById('countDisplay').textContent = this.value;
+            });
+
                 // Tema ayarı
             const savedTheme = localStorage.getItem('theme') || 
                             (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -1235,31 +1266,6 @@
             });
         });
 
-        // 3. Mevcut Event Listener'larını Güncelle
-        document.addEventListener('DOMContentLoaded', async () => {
-        
-        // Yeni fonksiyonu çağır
-            setupClickableValues();
-        
-        // Range input event listener'ları
-        document.getElementById('speedControl').addEventListener('input', function() {
-            document.getElementById('speedDisplay').textContent = this.value + 'x';
-        });
-        
-        document.getElementById('delayControl').addEventListener('input', function() {
-            document.getElementById('delayDisplay').textContent = this.value + 's';
-        });
-
-        // Dil değişikliğinde hız sınırını güncelle
-        document.getElementById('languageSelect').addEventListener('change', function() {
-            const speedControl = document.getElementById('speedControl');
-            if (speedControl) {
-            speedControl.max = getMaxSpeedForLanguage();
-            document.getElementById('speedDisplay').textContent = `${speedControl.value}x`;
-            }
-        });
-        });
-
         // 9. DİL ÇEVİRİLERİ (Önceki translations objesini aynen koruyun)
             const translations = {
                 'tr-TR': {
@@ -1295,6 +1301,7 @@
                     tipText: 'Boşluk tuşuyla hızlıca başlat/durdur yapabilirsiniz.',
                     howToUseTitle: 'Nasıl Kullanılır?',
                     language: 'Dil Seçimi',
+                    count: 'Sayı Adedi',
                 },
 
                 'en-US': {
@@ -1330,6 +1337,7 @@
                     tipText: 'Use the spacebar to quickly start/stop the application.',
                     howToUseTitle: 'How to Use?',
                     language: 'Language Selection',
+                    count: 'Number Count',
                 },
 
                 'en-GB': {
@@ -1365,6 +1373,7 @@
                     tipText: 'Use the spacebar to quickly start/stop the application.',
                     howToUseTitle: 'How to Use?',
                     language: 'Language Selection',
+                    count: 'Number Count',
                 },
 
                 'de-DE': {
@@ -1400,6 +1409,7 @@
                     tipText: 'Verwenden Sie die Leertaste, um die Anwendung schnell zu starten/stoppen.',
                     howToUseTitle: 'Wie benutzt man?',
                     language: 'Sprache auswählen',
+                    count: 'Zahlenanzahl',
                 },
 
                 'fr-FR': {
@@ -1435,6 +1445,7 @@
                     tipText: 'Utilisez la barre d\'espace pour démarrer/arrêter rapidement l\'application.',
                     howToUseTitle: 'Comment utiliser?',
                     language: 'Sélection de la Langue',
+                    count: 'Nombre de Nombres',
                 },
 
                 'es-ES': {
@@ -1468,7 +1479,9 @@
                     step4Desc: 'Haz clic en el botón "INICIAR" para iniciar la aplicación y "DETENER" para pausarla.',
                     tipTitle: 'NOTA:',
                     tipText: 'Utiliza el espacio para iniciar/detener rápidamente la aplicación.',
-                    howToUseTitle: 'Cómo usar?'
+                    howToUseTitle: 'Cómo usar?',
+                    language: 'Selección de la Lengua',
+                    count: 'Número de Nombres',
                 },
 
                 'ja-JP': {
@@ -1504,6 +1517,7 @@
                     tipText: 'スペースバーを使用してアプリケーションを迅速に開始/停止できます。',
                     howToUseTitle: 'どうやって使う？',
                     language: '言語選択',
+                    count: '数字の数',
                 },
 
                 'ru-RU': {
@@ -1539,6 +1553,7 @@
                     tipText: 'Используйте пробел для быстрого запуска/остановки приложения.',
                     howToUseTitle: 'Как использовать?',
                     language: 'Выбор Языка',
+                    count: 'Число',
                 },
 
                 'zh-CN': {
@@ -1574,6 +1589,7 @@
                     tipText: '使用空格键快速启动/停止应用程序。',
                     howToUseTitle: '如何使用？',
                     language: '语言选择',
+                    count: '数字的数',
                 },
 
                 'it-IT': {
@@ -1609,6 +1625,7 @@
                     tipText: 'Usa lo spazio per avviare/interrompere rapidamente l\'applicazione.',
                     howToUseTitle: 'Come usare?',
                     language: 'Selezione della Lingua',
+                    count: 'Numero di Numeri',
                 },
             };
             function getTranslation(lang, key) {
