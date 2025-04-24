@@ -1262,15 +1262,6 @@
                     }
                 };
 
-                        const utterance = new SpeechSynthesisUtterance(number.toString());
-            utterance.voice = currentVoice;
-            utterance.rate = parseFloat(elements.speedControl.value); // Kullanıcının seçtiği hız (5x'e kadar)
-
-            // Safari'de hızı biraz kısıtla (isteğe bağlı)
-            const browserInfo = getBrowserInfo();
-                if (browserInfo.isSafari) {
-                    utterance.rate = Math.min(utterance.rate, 4.0); // Safari'de 4x üst sınır
-                }
 
                 window.speechSynthesis.speak(utterance);
 
