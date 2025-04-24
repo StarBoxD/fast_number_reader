@@ -1271,12 +1271,7 @@
         // 8. OLAY DİNLEYİCİLERİ
             document.addEventListener('DOMContentLoaded', async () => {
 
-                            const browser = getBrowserInfo();
-                const debugInfo = `Tarayıcı: ${browser.isSafari ? 'Safari' : browser.isChrome ? 'Chrome' : 'Diğer'}, 
-                                iOS: ${browser.isIOS}, 
-                                Mobile: ${browser.isMobile}`;
-                document.getElementById('debugInfo').textContent = debugInfo;
-            });
+                
                 document.getElementById('countControl').addEventListener('input', function() {
                 document.getElementById('countDisplay').textContent = this.value;
             });
