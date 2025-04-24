@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sayı Okuyucu - Çoklu Dil Desteği ile Sayıları Sesli Okuyun</title>
     
         <!-- Promise polyfill for old browsers -->
@@ -107,6 +107,10 @@
             background-image: 
                 radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 20%),
                 radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 20%);
+            padding-top: env(safe-area-inset-top); /* Üst boşluğu otomatik ayarlar */
+            padding-bottom: env(safe-area-inset-bottom); /* Alt boşluğu ayarlar (isteğe bağlı) */
+            height: calc(var(--vh, 1vh) * 100); /* Dinamik yükseklik */
+            height: -webkit-fill-available; /* Mobil Safari için ek yükseklik ayarı */
         }
 
         body.dark-mode {
@@ -1207,6 +1211,14 @@
             }
             document.getElementById('favoriteLanguage').textContent = maxLang;
         }
+
+                // Sayfa yüklendiğinde ve boyut değiştiğinde çalıştır
+        function resizeHandler() {
+            document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+        }
+
+        window.addEventListener('load', resizeHandler);
+        window.addEventListener('resize', resizeHandler);
         
                 // 7. KONTROL FONKSİYONLARI
                         function startReading() {
